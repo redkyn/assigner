@@ -1,6 +1,11 @@
-{"sections": {
-    "a": [
-	{ "firstname":"", "lastname":"", "username":"" },
-	{ "firstname":"", "lastname":"", "username":"" }
-    ],
-}}
+{
+  "students": [{
+    "firstname": "Ty",
+    "lastname": "Morrow",
+    "username": "tjm6f4"
+  }, {
+    "firstname": "Mike",
+    "lastname": "Wisely",
+    "username": "mwwcp2"
+  }]
+}

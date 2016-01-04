@@ -1,5 +1,6 @@
 import sys, os, logging, argparse
 from urllib.parse import urlparse
+import json
 import getpass
 import gitlab
 
@@ -42,8 +43,14 @@ except Exception as e:
     sys.exit(1)
 
 # Load Roster
-#logging.info('Roster: ' + args.roster)
-
+try:
+    with open(args.roster, encoding='utf-8') as dataFile:
+        roster = json.loads(dataFile.read())
+    students = roster['students']
+except Exception as e:
+    logging.error('Failed to open roster file with provided name.')
+    sys.exit(1)
+logging.info('Roster: {0} (count: {1})'.format(args.roster, str(len(students))))
 
 print('GitLab Authentication')
 # Get user's GitLab info

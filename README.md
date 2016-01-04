@@ -5,6 +5,6 @@ This repo contains necessary scripts and resource files for generating the assig
 
 ```
 
-assign.py  [HW repo url] [Roster file name]
+assign.py  [HW repo url] [Roster file name].json
 
 ```
