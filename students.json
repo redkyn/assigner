@@ -1,11 +1,17 @@
 {
-  "students": [{
-    "firstname": "Ty",
-    "lastname": "Morrow",
-    "username": "tjm6f4"
+  "sections": [{
+    "name": "A",
+    "students": [{
+      "firstname": "Mike",
+      "lastname": "Wisely",
+      "username": "mwwcp2"
+    }]
   }, {
-    "firstname": "Mike",
-    "lastname": "Wisely",
-    "username": "mwwcp2"
+    "name": "B",
+    "students": [{
+      "firstname": "Nate",
+      "lastname": "Jarus",
+      "username": "nmjxv3"
+    }]
   }]
 }
