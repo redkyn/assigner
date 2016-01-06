@@ -29,7 +29,8 @@ if parsed_url.netloc:
 else:
     host = path_entries[0]
 logging.info("Host: " + host)
-try:
+
+try: # Is there a reason this is done with a try-catch instead of an if-else?
     group = path_entries[1]
     if not group:
         raise Exception
@@ -37,13 +38,14 @@ try:
 except Exception as e:
     logging.error("Group part was not found in the provided URL")
     sys.exit(1)
-try:
+    
+try: # Ditto here
     assignment = path_entries[2]
     if not assignment:
         raise Exception
-    if not assignment.endswith('.git'):
+    if not assignment.endswith('.git'): # Why raise an exception over this if you're just going to strip it anyway?
         raise Exception("Assignment must end with .git identifier")
-    assignment_name = assignment.rstrip('.git')
+    assignment_name = assignment.rstrip('.git') # This will happily strip any hanging ., g, i, or t from the end of the assignment name. Ex: "asdfg.git".rstrip(".git") -> "asdf". Better way is to just chop the last four chars off the end of assignment.
     logging.info("Assignment: " + assignment_name)
 except Exception as e:
     if not e:
@@ -60,7 +62,7 @@ if not os.path.isfile(CONFIG_FILE_NAME):
 logging.info("Loading config file")
 with open(CONFIG_FILE_NAME, 'r') as f:
     config = yaml.load(f)
-if not config["private_token"]:
+if not config["private_token"]: #nit: if "private_token" not in config: reads better to me
     logging.warning("""
         No GitLab private token has been set in {}.
         Add it in order to speed up authentication.
@@ -74,7 +76,7 @@ try:
     studentCount = 0
     for sec in sections:
         studentCount += len(sec['students'])
-except Exception as e:
+except Exception as e: #I would catch this as close to where it's thrown as possible. Also, you can just do 'except' if you don't care about what the exception was.
     logging.error("Failed to open roster file with provided name.")
     sys.exit(1)
 logging.info(
@@ -83,7 +85,7 @@ logging.info(
 
 print("GitLab Authentication")
 try:
-    if config["private_token"]:
+    if config["private_token"]: #nit, use 'in' 
         logging.info("Private key found.")
         glab = gitlab.Gitlab(host, token=config["private_token"])
     else:
@@ -92,7 +94,7 @@ try:
         userName = input('> GitLab User Name: ')
         userPw = getpass.getpass('> GitLab Password: ')
         glab.login(userName, userPw)
-except Exception as e:
+except Exception as e: #nit, just use 'except' if you don't care about e
     logging.error("""
         GitLab authentication failed.
         Please check your credentials.""")
@@ -100,7 +102,7 @@ except Exception as e:
 logging.info("Authentication succcessful!")
 
 # Get group ID
-for g in glab.getall(glab.getgroups):
+for g in glab.getall(glab.getgroups): # This is going to get really slow if there are a lot of groups. Is it possible to search by group name?
     if g['name'] == group:
         group_id = g['id']
         break
@@ -122,7 +124,7 @@ for sec in sections:
             namespace_id = group_id,
             visibility_level = 0)
         project = glab.getproject(group + '/' + project_name)
-        for u in allUsers:
+        for u in allUsers: # This seems expensive, especially if you're looping over 5,000 users for each student!
             if u['username'] == student['username']:
                 # Developer = 30
                 glab.addprojectmember(project['id'], u['id'], 30)
@@ -137,7 +139,7 @@ print("Push Initial Code")
 # Clone base repo and push to each repository that was just created
 try:
     if os.path.isdir(assignment_name):
-        shutil.rmtree(assignment_name)
+        shutil.rmtree(assignment_name) #careful! don't want to blow away stuff if you run this in the wrong directory. 
     local_repo = Repo.clone_from(args.hwrepo, assignment_name)
 except Exception as e:
     logging.error("""
