@@ -83,11 +83,7 @@ for g in glab.getall(glab.getgroups):
         break
 
 allUsers = glab.getall(glab.getusers)
-if parsed_url.scheme:
-    full_host = parsed_url.scheme + "://" + host
-else:
-    full_host = host
-user_remote_urls = []
+all_remotes = []
 
 # Create an assignment repo for each student
 print("Repository Creation & Permissions")
@@ -109,8 +105,8 @@ for sec in sections:
                 glab.addprojectmember(project['id'], u['id'], 30)
                 repos_made += 1
                 # Add url to remote list for use later
-                url = "{}/{}/{}.git".format(full_host, group, project_name)
-                user_remote_urls.append((student["username"], url))
+                url = "git@{}:{}/{}.git".format(host, group, project_name)
+                all_remotes.append((student["username"], url.lower()))
                 break
     logging.info('Done, ' + str(repos_made) + ' assignment(s) made')
 
@@ -126,7 +122,7 @@ except Exception as e:
     sys.exit(1)
 
 # Push copy to each remote URL
-for name, remote in user_remote_urls:
+for name, remote in all_remotes:
     r = Remote.add(local_repo, name, remote)
     r.push("master")
 

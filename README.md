@@ -8,3 +8,6 @@ This repo contains necessary scripts and resource files for generating the assig
 assign.py  [HW repo url] [Roster file name].json
 
 ```
+
+##### Regarding SSH
+Your GitLab account must have an SSH key set up in order to push the assignment to the students' repos.
