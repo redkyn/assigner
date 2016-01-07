@@ -38,6 +38,7 @@ if len(path_entries) < 3:
 if parsed_url.netloc:
     host = parsed_url.netloc
 else:
+    args.hwrepo = "https://" + args.hwrepo
     host = path_entries[0]
 if not host:
     exit_with_error("Host part was not found in the provided URL")
