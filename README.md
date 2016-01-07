@@ -34,3 +34,4 @@ If you don't add your private key, *Assigner* will simply prompt you for your cr
 
 - Ty Morrow
 - Mike Wisely
+- Nate Jarus
