@@ -2,14 +2,16 @@ import argparse
 import collections
 import getpass
 import gitlab
-from git import Repo, Remote
 import json
 import logging
 import os
 import shutil
 import sys
-from urllib.parse import urlparse
 import yaml
+
+from urllib.parse import urlparse
+from git import Repo, Remote
+
 
 def exit_with_error(msg):
     logging.error(msg)
