@@ -17,11 +17,14 @@ def exit_with_error(msg):
     logging.error(msg)
     sys.exit(1)
 
+
 def get_arguments():
     parser = argparse.ArgumentParser()
-    parser.add_argument("hwrepo", help="URL to repository where assignment exists")
+    parser.add_argument("hwrepo",
+                        help="URL to repository where assignment exists")
     parser.add_argument("roster", help="File name for class roster")
     return parser.parse_args()
+
 
 def parse_repo_url(url):
     parsed_url = urlparse(url)
@@ -57,6 +60,7 @@ def parse_repo_url(url):
     logging.info("Assignment: " + assignment_name)
     return ParsedRepoUrl(url, host_name, group_name, assignment_name)
 
+
 def get_config(file_name):
     if not os.path.isfile(CONFIG_FILE_NAME):
         logging.info("Creating new config file")
@@ -67,21 +71,27 @@ def get_config(file_name):
     logging.info("Config loaded")
     return config
 
+
 def connect_to_gitlab(host, private_token=""):
     try:
         if private_token:
             logging.info("Private key found")
             glab = gitlab.Gitlab(repo_url.host_name, token=private_token)
         else:
-            logging.info("No private key found, add it to speed up authentication")
+            logging.info(
+                "No private key found, add it to speed up authentication"
+            )
             glab = gitlab.Gitlab(repo_url.host_name)
             userName = input('> GitLab User Name: ')
             userPw = getpass.getpass('> GitLab Password: ')
             glab.login(userName, userPw)
         logging.info("Authentication succcessful")
     except:
-        exit_with_error("GitLab authentication failed - check your credentials")
+        exit_with_error(
+            "GitLab authentication failed - check your credentials"
+        )
     return glab
+
 
 def get_roster(file_name):
     try:
@@ -101,6 +111,7 @@ def get_roster(file_name):
         logging.info("Exiting because no students were found in roster file")
         sys.exit(1)
     return roster
+
 
 def create_assignment_repo(repo_url, section, student, gitlab_api):
     project_name = repo_url.assignment_name + "-"
@@ -124,13 +135,14 @@ def create_assignment_repo(repo_url, section, student, gitlab_api):
                 student["firstname"],
                 student["lastname"],
                 student["username"]))
-        return false
+        return False
     user = matching_users[0]
     gitlab_api.addprojectmember(project["id"], user["id"], 30)
     # Add url to remote list for use later
     ssh_url = "git@{}:{}/{}.git".format(
         repo_url.host_name, repo_url.group_name, project_name)
     return (student["username"], ssh_url.lower())
+
 
 def create_assignment_repos(roster, repo_url, gitlab_api):
     all_remotes = []
@@ -147,14 +159,18 @@ def create_assignment_repos(roster, repo_url, gitlab_api):
         logging.info("Done, " + str(repos_made) + " repo(s) made")
     return all_remotes
 
+
 def clone_base_repo(url, dir_name):
     try:
         if os.path.isdir(dir_name):
             shutil.rmtree(dir_name)
         return Repo.clone_from(url, dir_name)
-    except Exception as e:
-        exit_with_error("Failed to clone repo - check your URL and credentials")
+    except:
+        exit_with_error(
+            "Failed to clone repo - check your URL and credentials"
+        )
     logging.info("Cloned base repo")
+
 
 def push_repo_to_remotes(repo, remotes):
     for name, remote in remotes:
@@ -164,7 +180,8 @@ def push_repo_to_remotes(repo, remotes):
 
 CONFIG_FILE_NAME = "_config.yml"
 logging.getLogger("requests").setLevel(logging.WARNING)
-logging.basicConfig(format=":: %(levelname)s: %(message)s", level=logging.DEBUG)
+logging.basicConfig(format=":: %(levelname)s: %(message)s",
+                    level=logging.DEBUG)
 
 print("[Assigner]")
 
