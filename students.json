@@ -1,13 +1,15 @@
 {
+  "class": "cs2001",
+  "semester": "2016sp",
   "sections": [{
-    "name": "A",
+    "name": "a",
     "students": [{
       "firstname": "Mike",
       "lastname": "Wisely",
       "username": "mwwcp2"
     }]
   }, {
-    "name": "B",
+    "name": "b",
     "students": [{
       "firstname": "Nate",
       "lastname": "Jarus",

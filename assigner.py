@@ -20,8 +20,10 @@ def exit_with_error(msg):
 
 def get_arguments():
     parser = argparse.ArgumentParser()
-    parser.add_argument("hwrepo",
-                        help="URL to repository where assignment exists")
+    parser.add_argument(
+        "hwrepo",
+        help="URL to repository where assignment exists"
+    )
     parser.add_argument("roster", help="File name for class roster")
     return parser.parse_args()
 
@@ -30,12 +32,14 @@ def parse_repo_url(url):
     parsed_url = urlparse(url)
     ParsedRepoUrl = collections.namedtuple(
         "ParsedRepoUrl",
-        ["full", "host_name", "group_name", "assignment_name"])
+        ["full", "host_name", "group_name", "assignment_name"]
+    )
     path_entries = parsed_url.path.split('/')
     if len(path_entries) < 3:
         exit_with_error(
             "The provided URL is invalid. \n" +
-            "Required format: [hostname]/[group]/[repo].git")
+            "Required format: [hostname]/[group]/[repo].git"
+        )
     # Get host name
     if parsed_url.netloc:
         host_name = parsed_url.netloc
@@ -113,9 +117,10 @@ def get_roster(file_name):
     return roster
 
 
-def create_assignment_repo(repo_url, section, student, gitlab_api):
-    project_name = repo_url.assignment_name + "-"
-    project_name += section["name"] + "-"
+def create_assignment_repo(repo_url, semester, section, student, gitlab_api):
+    project_name = semester + "-"
+    project_name += section + "-"
+    project_name += repo_url.assignment_name + "-"
     project_name += student["username"]
     # Get group ID
     group = gitlab_api.getgroups(repo_url.group_name)
@@ -123,9 +128,11 @@ def create_assignment_repo(repo_url, section, student, gitlab_api):
     gitlab_api.createproject(
         project_name,
         namespace_id=group_id,
-        visibility_level=0)
+        visibility_level=0
+    )
     project = gitlab_api.getproject(
-        repo_url.group_name + "/" + project_name)
+        repo_url.group_name + "/" + project_name
+    )
     # Get student GitLab id
     matching_users = gitlab_api.getusers(student["username"])
     if len(matching_users) != 1:
@@ -134,25 +141,35 @@ def create_assignment_repo(repo_url, section, student, gitlab_api):
             .format(
                 student["firstname"],
                 student["lastname"],
-                student["username"]))
+                student["username"]
+            )
+        )
         return False
     user = matching_users[0]
     gitlab_api.addprojectmember(project["id"], user["id"], 30)
     # Add url to remote list for use later
     ssh_url = "git@{}:{}/{}.git".format(
-        repo_url.host_name, repo_url.group_name, project_name)
+        repo_url.host_name, repo_url.group_name, project_name
+    )
     return (student["username"], ssh_url.lower())
 
 
 def create_assignment_repos(roster, repo_url, gitlab_api):
     all_remotes = []
     for section in roster["sections"]:
-        logging.info("Creating repos for students in section " +
-                     section["name"])
+        logging.info(
+            "Creating repos for students in section " +
+            section["name"]
+        )
         repos_made = 0
         for student in section["students"]:
             result = create_assignment_repo(
-                repo_url, section, student, gitlab_api)
+                repo_url,
+                roster["semester"],
+                roster["class"] + section["name"],
+                student,
+                gitlab_api
+            )
             if result:
                 all_remotes.append(result)
                 repos_made += 1
@@ -180,8 +197,10 @@ def push_repo_to_remotes(repo, remotes):
 
 CONFIG_FILE_NAME = "_config.yml"
 logging.getLogger("requests").setLevel(logging.WARNING)
-logging.basicConfig(format=":: %(levelname)s: %(message)s",
-                    level=logging.DEBUG)
+logging.basicConfig(
+    format=":: %(levelname)s: %(message)s",
+    level=logging.DEBUG
+)
 
 print("[Assigner]")
 
