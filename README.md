@@ -27,8 +27,8 @@ assigner.py [HW repo url] [Roster file name].json
 Your GitLab account must have an SSH key set up in order to push the assignment to the students' repos.
 
 #### Configuration File
-*Assigner* will create a `_config.yml` file that will persist your GitLab private key, should you desire to add it.
-If you don't add your private key, *Assigner* will simply prompt you for your credentials every time you run it.
+*Assigner* will create a `_config.yml` file that will persist your GitLab private token, should you desire to add it.
+If you don't add your private token, *Assigner* will simply prompt you for your credentials every time you run it.
 
 ## Credits
 
