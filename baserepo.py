@@ -128,9 +128,11 @@ class BaseRepo(Repo):
 
 
 class StudentRepo(Repo):
+    """Repository for a student's solution to a homework assignment"""
 
     @classmethod
     def new(cls, base_repo, semester, section, username, token):
+        """Create a new repository on GitLab"""
         fmt = {
             'semester': semester,
             'section': section,
@@ -151,7 +153,15 @@ class StudentRepo(Repo):
 
         result = cls._cls_gl_post(base_repo.url_base, "/projects", token, payload)
 
-        return cls(result['http_url_to_repo'], token)
+        return cls(base_repo, result['http_url_to_repo'], token)
+    
+    def __init__(self, base_repo, url, token):
+        super().__init__(url, token)
+        self.base_repo = base_repo
+
+    def push_base(self):
+        """Push base repo code to this repo"""
+        self.base_repo.push_to(self)
 
 
 if __name__ == '__main__':
