@@ -145,8 +145,9 @@ class StudentRepo(Repo):
             'visibility_level': Visibility.private,
         }
 
-        cls._cls_gl_post(base_repo.url_base, "/projects", token, payload)
+        result = cls._cls_gl_post(base_repo.url_base, "/projects", token, payload)
 
+        return cls(result['http_url_to_repo'], token)
 
 
 if __name__ == '__main__':
