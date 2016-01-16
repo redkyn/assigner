@@ -162,4 +162,4 @@ if __name__ == '__main__':
         b.clone_to(tmpdirname)
         print(os.listdir(tmpdirname))
 
-    StudentRepo.new(b, "SP", "A", "mwwcp2", token)
+    StudentRepo.new(b, "2016SP", "A", "mwwcp2", token)
