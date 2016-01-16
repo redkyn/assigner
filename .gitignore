@@ -63,3 +63,4 @@ include/
 pip*
 *~
 _config.yml
+secret.py
