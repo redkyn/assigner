@@ -154,6 +154,8 @@ if __name__ == '__main__':
     # Need to make this module if'n you're going to run this
     from secret import token
 
+    logging.basicConfig(level=logging.INFO)
+
     b = BaseRepo("https://git.mst.edu/2016-Spring-CS-2001/hw01.git", token)
     print(json.dumps(b.info, indent=8))
     with tempfile.TemporaryDirectory() as tmpdirname:
