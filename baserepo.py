@@ -15,17 +15,20 @@ class BaseRepoError(Exception):
 
 
 class Visibility(Enum):
+    """Gitlab API values for repo visibility"""
     private = 0
     internal = 10
     public = 20
 
 
 class Repo(object):
+    """Gitlab repo; manages API requests and various metadata"""
 
     PATH_RE = re.compile(r'^/(?P<namespace>[\w\-\.]+)/(?P<name>[\w\-\.]+)\.git$')
 
     @classmethod
     def _cls_gl_get(cls, url_base, path, token, params={}):
+        """Make a Gitlab GET request"""
         params.update({'private_token': token})
         url = urljoin(url_base, '/api/v3' + path)
         r = requests.get(url, params=params)
@@ -34,6 +37,7 @@ class Repo(object):
 
     @classmethod
     def _cls_gl_post(cls, url_base, path, token, payload={}, params={}):
+        """Make a Gitlab POST request"""
         params.update({'private_token': token})
         url = urljoin(url_base, '/api/v3' + path)
         r = requests.post(url, params=params, data=payload)
