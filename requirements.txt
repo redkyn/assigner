@@ -1,3 +1,4 @@
+colorlog==2.6.0
 flake8==2.5.1
 gitdb==0.6.4
 GitPython==1.0.1
