@@ -93,9 +93,15 @@ def get(args):
                         student['username']
                     )
 
-            repo = StudentRepo(conf['gitlab-host'], conf['namespace'], name, conf['token'])
-            repo.clone_to(os.path.join(path, student['username']))
-            count += 1
+            try:
+                repo = StudentRepo(conf['gitlab-host'], conf['namespace'], name, conf['token'])
+                repo.clone_to(os.path.join(path, student['username']))
+                count += 1
+            except HTTPError as e:
+                if e.response.status_code == 404:
+                    logging.warn("Repository %s does not exist.", name)
+                else:
+                    raise
 
     print("Cloned ", count, " repositories")
 
