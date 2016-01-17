@@ -182,15 +182,11 @@ class StudentRepo(Repo):
 
         result = cls._cls_gl_post(base_repo.url_base, "/projects", token, payload)
 
-        return cls(base_repo, result['http_url_to_repo'], token)
-    
-    def __init__(self, base_repo, url, token):
-        super().__init__(url, token)
-        self.base_repo = base_repo
+        return cls(result['http_url_to_repo'], token)
 
-    def push_base(self):
-        """Push base repo code to this repo"""
-        self.base_repo.push_to(self)
+    def push(self, base_repo):
+        """Push base_repo code to this repo"""
+        base_repo.push_to(self)
 
 
 if __name__ == '__main__':

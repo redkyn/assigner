@@ -43,7 +43,7 @@ def assign(args):
         count = 0
         for student in conf['roster']:
             repo = StudentRepo.new(base, conf['semester'], student['section'], student['username'], conf['token'])
-            repo.push_base()
+            repo.push(base)
 
             count += 1
 
