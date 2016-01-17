@@ -51,7 +51,29 @@ def assign(args):
 
 
 def get(args):
-    raise NotImplementedError("'get' command is not available")
+    if args.student:
+        raise NotImplementedError("'--student' is not implemented")
+
+    with config(args.config) as conf:
+        path = os.path.join(args.path, args.name)
+        os.makedirs(path, mode=0o700, exist_ok=True)
+
+        count = 0
+        for student in conf['roster']:
+            url = Repo.build_url(conf['gitlab-host'], conf['namespace'],
+                    StudentRepo.name(
+                        conf['semester'],
+                        student['section'],
+                        args.name,
+                        student['username']
+                    )
+                )
+
+            repo = StudentRepo(url, conf['token'])
+            repo.clone_to(os.path.join(path, student['username']))
+            count += 1
+
+    print("Cloned ", count, " repositories")
 
 
 def lock(args):
@@ -168,6 +190,8 @@ def make_parser():
                                       help="Clone student repos")
     subparser.add_argument('name',
                            help='Name of the assignment to retrieve.')
+    subparser.add_argument('path', default=".", nargs='?',
+            help='Path to clone student repositories to')
     subparser.add_argument('--student', metavar="id",
                            help='ID of student whose assignment needs retrieving.')
     subparser.set_defaults(run=get)

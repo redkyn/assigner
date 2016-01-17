@@ -108,6 +108,11 @@ class Repo(object):
         s, n, _, _, _ = urlsplit(self.url)
         return urlunsplit((s, n, '', '', ''))
 
+    def clone_to(self, dir_name):
+        self._repo = git.Repo.clone_from(self.ssh_url, dir_name)
+        logging.info("Cloned %s", self.name)
+        return self._repo
+
     def _gl_get(self, path, params={}):
         return self.__class__._cls_gl_get(
             self.url_base, path, self.token, params
@@ -145,11 +150,6 @@ class BaseRepo(Repo):
 
         return cls(result['http_url_to_repo'], token)
 
-    def clone_to(self, dir_name):
-        self._repo = git.Repo.clone_from(self.ssh_url, dir_name)
-        logging.info("Cloned %s", self.name)
-        return self._repo
-
     def push_to(self, student_repo):
         r = git.Remote.add(self.repo, student_repo.name, student_repo.ssh_url)
         r.push("master")
@@ -162,15 +162,8 @@ class StudentRepo(Repo):
     @classmethod
     def new(cls, base_repo, semester, section, username, token):
         """Create a new repository on GitLab"""
-        fmt = {
-            'semester': semester,
-            'section': section,
-            'assignment': base_repo.name,
-            'user': username
-        }
-
         payload = {
-            'name': "{semester}-{section}-{assignment}-{user}".format(**fmt),
+            'name': cls.name(semester, section, base_repo.name, username),
             'namespace_id': base_repo.namespace_id,
             'issues_enabled': False,
             'merge_requests_enabled': False,
@@ -183,6 +176,17 @@ class StudentRepo(Repo):
         result = cls._cls_gl_post(base_repo.url_base, "/projects", token, payload)
 
         return cls(result['http_url_to_repo'], token)
+
+    @classmethod
+    def name(cls, semester, section, assignment, user):
+        fmt = {
+            'semester': semester,
+            'section': section,
+            'assignment': assignment,
+            'user': user
+        }
+
+        return "{semester}-{section}-{assignment}-{user}".format(**fmt)
 
     def push(self, base_repo):
         """Push base_repo code to this repo"""
