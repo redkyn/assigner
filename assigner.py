@@ -2,6 +2,8 @@ import argparse
 import importlib
 import logging
 import os
+import re
+import csv
 
 from collections import OrderedDict
 from colorlog import ColoredFormatter
@@ -37,6 +39,31 @@ def lock(args):
 
 def status(args):
     raise NotImplementedError("'status' command is not available")
+
+
+def import_students(args):
+    # TODO: This should probably move to another file
+    email_re = re.compile(r'^(?P<user>[^@]+)')
+    with open(args.file) as fh, config(args.config) as conf:
+        reader = csv.reader(fh)
+
+        if 'roster' not in conf:
+            conf['roster'] = []
+
+        # Note: This is incredibly hardcoded.
+        # However, peoplesoft never updates anything, so we're probably good.
+        reader.__next__()  # Skip the header
+        count = 0
+        for row in reader:
+            count += 1
+            match = email_re.match(row[4])
+            conf['roster'].append({
+                'name': row[3],
+                'username': match.group("user"),
+                'section': args.section
+            })
+
+    print("Imported ", count, " students.")
 
 
 def set_conf(args):
@@ -143,6 +170,13 @@ def make_parser():
     subparser.add_argument('name', nargs='?',
                            help='Name of the assignment to look up.')
     subparser.set_defaults(run=status)
+
+    # 'import' command
+    subparser = subparsers.add_parser("import",
+            help="Import students from a csv")
+    subparser.add_argument('file', help='CSV file to import from')
+    subparser.add_argument('section', help='Section being imported')
+    subparser.set_defaults(run=import_students)
 
     # 'set' command
     subparser = subparsers.add_parser("set",
