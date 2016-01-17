@@ -77,6 +77,15 @@ class Repo(object):
         r.raise_for_status()
         return r.json()
 
+    @classmethod
+    def _cls_gl_delete(cls, url_base, path, token, params={}):
+        """Make a Gitlab DELETE request"""
+        params.update({'private_token': token})
+        url = urljoin(url_base, '/api/v3' + path)
+        r = requests.delete(url, params=params)
+        r.raise_for_status()
+        return r.json()
+
     def __init__(self, url_base, namespace, name, token, url=None):
         self.url_base = url_base
         self.namespace = namespace
@@ -95,6 +104,10 @@ class Repo(object):
     @property
     def namespace_id(self):
         return self.info['namespace']['id']
+
+    @property
+    def id(self):
+        return self.info['id']
 
     @property
     def info(self):
@@ -120,6 +133,10 @@ class Repo(object):
         logging.info("Cloned %s", self.name)
         return self._repo
 
+    def delete(self):
+        self._gl_delete("/projects/{}".format(self.id))
+        logging.info("Deleted %s", self.name)
+
     def _gl_get(self, path, params={}):
         return self.__class__._cls_gl_get(
             self.url_base, path, self.token, params
@@ -128,6 +145,11 @@ class Repo(object):
     def _gl_post(self, path, payload={}, params={}):
         return self.__class__._cls_gl_post(
             self.url_base, path, self.token, payload
+        )
+
+    def _gl_delete(self, path, params={}):
+        return self.__class__._cls_gl_delete(
+            self.url_base, path, self.token, params
         )
 
 

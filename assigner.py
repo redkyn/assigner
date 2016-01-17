@@ -6,6 +6,7 @@ import re
 import csv
 import tempfile
 
+from requests.exceptions import HTTPError
 from collections import OrderedDict
 from colorlog import ColoredFormatter
 
@@ -42,10 +43,35 @@ def assign(args):
 
         count = 0
         for student in conf['roster']:
-            repo = StudentRepo.new(base, conf['semester'], student['section'], student['username'], conf['token'])
-            repo.push(base)
+            try:
+                name = StudentRepo.name(
+                            conf['semester'],
+                            student['section'],
+                            args.name,
+                            student['username']
+                        )
 
-            count += 1
+                repo = StudentRepo(conf['gitlab-host'], conf['namespace'], name, conf['token'])
+                repo.info
+
+                logging.warning("Student repository %s already exists.", repo.name)
+
+                if args.force:
+                    logging.warning("Deleting...")
+                    repo.delete()
+                    repo = StudentRepo.new(base, conf['semester'], student['section'], student['username'], conf['token'])
+                    repo.push(base)
+                    count += 1
+                else:
+                    logging.warning("Skipping...")
+
+            except HTTPError as e:
+                if e.response.status_code == 404:
+                    repo = StudentRepo.new(base, conf['semester'], student['section'], student['username'], conf['token'])
+                    repo.push(base)
+                    count += 1
+                else:
+                    raise
 
     print("Assigned homework ", args.name, " to ", count, " students")
 
@@ -181,6 +207,8 @@ def make_parser():
                            help='ID of the student to assign to.')
     subparser.add_argument('--dry-run', action='store_true',
                            help="Don't actually do it.")
+    subparser.add_argument('-f, --force', action='store_true', dest='force',
+            help="Delete and recreate already existing student repos.")
     subparser.set_defaults(run=assign)
 
     # 'get' command
