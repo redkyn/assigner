@@ -6,13 +6,21 @@ import os
 from collections import OrderedDict
 from colorlog import ColoredFormatter
 
+from config import config
+
+from baserepo import BaseRepo, StudentRepo
+
+
 logger = logging.getLogger(__name__)
 
 description = "An automated grading tool for programming assignments."
 
 
 def new(args):
-    raise NotImplementedError("'new' command is not available")
+    with config(args.config) as conf:
+        repo = BaseRepo.new(args.name, conf['namespace'], conf['gitlab-host'],
+                conf['token'])
+        print("Created repo at ", repo.url)
 
 
 def assign(args):

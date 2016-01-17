@@ -116,6 +116,30 @@ class Repo(object):
 
 class BaseRepo(Repo):
 
+    @classmethod
+    def new(cls, name, namespace, url_base, token):
+        namespaces = cls._cls_gl_get(url_base, "/namespaces", token,
+                {'search': namespace})
+        logging.debug("Got %d namespaces matching %s", len(namespaces),
+                namespace)
+        logging.debug("Using namespace %s with ID %d", namespaces[0]["path"],
+                namespaces[0]["id"])
+
+        payload = {
+            'name': name,
+            'namespace_id': namespaces[0]["id"],
+            'issues_enabled': False,
+            'merge_requests_enabled': False,
+            'builds_enabled': False,
+            'wiki_enabled': False,
+            'snippets_enabled': True,  # Why not?
+            'visibility_level': Visibility.private,
+        }
+
+        result = cls._cls_gl_post(url_base, "/projects", token, payload)
+
+        return cls(result['http_url_to_repo'], token)
+
     def clone_to(self, dir_name):
         self._repo = git.Repo.clone_from(self.ssh_url, dir_name)
         logging.info("Cloned %s", self.name)
