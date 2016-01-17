@@ -32,6 +32,34 @@ class Repo(object):
         return url_base + '/' + namespace + '/' + name + '.git'
 
     @classmethod
+    def from_url(cls, url, token):
+        parts = urlsplit(url)
+        if not parts.scheme:
+            raise BaseRepoError("{} is missing a scheme.".format(url))
+        if not parts.netloc:
+            raise BaseRepoError("{} is missing a domain.".format(url))
+
+        if parts.scheme != "https":
+            logging.warning("Using scheme {} instead of https.", parts.scheme)
+
+        match = cls.PATH_RE.match(parts.path)
+        if not match:
+            raise BaseRepoError(
+                "Bad path. Can't separate namespace from "
+                "repo name {}".format(parts.path)
+            )
+
+        namespace = match.group("namespace")
+        name = match.group("name")
+
+        self = cls(urlunsplit((parts.scheme, parts.netloc, '', '', '')), namespace, name, token, url)
+
+        logging.debug(json.dumps(self.info))
+        logging.info("Found %s", self.name_with_namespace)
+
+        return self
+
+    @classmethod
     def _cls_gl_get(cls, url_base, path, token, params={}):
         """Make a Gitlab GET request"""
         params.update({'private_token': token})
@@ -49,31 +77,16 @@ class Repo(object):
         r.raise_for_status()
         return r.json()
 
-    def __init__(self, url, token):
-        self.url = url
+    def __init__(self, url_base, namespace, name, token, url=None):
+        self.url_base = url_base
+        self.namespace = namespace
+        self.name = name
         self.token = token
 
-        parts = urlsplit(url)
-        if not parts.scheme:
-            raise BaseRepoError("{} is missing a scheme.".format(url))
-        if not parts.netloc:
-            raise BaseRepoError("{} is missing a domain.".format(url))
-
-        if parts.scheme != "https":
-            logging.warning("Using scheme {} instead of https.", parts.scheme)
-
-        match = self.__class__.PATH_RE.match(parts.path)
-        if not match:
-            raise BaseRepoError(
-                "Bad path. Can't separate namespace from "
-                "repo name {}".format(parts.path)
-            )
-
-        self.namespace = match.group("namespace")
-        self.name = match.group("name")
-
-        logging.debug(json.dumps(self.info))
-        logging.info("Found %s", self.name_with_namespace)
+        if url is None:
+            self.url = Repo.build_url(url_base, namespace, name)
+        else:
+            self.url = url
 
     @property
     def name_with_namespace(self):
@@ -101,12 +114,6 @@ class Repo(object):
     @property
     def ssh_url(self):
         return self.info['ssh_url_to_repo']
-
-    @property
-    def url_base(self):
-        """Return just the scheme and the netloc"""
-        s, n, _, _, _ = urlsplit(self.url)
-        return urlunsplit((s, n, '', '', ''))
 
     def clone_to(self, dir_name):
         self._repo = git.Repo.clone_from(self.ssh_url, dir_name)
@@ -148,7 +155,7 @@ class BaseRepo(Repo):
 
         result = cls._cls_gl_post(url_base, "/projects", token, payload)
 
-        return cls(result['http_url_to_repo'], token)
+        return cls.from_url(result['http_url_to_repo'], token)
 
     def push_to(self, student_repo):
         r = git.Remote.add(self.repo, student_repo.name, student_repo.ssh_url)
@@ -175,7 +182,7 @@ class StudentRepo(Repo):
 
         result = cls._cls_gl_post(base_repo.url_base, "/projects", token, payload)
 
-        return cls(result['http_url_to_repo'], token)
+        return cls.from_url(result['http_url_to_repo'], token)
 
     @classmethod
     def name(cls, semester, section, assignment, user):

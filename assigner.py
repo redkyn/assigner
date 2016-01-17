@@ -37,7 +37,7 @@ def assign(args):
         raise NotImplementedError("'--student' is not implemented")
 
     with config(args.config) as conf, tempfile.TemporaryDirectory() as tmpdirname:
-        base = BaseRepo(Repo.build_url(conf['gitlab-host'], conf['namespace'], args.name), conf['token'])
+        base = BaseRepo(conf['gitlab-host'], conf['namespace'], args.name, conf['token'])
         base.clone_to(tmpdirname)
 
         count = 0
@@ -60,16 +60,14 @@ def get(args):
 
         count = 0
         for student in conf['roster']:
-            url = Repo.build_url(conf['gitlab-host'], conf['namespace'],
-                    StudentRepo.name(
+            name = StudentRepo.name(
                         conf['semester'],
                         student['section'],
                         args.name,
                         student['username']
                     )
-                )
 
-            repo = StudentRepo(url, conf['token'])
+            repo = StudentRepo(conf['gitlab-host'], conf['namespace'], name, conf['token'])
             repo.clone_to(os.path.join(path, student['username']))
             count += 1
 
