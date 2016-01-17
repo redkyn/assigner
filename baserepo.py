@@ -27,6 +27,11 @@ class Repo(object):
     PATH_RE = re.compile(r'^/(?P<namespace>[\w\-\.]+)/(?P<name>[\w\-\.]+)\.git$')
 
     @classmethod
+    def build_url(cls, url_base, namespace, name):
+        """ Build a url for a repository """
+        return url_base + '/' + namespace + '/' + name + '.git'
+
+    @classmethod
     def _cls_gl_get(cls, url_base, path, token, params={}):
         """Make a Gitlab GET request"""
         params.update({'private_token': token})

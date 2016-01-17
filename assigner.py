@@ -4,13 +4,14 @@ import logging
 import os
 import re
 import csv
+import tempfile
 
 from collections import OrderedDict
 from colorlog import ColoredFormatter
 
 from config import config
 
-from baserepo import BaseRepo, StudentRepo
+from baserepo import Repo, BaseRepo, StudentRepo
 
 
 logger = logging.getLogger(__name__)
@@ -20,13 +21,33 @@ description = "An automated grading tool for programming assignments."
 
 def new(args):
     with config(args.config) as conf:
-        repo = BaseRepo.new(args.name, conf['namespace'], conf['gitlab-host'],
+        if args.dry_run:
+            url = Repo.build_url(conf['gitlab-host'], conf['namespace'], args.name)
+        else:
+            repo = BaseRepo.new(args.name, conf['namespace'], conf['gitlab-host'],
                 conf['token'])
-        print("Created repo at ", repo.url)
+            url = repo.url
+        print("Created repo at ", url)
 
 
 def assign(args):
-    raise NotImplementedError("'assign' command is not available")
+    if args.dry_run:
+        raise NotImplementedError("'--dry-run' is not implemented")
+    if args.student:
+        raise NotImplementedError("'--student' is not implemented")
+
+    with config(args.config) as conf, tempfile.TemporaryDirectory() as tmpdirname:
+        base = BaseRepo(Repo.build_url(conf['gitlab-host'], conf['namespace'], args.name), conf['token'])
+        base.clone_to(tmpdirname)
+
+        count = 0
+        for student in conf['roster']:
+            repo = StudentRepo.new(base, conf['semester'], student['section'], student['username'], conf['token'])
+            repo.push_base()
+
+            count += 1
+
+    print("Assigned homework ", args.name, " to ", count, " students")
 
 
 def get(args):
