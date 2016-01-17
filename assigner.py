@@ -39,6 +39,11 @@ def status(args):
     raise NotImplementedError("'status' command is not available")
 
 
+def set_conf(args):
+    with config(args.config) as conf:
+        conf[args.key] = args.value
+
+
 def configure_logging():
     # Get the root logger
     root_logger = logging.getLogger()
@@ -138,6 +143,13 @@ def make_parser():
     subparser.add_argument('name', nargs='?',
                            help='Name of the assignment to look up.')
     subparser.set_defaults(run=status)
+
+    # 'set' command
+    subparser = subparsers.add_parser("set",
+                                      help="Set configuration values")
+    subparser.add_argument("key", help="Key to set")
+    subparser.add_argument("value", help="Value to set")
+    subparser.set_defaults(run=set_conf)
 
     # The 'help' command shows the help screen
     help_parser = subparsers.add_parser("help",
