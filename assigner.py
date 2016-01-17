@@ -224,7 +224,7 @@ def make_parser():
     subparser.set_defaults(run=import_students)
 
     # 'set' command
-    subparser = subparsers.add_parser("set",
+    subparser = subparsers.add_parser("config",
                                       help="Set configuration values")
     subparser.add_argument("key", help="Key to set")
     subparser.add_argument("value", help="Value to set")
