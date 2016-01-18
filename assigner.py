@@ -12,7 +12,7 @@ from colorlog import ColoredFormatter
 
 from config import config
 
-from baserepo import Repo, BaseRepo, StudentRepo
+from baserepo import Access, RepoError, Repo, BaseRepo, StudentRepo
 
 
 logger = logging.getLogger(__name__)
@@ -75,6 +75,35 @@ def assign(args):
 
     print("Assigned homework ", args.name, " to ", count, " students")
 
+def open_assignment(args):
+    with config(args.config) as conf:
+        count = 0
+        for student in conf['roster']:
+            name = StudentRepo.name(
+                        conf['semester'],
+                        student['section'],
+                        args.name,
+                        student['username']
+                    )
+
+            try:
+                repo = StudentRepo(conf['gitlab-host'], conf['namespace'], name, conf['token'])
+                if 'id' not in student:
+                    student['id'] = Repo.get_user_id(student['username'], conf['gitlab-host'], conf['token'])
+
+                repo.add_member(student['id'], Access.developer)
+                count += 1
+            except RepoError:
+                logging.warn("Could not add %s to %s", student['username'], name)
+            except HTTPError as e:
+                raise
+                if e.response.status_code == 404:
+                    logging.warn("Repository %s does not exist.", name)
+                else:
+                    raise
+
+    print("Granted access to ", count, " repositories")
+
 
 def get(args):
     if args.student:
@@ -135,6 +164,11 @@ def import_students(args):
                 'username': match.group("user"),
                 'section': args.section
             })
+
+            try:
+                conf['roster'][-1]['id'] = Repo.get_user_id(match.group("user"), conf['gitlab-host'], conf['token'])
+            except RepoError:
+                logger.warning("Student %s does not have a Gitlab account.", row[3])
 
     print("Imported ", count, " students.")
 
@@ -216,6 +250,11 @@ def make_parser():
     subparser.add_argument('-f, --force', action='store_true', dest='force',
             help="Delete and recreate already existing student repos.")
     subparser.set_defaults(run=assign)
+
+    # 'open' command
+    subparser = subparsers.add_parser("open", help="Grant students access to their repos")
+    subparser.add_argument('name', help='Name of the assignment to grant access to')
+    subparser.set_defaults(run=open_assignment)
 
     # 'get' command
     subparser = subparsers.add_parser("get",

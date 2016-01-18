@@ -10,7 +10,7 @@ from enum import Enum
 from urllib.parse import urlsplit, urlunsplit, urljoin, quote
 
 
-class BaseRepoError(Exception):
+class RepoError(Exception):
     pass
 
 
@@ -19,6 +19,14 @@ class Visibility(Enum):
     private = 0
     internal = 10
     public = 20
+
+
+class Access(Enum):
+    guest = 10
+    reporter = 20
+    developer = 30
+    master = 40
+    owner = 50
 
 
 class Repo(object):
@@ -71,6 +79,15 @@ class Repo(object):
     @classmethod
     def _cls_gl_post(cls, url_base, path, token, payload={}, params={}):
         """Make a Gitlab POST request"""
+        params.update({'private_token': token})
+        url = urljoin(url_base, '/api/v3' + path)
+        r = requests.post(url, params=params, data=payload)
+        r.raise_for_status()
+        return r.json()
+
+    @classmethod
+    def _cls_gl_put(cls, url_base, path, token, payload={}, params={}):
+        """Make a Gitlab PUT request"""
         params.update({'private_token': token})
         url = urljoin(url_base, '/api/v3' + path)
         r = requests.post(url, params=params, data=payload)
@@ -137,6 +154,29 @@ class Repo(object):
         self._gl_delete("/projects/{}".format(self.id))
         logging.info("Deleted %s", self.name)
 
+    # TODO: this should really go elsewhere
+    @classmethod
+    def get_user_id(cls, username, url_base, token):
+        data = cls._cls_gl_get(url_base, "/users", token, params={'search': username})
+
+        if len(data) == 0:
+            logging.warn("Did not find any users matching %s", username)
+            raise RepoError("No user {}".format(username))
+
+        if len(data) > 1:
+            logging.warn("Got %d users for %s", len(data), username)
+
+        logging.info("Got id %d for user %s", data[0]['id'], username)
+        return data[0]['id']
+
+    def add_member(self, user_id, level):
+        payload = {'id': self.id, 'user_id': user_id, 'access_level': level.value}
+        return self._gl_post("/projects/{}/members".format(self.id), payload)
+
+    def edit_member(self, user_id, level):
+        payload = {'id': self.id, 'user_id': user_id, 'access_level': level.value}
+        return self._gl_put("/projects/{}/members/{}".format(self.id, user_id), payload)
+
     def _gl_get(self, path, params={}):
         return self.__class__._cls_gl_get(
             self.url_base, path, self.token, params
@@ -144,6 +184,11 @@ class Repo(object):
 
     def _gl_post(self, path, payload={}, params={}):
         return self.__class__._cls_gl_post(
+            self.url_base, path, self.token, payload
+        )
+
+    def _gl_put(self, path, payload={}, params={}):
+        return self.__class__._cls_gl_put(
             self.url_base, path, self.token, payload
         )
 
