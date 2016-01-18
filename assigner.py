@@ -1,5 +1,4 @@
 import argparse
-import importlib
 import logging
 import os
 import re
@@ -7,7 +6,6 @@ import csv
 import tempfile
 
 from requests.exceptions import HTTPError
-from collections import OrderedDict
 from colorlog import ColoredFormatter
 
 from config import config
