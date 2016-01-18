@@ -90,7 +90,7 @@ class Repo(object):
         """Make a Gitlab PUT request"""
         params.update({'private_token': token})
         url = urljoin(url_base, '/api/v3' + path)
-        r = requests.post(url, params=params, data=payload)
+        r = requests.put(url, params=params, data=payload)
         r.raise_for_status()
         return r.json()
 
@@ -176,6 +176,9 @@ class Repo(object):
     def edit_member(self, user_id, level):
         payload = {'id': self.id, 'user_id': user_id, 'access_level': level.value}
         return self._gl_put("/projects/{}/members/{}".format(self.id, user_id), payload)
+
+    def delete_member(self, user_id):
+        return self._gl_delete("/projects/{}/members/{}".format(self.id, user_id))
 
     def _gl_get(self, path, params={}):
         return self.__class__._cls_gl_get(

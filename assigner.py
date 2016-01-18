@@ -136,7 +136,44 @@ def get(args):
 
 
 def lock(args):
-    raise NotImplementedError("'lock' command is not available")
+    return manage_users(args, Access.reporter)
+
+
+def unlock(args):
+    return manage_users(args, Access.developer)
+
+
+def manage_users(args, level):
+    if args.dry_run:
+        raise NotImplementedError("'--dry-run' is not implemented")
+    if args.student:
+        raise NotImplementedError("'--student' is not implemented")
+
+    with config(args.config) as conf:
+        count = 0
+        for student in conf['roster']:
+            name = StudentRepo.name(
+                        conf['semester'],
+                        student['section'],
+                        args.name,
+                        student['username']
+                    )
+
+            if 'id' in student:
+                try:
+                    repo = StudentRepo(conf['gitlab-host'], conf['namespace'], name, conf['token'])
+                    repo.edit_member(student['id'], level)
+                    count += 1
+                except HTTPError as e:
+                    raise
+                    if e.response.status_code == 404:
+                        logging.warning("Repository %s does not exist.", name)
+                    else:
+                        raise
+            else:
+                logging.warning("Student %s does not have a gitlab account.", student['username'])
+
+    print("Changed ", count, " repositories.")
 
 
 def status(args):
@@ -277,6 +314,17 @@ def make_parser():
     subparser.add_argument('--dry-run', action='store_true',
                            help="Don't actually do it.")
     subparser.set_defaults(run=lock)
+
+    # 'unlock' command
+    subparser = subparsers.add_parser("unlock",
+                                      help="unlock students from repos")
+    subparser.add_argument('name',
+                           help='Name of the assignment to unlock.')
+    subparser.add_argument('--student', metavar="id",
+                           help='ID of student whose assignment needs unlocking.')
+    subparser.add_argument('--dry-run', action='store_true',
+                           help="Don't actually do it.")
+    subparser.set_defaults(run=unlock)
 
     # 'status' command
     subparser = subparsers.add_parser("status",
