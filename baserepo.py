@@ -205,12 +205,9 @@ class BaseRepo(Repo):
 
     @classmethod
     def new(cls, name, namespace, url_base, token):
-        namespaces = cls._cls_gl_get(url_base, "/namespaces", token,
-                {'search': namespace})
-        logging.debug("Got %d namespaces matching %s", len(namespaces),
-                namespace)
-        logging.debug("Using namespace %s with ID %d", namespaces[0]["path"],
-                namespaces[0]["id"])
+        namespaces = cls._cls_gl_get(url_base, "/namespaces", token, {'search': namespace})
+        logging.debug("Got %d namespaces matching %s", len(namespaces), namespace)
+        logging.debug("Using namespace %s with ID %d", namespaces[0]["path"], namespaces[0]["id"])
 
         payload = {
             'name': name,

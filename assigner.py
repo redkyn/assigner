@@ -25,8 +25,7 @@ def new(args):
             print("Created repo at ", url)
         else:
             try:
-                repo = BaseRepo.new(args.name, conf['namespace'], conf['gitlab-host'],
-                    conf['token'])
+                repo = BaseRepo.new(args.name, conf['namespace'], conf['gitlab-host'], conf['token'])
                 print("Created repo at ", repo.url)
             except HTTPError as e:
                 if e.response.status_code == 400:
@@ -48,12 +47,7 @@ def assign(args):
         count = 0
         for student in conf['roster']:
             try:
-                name = StudentRepo.name(
-                            conf['semester'],
-                            student['section'],
-                            args.name,
-                            student['username']
-                        )
+                name = StudentRepo.name(conf['semester'], student['section'], args.name, student['username'])
 
                 repo = StudentRepo(conf['gitlab-host'], conf['namespace'], name, conf['token'])
                 repo.info
@@ -79,16 +73,12 @@ def assign(args):
 
     print("Assigned homework ", args.name, " to ", count, " students")
 
+
 def open_assignment(args):
     with config(args.config) as conf:
         count = 0
         for student in conf['roster']:
-            name = StudentRepo.name(
-                        conf['semester'],
-                        student['section'],
-                        args.name,
-                        student['username']
-                    )
+            name = StudentRepo.name(conf['semester'], student['section'], args.name, student['username'])
 
             try:
                 repo = StudentRepo(conf['gitlab-host'], conf['namespace'], name, conf['token'])
@@ -119,12 +109,7 @@ def get(args):
 
         count = 0
         for student in conf['roster']:
-            name = StudentRepo.name(
-                        conf['semester'],
-                        student['section'],
-                        args.name,
-                        student['username']
-                    )
+            name = StudentRepo.name(conf['semester'], student['section'], args.name, student['username'])
 
             try:
                 repo = StudentRepo(conf['gitlab-host'], conf['namespace'], name, conf['token'])
@@ -156,12 +141,7 @@ def manage_users(args, level):
     with config(args.config) as conf:
         count = 0
         for student in conf['roster']:
-            name = StudentRepo.name(
-                        conf['semester'],
-                        student['section'],
-                        args.name,
-                        student['username']
-                    )
+            name = StudentRepo.name(conf['semester'], student['section'], args.name, student['username'])
 
             if 'id' in student:
                 try:
@@ -236,11 +216,11 @@ def configure_logging():
         datefmt=None,
         reset=True,
         log_colors={
-                'DEBUG':    'cyan',
-                'INFO':     'green',
-                'WARNING':  'yellow',
-                'ERROR':    'red',
-                'CRITICAL': 'red,bg_white',
+            'DEBUG':    'cyan',
+            'INFO':     'green',
+            'WARNING':  'yellow',
+            'ERROR':    'red',
+            'CRITICAL': 'red,bg_white',
         },
         secondary_log_colors={},
         style='%'
@@ -289,7 +269,7 @@ def make_parser():
     subparser.add_argument('--dry-run', action='store_true',
                            help="Don't actually do it.")
     subparser.add_argument('-f, --force', action='store_true', dest='force',
-            help="Delete and recreate already existing student repos.")
+                           help="Delete and recreate already existing student repos.")
     subparser.set_defaults(run=assign)
 
     # 'open' command
@@ -303,7 +283,7 @@ def make_parser():
     subparser.add_argument('name',
                            help='Name of the assignment to retrieve.')
     subparser.add_argument('path', default=".", nargs='?',
-            help='Path to clone student repositories to')
+                           help='Path to clone student repositories to')
     subparser.add_argument('--student', metavar="id",
                            help='ID of student whose assignment needs retrieving.')
     subparser.set_defaults(run=get)
@@ -341,7 +321,7 @@ def make_parser():
 
     # 'import' command
     subparser = subparsers.add_parser("import",
-            help="Import students from a csv")
+                                      help="Import students from a csv")
     subparser.add_argument('file', help='CSV file to import from')
     subparser.add_argument('section', help='Section being imported')
     subparser.set_defaults(run=import_students)
