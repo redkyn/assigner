@@ -1,233 +1,369 @@
+#!/usr/bin/env python3
 import argparse
-import collections
-import getpass
-import gitlab
-import json
 import logging
 import os
-import shutil
-import sys
-import yaml
+import re
+import csv
+import tempfile
 
-from urllib.parse import urlparse
-from git import Repo, Remote
+from requests.exceptions import HTTPError
+from colorlog import ColoredFormatter
 
+from config import config
 
-def exit_with_error(msg):
-    logging.error(msg)
-    sys.exit(1)
-
-
-def get_arguments():
-    parser = argparse.ArgumentParser()
-    parser.add_argument(
-        "hwrepo",
-        help="URL to repository where assignment exists"
-    )
-    parser.add_argument("roster", help="File name for class roster")
-    return parser.parse_args()
+from baserepo import Access, RepoError, Repo, BaseRepo, StudentRepo
 
 
-def parse_repo_url(url):
-    parsed_url = urlparse(url)
-    ParsedRepoUrl = collections.namedtuple(
-        "ParsedRepoUrl",
-        ["full", "host_name", "group_name", "assignment_name"]
-    )
-    path_entries = parsed_url.path.split('/')
-    if len(path_entries) < 3:
-        exit_with_error(
-            "The provided URL is invalid. \n" +
-            "Required format: [hostname]/[group]/[repo].git"
-        )
-    # Get host name
-    if parsed_url.netloc:
-        host_name = parsed_url.netloc
-    else:
-        url = "https://" + url
-        host_name = path_entries[0]
-    if not host_name:
-        exit_with_error("Host part was not found in the provided URL")
-    # Get group name
-    group_name = path_entries[1]
-    if not group_name:
-        exit_with_error("Group part was not found in the provided URL")
-    # Get assignment name
-    assignment = path_entries[2]
-    if not assignment:
-        exit_with_error("Assignment part was not found in provided URL")
-    if not assignment.endswith('.git'):
-        exit_with_error("Assignment must end with .git identifier")
-    assignment_name = assignment[:-4]
-    logging.info("Host: " + host_name)
-    logging.info("Group: " + group_name)
-    logging.info("Assignment: " + assignment_name)
-    return ParsedRepoUrl(url, host_name, group_name, assignment_name)
+logger = logging.getLogger(__name__)
+
+description = "An automated grading tool for programming assignments."
 
 
-def get_config(file_name):
-    if not os.path.isfile(CONFIG_FILE_NAME):
-        logging.info("Creating new config file")
-        with open(CONFIG_FILE_NAME, 'w') as f:
-            f.write("private_token: \n")
-    with open(CONFIG_FILE_NAME, 'r') as f:
-        config = yaml.load(f)
-    logging.info("Config loaded")
-    return config
-
-
-def connect_to_gitlab(host, private_token=""):
-    try:
-        if private_token:
-            logging.info("Private key found")
-            glab = gitlab.Gitlab(repo_url.host_name, token=private_token)
+def new(args):
+    with config(args.config) as conf:
+        if args.dry_run:
+            url = Repo.build_url(conf['gitlab-host'], conf['namespace'], args.name)
+            print("Created repo at ", url)
         else:
-            logging.info(
-                "No private key found, add it to speed up authentication"
-            )
-            glab = gitlab.Gitlab(repo_url.host_name)
-            userName = input('> GitLab User Name: ')
-            userPw = getpass.getpass('> GitLab Password: ')
-            glab.login(userName, userPw)
-        logging.info("Authentication succcessful")
-    except:
-        exit_with_error(
-            "GitLab authentication failed - check your credentials"
-        )
-    return glab
+            try:
+                repo = BaseRepo.new(args.name, conf['namespace'], conf['gitlab-host'], conf['token'])
+                print("Created repo at ", repo.url)
+            except HTTPError as e:
+                if e.response.status_code == 400:
+                    logger.warning("Repository %s already exists!", args.name)
+                else:
+                    raise
 
 
-def get_roster(file_name):
+def assign(args):
+    if args.dry_run:
+        raise NotImplementedError("'--dry-run' is not implemented")
+    if args.student:
+        raise NotImplementedError("'--student' is not implemented")
+
+    with config(args.config) as conf, tempfile.TemporaryDirectory() as tmpdirname:
+        base = BaseRepo(conf['gitlab-host'], conf['namespace'], args.name, conf['token'])
+        base.clone_to(tmpdirname)
+
+        count = 0
+        for student in conf['roster']:
+            try:
+                name = StudentRepo.name(conf['semester'], student['section'], args.name, student['username'])
+
+                repo = StudentRepo(conf['gitlab-host'], conf['namespace'], name, conf['token'])
+                repo.info
+
+                logging.warning("Student repository %s already exists.", repo.name)
+
+                if args.force:
+                    logging.warning("Deleting...")
+                    repo.delete()
+                    repo = StudentRepo.new(base, conf['semester'], student['section'], student['username'], conf['token'])
+                    repo.push(base)
+                    count += 1
+                else:
+                    logging.warning("Skipping...")
+
+            except HTTPError as e:
+                if e.response.status_code == 404:
+                    repo = StudentRepo.new(base, conf['semester'], student['section'], student['username'], conf['token'])
+                    repo.push(base)
+                    count += 1
+                else:
+                    raise
+
+    print("Assigned homework ", args.name, " to ", count, " students")
+
+
+def open_assignment(args):
+    with config(args.config) as conf:
+        count = 0
+        for student in conf['roster']:
+            name = StudentRepo.name(conf['semester'], student['section'], args.name, student['username'])
+
+            try:
+                repo = StudentRepo(conf['gitlab-host'], conf['namespace'], name, conf['token'])
+                if 'id' not in student:
+                    student['id'] = Repo.get_user_id(student['username'], conf['gitlab-host'], conf['token'])
+
+                repo.add_member(student['id'], Access.developer)
+                count += 1
+            except RepoError:
+                logging.warn("Could not add %s to %s", student['username'], name)
+            except HTTPError as e:
+                raise
+                if e.response.status_code == 404:
+                    logging.warn("Repository %s does not exist.", name)
+                else:
+                    raise
+
+    print("Granted access to ", count, " repositories")
+
+
+def get(args):
+    if args.student:
+        raise NotImplementedError("'--student' is not implemented")
+
+    with config(args.config) as conf:
+        path = os.path.join(args.path, args.name)
+        os.makedirs(path, mode=0o700, exist_ok=True)
+
+        count = 0
+        for student in conf['roster']:
+            name = StudentRepo.name(conf['semester'], student['section'], args.name, student['username'])
+
+            try:
+                repo = StudentRepo(conf['gitlab-host'], conf['namespace'], name, conf['token'])
+                repo.clone_to(os.path.join(path, student['username']))
+                count += 1
+            except HTTPError as e:
+                if e.response.status_code == 404:
+                    logging.warn("Repository %s does not exist.", name)
+                else:
+                    raise
+
+    print("Cloned ", count, " repositories")
+
+
+def lock(args):
+    return manage_users(args, Access.reporter)
+
+
+def unlock(args):
+    return manage_users(args, Access.developer)
+
+
+def manage_users(args, level):
+    if args.dry_run:
+        raise NotImplementedError("'--dry-run' is not implemented")
+    if args.student:
+        raise NotImplementedError("'--student' is not implemented")
+
+    with config(args.config) as conf:
+        count = 0
+        for student in conf['roster']:
+            name = StudentRepo.name(conf['semester'], student['section'], args.name, student['username'])
+
+            if 'id' in student:
+                try:
+                    repo = StudentRepo(conf['gitlab-host'], conf['namespace'], name, conf['token'])
+                    repo.edit_member(student['id'], level)
+                    count += 1
+                except HTTPError as e:
+                    raise
+                    if e.response.status_code == 404:
+                        logging.warning("Repository %s does not exist.", name)
+                    else:
+                        raise
+            else:
+                logging.warning("Student %s does not have a gitlab account.", student['username'])
+
+    print("Changed ", count, " repositories.")
+
+
+def status(args):
+    raise NotImplementedError("'status' command is not available")
+
+
+def import_students(args):
+    # TODO: This should probably move to another file
+    email_re = re.compile(r'^(?P<user>[^@]+)')
+    with open(args.file) as fh, config(args.config) as conf:
+        reader = csv.reader(fh)
+
+        if 'roster' not in conf:
+            conf['roster'] = []
+
+        # Note: This is incredibly hardcoded.
+        # However, peoplesoft never updates anything, so we're probably good.
+        reader.__next__()  # Skip the header
+        count = 0
+        for row in reader:
+            count += 1
+            match = email_re.match(row[4])
+            conf['roster'].append({
+                'name': row[3],
+                'username': match.group("user"),
+                'section': args.section
+            })
+
+            try:
+                conf['roster'][-1]['id'] = Repo.get_user_id(match.group("user"), conf['gitlab-host'], conf['token'])
+            except RepoError:
+                logger.warning("Student %s does not have a Gitlab account.", row[3])
+
+    print("Imported ", count, " students.")
+
+
+def set_conf(args):
+    with config(args.config) as conf:
+        conf[args.key] = args.value
+
+
+def configure_logging():
+    # Get the root logger
+    root_logger = logging.getLogger()
+    root_logger.setLevel(logging.INFO)
+
+    # Create console handler. It'll write everything that's DEBUG or
+    # better. However, it's only going to write what the logger passes
+    # to it.
+    console = logging.StreamHandler()
+    console.setLevel(logging.DEBUG)
+
+    # Create a colorized formatter
+    formatter = ColoredFormatter(
+        "%(log_color)s%(levelname)-8s%(reset)s %(blue)s%(message)s",
+        datefmt=None,
+        reset=True,
+        log_colors={
+            'DEBUG':    'cyan',
+            'INFO':     'green',
+            'WARNING':  'yellow',
+            'ERROR':    'red',
+            'CRITICAL': 'red,bg_white',
+        },
+        secondary_log_colors={},
+        style='%'
+    )
+
+    # Add the formatter to the console handler, and the console
+    # handler to the root logger.
+    console.setFormatter(formatter)
+    root_logger.addHandler(console)
+
+
+def make_parser():
+    """Construct and return a CLI argument parser.
+    """
+    parser = argparse.ArgumentParser(description=description)
+    parser.add_argument('--config', default="_config.yml",
+                        help='Path a config file')
+    parser.add_argument('--tracebacks', action='store_true',
+                        help='Show full tracebacks')
+    parser.add_argument('--verbosity', default="INFO",
+                        choices=["DEBUG", "INFO", "WARNING", "ERROR"],
+                        help='Desired log level')
+
+    # If no arguments are provided, show the usage screen
+    parser.set_defaults(run=lambda x: parser.print_usage())
+
+    # Set up subcommands for each package
+    subparsers = parser.add_subparsers(title="subcommands")
+
+    # 'new' command
+    subparser = subparsers.add_parser("new",
+                                      help="Create a new base repo")
+    subparser.add_argument('name',
+                           help='Name of the assignment.')
+    subparser.add_argument('--dry-run', action='store_true',
+                           help="Don't actually do it.")
+    subparser.set_defaults(run=new)
+
+    # 'assign' command
+    subparser = subparsers.add_parser("assign",
+                                      help="Assign a base repo to students")
+    subparser.add_argument('name',
+                           help='Name of the assignment to assign.')
+    subparser.add_argument('--student', metavar="id",
+                           help='ID of the student to assign to.')
+    subparser.add_argument('--dry-run', action='store_true',
+                           help="Don't actually do it.")
+    subparser.add_argument('-f, --force', action='store_true', dest='force',
+                           help="Delete and recreate already existing student repos.")
+    subparser.set_defaults(run=assign)
+
+    # 'open' command
+    subparser = subparsers.add_parser("open", help="Grant students access to their repos")
+    subparser.add_argument('name', help='Name of the assignment to grant access to')
+    subparser.set_defaults(run=open_assignment)
+
+    # 'get' command
+    subparser = subparsers.add_parser("get",
+                                      help="Clone student repos")
+    subparser.add_argument('name',
+                           help='Name of the assignment to retrieve.')
+    subparser.add_argument('path', default=".", nargs='?',
+                           help='Path to clone student repositories to')
+    subparser.add_argument('--student', metavar="id",
+                           help='ID of student whose assignment needs retrieving.')
+    subparser.set_defaults(run=get)
+
+    # 'lock' command
+    subparser = subparsers.add_parser("lock",
+                                      help="Lock students out of repos")
+    subparser.add_argument('name',
+                           help='Name of the assignment to lock.')
+    subparser.add_argument('--student', metavar="id",
+                           help='ID of student whose assignment needs locking.')
+    subparser.add_argument('--dry-run', action='store_true',
+                           help="Don't actually do it.")
+    subparser.set_defaults(run=lock)
+
+    # 'unlock' command
+    subparser = subparsers.add_parser("unlock",
+                                      help="unlock students from repos")
+    subparser.add_argument('name',
+                           help='Name of the assignment to unlock.')
+    subparser.add_argument('--student', metavar="id",
+                           help='ID of student whose assignment needs unlocking.')
+    subparser.add_argument('--dry-run', action='store_true',
+                           help="Don't actually do it.")
+    subparser.set_defaults(run=unlock)
+
+    # 'status' command
+    subparser = subparsers.add_parser("status",
+                                      help="Retrieve status of repos")
+    subparser.add_argument('--student', metavar="id",
+                           help='ID of student.')
+    subparser.add_argument('name', nargs='?',
+                           help='Name of the assignment to look up.')
+    subparser.set_defaults(run=status)
+
+    # 'import' command
+    subparser = subparsers.add_parser("import",
+                                      help="Import students from a csv")
+    subparser.add_argument('file', help='CSV file to import from')
+    subparser.add_argument('section', help='Section being imported')
+    subparser.set_defaults(run=import_students)
+
+    # 'set' command
+    subparser = subparsers.add_parser("config",
+                                      help="Set configuration values")
+    subparser.add_argument("key", help="Key to set")
+    subparser.add_argument("value", help="Value to set")
+    subparser.set_defaults(run=set_conf)
+
+    # The 'help' command shows the help screen
+    help_parser = subparsers.add_parser("help",
+                                        help="Show this help screen and exit")
+    help_parser.set_defaults(run=lambda x: parser.print_help())
+
+    return parser
+
+
+def main():
+    """Entry point
+    """
+    # Configure logging
+    configure_logging()
+
+    # Parse CLI args
+    parser = make_parser()
+    args = parser.parse_args()
+
+    # Set logging verbosity
+    logging.getLogger().setLevel(args.verbosity)
+
+    # Do it
     try:
-        with open(file_name, encoding="utf-8") as dataFile:
-            roster = json.loads(dataFile.read())
+        args.run(args)
     except Exception as e:
-        exit_with_error(e)
-    if "sections" not in roster or not roster["sections"]:
-        exit_with_error("No sections defined in roster file")
-    studentCount = 0
-    for sec in roster["sections"]:
-        studentCount += len(sec["students"])
-    logging.info(
-        "Roster loaded: {} (section(s): {}, student(s): {})".format(
-            file_name, str(len(roster["sections"])), str(studentCount)))
-    if not studentCount:
-        logging.info("Exiting because no students were found in roster file")
-        sys.exit(1)
-    return roster
+        if args.tracebacks:
+            raise e
+        logger.error(str(e))
+        raise SystemExit(1) from e
 
 
-def create_assignment_repo(repo_url, semester, section, student, gitlab_api):
-    project_name = semester + "-"
-    project_name += section + "-"
-    project_name += repo_url.assignment_name + "-"
-    project_name += student["username"]
-    # Get group ID
-    group = gitlab_api.getgroups(repo_url.group_name)
-    group_id = group["id"]
-    gitlab_api.createproject(
-        project_name,
-        namespace_id=group_id,
-        visibility_level=0
-    )
-    project = gitlab_api.getproject(
-        repo_url.group_name + "/" + project_name
-    )
-    # Get student GitLab id
-    matching_users = gitlab_api.getusers(student["username"])
-    if len(matching_users) != 1:
-        logging.warning(
-            "Student {} {} with username '{}' not found on GitLab"
-            .format(
-                student["firstname"],
-                student["lastname"],
-                student["username"]
-            )
-        )
-        return False
-    user = matching_users[0]
-    gitlab_api.addprojectmember(project["id"], user["id"], 30)
-    # Add url to remote list for use later
-    ssh_url = "git@{}:{}/{}.git".format(
-        repo_url.host_name, repo_url.group_name, project_name
-    )
-    return (student["username"], ssh_url.lower())
-
-
-def create_assignment_repos(roster, repo_url, gitlab_api):
-    all_remotes = []
-    for section in roster["sections"]:
-        logging.info(
-            "Creating repos for students in section " +
-            section["name"]
-        )
-        repos_made = 0
-        for student in section["students"]:
-            result = create_assignment_repo(
-                repo_url,
-                roster["semester"],
-                roster["class"] + section["name"],
-                student,
-                gitlab_api
-            )
-            if result:
-                all_remotes.append(result)
-                repos_made += 1
-        logging.info("Done, " + str(repos_made) + " repo(s) made")
-    return all_remotes
-
-
-def clone_base_repo(url, dir_name):
-    try:
-        if os.path.isdir(dir_name):
-            shutil.rmtree(dir_name)
-        return Repo.clone_from(url, dir_name)
-    except:
-        exit_with_error(
-            "Failed to clone repo - check your URL and credentials"
-        )
-    logging.info("Cloned base repo")
-
-
-def push_repo_to_remotes(repo, remotes):
-    for name, remote in remotes:
-        r = Remote.add(repo, name, remote)
-        r.push("master")
-    logging.info("Base repo pushed to all student repos")
-
-CONFIG_FILE_NAME = "_config.yml"
-logging.getLogger("requests").setLevel(logging.WARNING)
-logging.basicConfig(
-    format=":: %(levelname)s: %(message)s",
-    level=logging.DEBUG
-)
-
-print("[Assigner]")
-
-print("\nSet Up")
-# Get commandline arguments
-args = get_arguments()
-# Parse URL
-repo_url = parse_repo_url(args.hwrepo)
-# Create/load config file
-config = get_config(CONFIG_FILE_NAME)
-
-print("\nGitLab Authentication")
-gitlab_api = connect_to_gitlab(repo_url.host_name, config["private_token"])
-
-print("\nRepository Creation & Permissions")
-# Load roster from JSON file
-roster = get_roster(args.roster)
-# Create an assignment repo for each student
-all_remotes = create_assignment_repos(roster, repo_url, gitlab_api)
-# Clone base repo and push to each repository that was just created
-local_repo = clone_base_repo(repo_url.full, repo_url.assignment_name)
-# Push copy to each remote URL
-push_repo_to_remotes(local_repo, all_remotes)
-
-print("\nClean Up")
-# Delete local repository
-shutil.rmtree(repo_url.assignment_name)
-logging.info("Deleted local copy of base repo")
-
-print("\n[Done]")
+if __name__ == '__main__':
+    main()
