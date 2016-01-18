@@ -24,11 +24,17 @@ def new(args):
     with config(args.config) as conf:
         if args.dry_run:
             url = Repo.build_url(conf['gitlab-host'], conf['namespace'], args.name)
+            print("Created repo at ", url)
         else:
-            repo = BaseRepo.new(args.name, conf['namespace'], conf['gitlab-host'],
-                conf['token'])
-            url = repo.url
-        print("Created repo at ", url)
+            try:
+                repo = BaseRepo.new(args.name, conf['namespace'], conf['gitlab-host'],
+                    conf['token'])
+                print("Created repo at ", repo.url)
+            except HTTPError as e:
+                if e.response.status_code == 400:
+                    logger.warning("Repository %s already exists!", args.name)
+                else:
+                    raise
 
 
 def assign(args):
