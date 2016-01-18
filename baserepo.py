@@ -43,16 +43,16 @@ class Repo(object):
     def from_url(cls, url, token):
         parts = urlsplit(url)
         if not parts.scheme:
-            raise BaseRepoError("{} is missing a scheme.".format(url))
+            raise RepoError("{} is missing a scheme.".format(url))
         if not parts.netloc:
-            raise BaseRepoError("{} is missing a domain.".format(url))
+            raise RepoError("{} is missing a domain.".format(url))
 
         if parts.scheme != "https":
             logging.warning("Using scheme {} instead of https.", parts.scheme)
 
         match = cls.PATH_RE.match(parts.path)
         if not match:
-            raise BaseRepoError(
+            raise RepoError(
                 "Bad path. Can't separate namespace from "
                 "repo name {}".format(parts.path)
             )
