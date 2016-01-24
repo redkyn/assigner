@@ -34,6 +34,14 @@ Your GitLab account must have an SSH key set up in order to push the assignment 
 *Assigner* will create a `_config.yml` file that will persist your GitLab private token and other settings.
 You can use a different config file by specifying the `--config` option. 
 
+*Assigner* needs you to set a few config keys before it will work:
+- `gitlab-host`: Hostname of your gitlab instance
+- `namespace`: Group or user to create repositories in
+- `semester`: The semester; recommended formatting: `2016SP`
+- `token`: Your gitlab API token, retrievable from your gitlab settings page
+
+You can set these keys by either manually adding them to the config or through using the `config` subcommand.
+
 #### Importing
 Joe'SS offers a button to download a table of all the students in a section.
 For whatever reason, the developers at Oracle decided that this button should give you an HTML table in a file named `pg.xls` (or something like that).
