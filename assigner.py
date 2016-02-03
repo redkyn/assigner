@@ -43,7 +43,10 @@ def assign(args):
 
     with config(args.config) as conf, tempfile.TemporaryDirectory() as tmpdirname:
         base = BaseRepo(conf['gitlab-host'], conf['namespace'], args.name, conf['token'])
-        base.clone_to(tmpdirname)
+        if args.branch:
+            base.clone_to(tmpdirname, args.branch)
+        else:
+            base.clone_to(tmpdirname)
 
         count = 0
         for student in conf['roster']:
@@ -62,15 +65,28 @@ def assign(args):
                     logging.warning("Deleting...")
                     repo.delete()
                     repo = StudentRepo.new(base, conf['semester'], student['section'], student['username'], conf['token'])
-                    repo.push(base)
+
+                    if args.branch:
+                        repo.push(base, args.branch)
+                    else:
+                        repo.push(base)
+
                     count += 1
                 else:
-                    logging.warning("Skipping...")
+                    # If we have an explicit branch, push anyways
+                    if args.branch:
+                        repo.push(base, args.branch)
+                        count += 1
+                    else:
+                        logging.warning("Skipping...")
 
             except HTTPError as e:
                 if e.response.status_code == 404:
                     repo = StudentRepo.new(base, conf['semester'], student['section'], student['username'], conf['token'])
-                    repo.push(base)
+                    if args.branch:
+                        repo.push(base, args.branch)
+                    else:
+                        repo.push(base)
                     count += 1
                 else:
                     raise
@@ -277,6 +293,8 @@ def make_parser():
                                       help="Assign a base repo to students")
     subparser.add_argument('name',
                            help='Name of the assignment to assign.')
+    subparser.add_argument('--branch', nargs='?',
+                           help='Branch to push')
     subparser.add_argument('--section', nargs='?',
                            help='Section to assign homework to')
     subparser.add_argument('--student', metavar="id",
