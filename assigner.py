@@ -47,6 +47,9 @@ def assign(args):
 
         count = 0
         for student in conf['roster']:
+            if args.section and student['section'] != args.section:
+                continue
+
             try:
                 name = StudentRepo.name(conf['semester'], student['section'], args.name, student['username'])
 
@@ -79,6 +82,9 @@ def open_assignment(args):
     with config(args.config) as conf:
         count = 0
         for student in conf['roster']:
+            if args.section and student['section'] != args.section:
+                continue
+
             name = StudentRepo.name(conf['semester'], student['section'], args.name, student['username'])
 
             try:
@@ -110,6 +116,9 @@ def get(args):
 
         count = 0
         for student in conf['roster']:
+            if args.section and student['section'] != args.section:
+                continue
+
             name = StudentRepo.name(conf['semester'], student['section'], args.name, student['username'])
 
             try:
@@ -142,6 +151,9 @@ def manage_users(args, level):
     with config(args.config) as conf:
         count = 0
         for student in conf['roster']:
+            if args.section and student['section'] != args.section:
+                continue
+
             name = StudentRepo.name(conf['semester'], student['section'], args.name, student['username'])
 
             if 'id' in student:
@@ -265,6 +277,8 @@ def make_parser():
                                       help="Assign a base repo to students")
     subparser.add_argument('name',
                            help='Name of the assignment to assign.')
+    subparser.add_argument('--section', nargs='?',
+                           help='Section to assign homework to')
     subparser.add_argument('--student', metavar="id",
                            help='ID of the student to assign to.')
     subparser.add_argument('--dry-run', action='store_true',
@@ -276,6 +290,8 @@ def make_parser():
     # 'open' command
     subparser = subparsers.add_parser("open", help="Grant students access to their repos")
     subparser.add_argument('name', help='Name of the assignment to grant access to')
+    subparser.add_argument('--section', nargs='?',
+                           help='Section to grant access to')
     subparser.set_defaults(run=open_assignment)
 
     # 'get' command
@@ -285,6 +301,8 @@ def make_parser():
                            help='Name of the assignment to retrieve.')
     subparser.add_argument('path', default=".", nargs='?',
                            help='Path to clone student repositories to')
+    subparser.add_argument('--section', nargs='?',
+                           help='Section to retrieve')
     subparser.add_argument('--student', metavar="id",
                            help='ID of student whose assignment needs retrieving.')
     subparser.set_defaults(run=get)
@@ -294,6 +312,8 @@ def make_parser():
                                       help="Lock students out of repos")
     subparser.add_argument('name',
                            help='Name of the assignment to lock.')
+    subparser.add_argument('--section', nargs='?',
+                           help='Section to lock')
     subparser.add_argument('--student', metavar="id",
                            help='ID of student whose assignment needs locking.')
     subparser.add_argument('--dry-run', action='store_true',
@@ -305,6 +325,8 @@ def make_parser():
                                       help="unlock students from repos")
     subparser.add_argument('name',
                            help='Name of the assignment to unlock.')
+    subparser.add_argument('--section', nargs='?',
+                           help='Section to unlock')
     subparser.add_argument('--student', metavar="id",
                            help='ID of student whose assignment needs unlocking.')
     subparser.add_argument('--dry-run', action='store_true',
@@ -314,6 +336,8 @@ def make_parser():
     # 'status' command
     subparser = subparsers.add_parser("status",
                                       help="Retrieve status of repos")
+    subparser.add_argument('--section', nargs='?',
+                           help='Section to get status of')
     subparser.add_argument('--student', metavar="id",
                            help='ID of student.')
     subparser.add_argument('name', nargs='?',
