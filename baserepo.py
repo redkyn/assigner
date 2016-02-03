@@ -166,10 +166,15 @@ class Repo(object):
             logging.warn("Did not find any users matching %s", username)
             raise RepoError("No user {}".format(username))
 
-        if len(data) > 1:
-            logging.warn("Got %d users for %s", len(data), username)
+        for result in data:
+            if result['username'] == username:
+                logging.info("Got id %d for user %s", data[0]['id'], username)
+                return result['id']
 
-        logging.info("Got id %d for user %s", data[0]['id'], username)
+        # Fall back to first result if all else fails
+        logging.warn("Got %d users for %s", len(data), username)
+        logging.warn("Failed to find an exact match for %s", username)
+        logging.info("Got id %d for user %s", data[0]['id'], data[0]['username'])
         return data[0]['id']
 
     def add_member(self, user_id, level):
