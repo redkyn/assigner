@@ -145,8 +145,11 @@ class Repo(object):
     def ssh_url(self):
         return self.info['ssh_url_to_repo']
 
-    def clone_to(self, dir_name):
-        self._repo = git.Repo.clone_from(self.ssh_url, dir_name)
+    def clone_to(self, dir_name, branch=None):
+        if branch:
+            self._repo = git.Repo.clone_from(self.ssh_url, dir_name, branch=branch)
+        else:
+            self._repo = git.Repo.clone_from(self.ssh_url, dir_name)
         logging.info("Cloned %s", self.name)
         return self._repo
 
@@ -224,9 +227,9 @@ class BaseRepo(Repo):
 
         return cls.from_url(result['http_url_to_repo'], token)
 
-    def push_to(self, student_repo):
+    def push_to(self, student_repo, branch="master"):
         r = git.Remote.add(self.repo, student_repo.name, student_repo.ssh_url)
-        r.push("master")
+        r.push(branch)
         logging.info("Pushed %s to %s", self.name, student_repo.name)
 
 
@@ -262,9 +265,9 @@ class StudentRepo(Repo):
 
         return "{semester}-{section}-{assignment}-{user}".format(**fmt)
 
-    def push(self, base_repo):
+    def push(self, base_repo, branch="master"):
         """Push base_repo code to this repo"""
-        base_repo.push_to(self)
+        base_repo.push_to(self, branch)
 
 
 if __name__ == '__main__':
