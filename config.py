@@ -69,7 +69,7 @@ class _Config(UserDict):
                         # Their GitLab username (single sign on)
                         "username": {
                             "type": "string",
-                            "pattern": "^\w+$",
+                            "pattern": "^[\w\.\-]+$",
                         },
 
                         # Their GitLab id (might be handy, but we'd have
