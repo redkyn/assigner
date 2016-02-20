@@ -265,7 +265,7 @@ class StudentRepo(Repo):
             'semester': semester,
             'section': section,
             'assignment': assignment,
-            'user': user
+            'user': user.translate(str.maketrans('.','-')) # Replace .s with -s
         }
 
         return "{semester}-{section}-{assignment}-{user}".format(**fmt)
