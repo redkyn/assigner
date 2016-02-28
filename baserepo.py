@@ -7,6 +7,7 @@ import requests
 import tempfile
 
 from enum import Enum
+from requests.exceptions import HTTPError
 from urllib.parse import urlsplit, urlunsplit, urljoin, quote
 
 
@@ -32,12 +33,14 @@ class Access(Enum):
 class Repo(object):
     """Gitlab repo; manages API requests and various metadata"""
 
-    PATH_RE = re.compile(r'^/(?P<namespace>[\w\-\.]+)/(?P<name>[\w\-\.]+)\.git$')
+    PATH_RE = re.compile(
+        r"^/(?P<namespace>[\w\-\.]+)/(?P<name>[\w\-\.]+)\.git$"
+    )
 
     @classmethod
     def build_url(cls, url_base, namespace, name):
         """ Build a url for a repository """
-        return url_base + '/' + namespace + '/' + name + '.git'
+        return url_base + "/" + namespace + "/" + name + ".git"
 
     @classmethod
     def from_url(cls, url, token):
@@ -53,13 +56,15 @@ class Repo(object):
         match = cls.PATH_RE.match(parts.path)
         if not match:
             raise RepoError(
-                "Bad path. Can't separate namespace from repo name {}.".format(parts.path)
+                "Bad path. Can't separate namespace " +
+                "from repo name {}.".format(parts.path)
             )
 
         namespace = match.group("namespace")
         name = match.group("name")
 
-        self = cls(urlunsplit((parts.scheme, parts.netloc, '', '', '')), namespace, name, token, url)
+        self = cls(urlunsplit((parts.scheme, parts.netloc, "", "", "")),
+                   namespace, name, token, url)
 
         logging.debug(json.dumps(self.info))
         logging.info("Found {}.".format(self.name_with_namespace))
@@ -69,8 +74,8 @@ class Repo(object):
     @classmethod
     def _cls_gl_get(cls, url_base, path, token, params={}):
         """Make a Gitlab GET request"""
-        params.update({'private_token': token})
-        url = urljoin(url_base, '/api/v3' + path)
+        params.update({"private_token": token})
+        url = urljoin(url_base, "/api/v3" + path)
         r = requests.get(url, params=params)
         r.raise_for_status()
         return r.json()
@@ -78,8 +83,8 @@ class Repo(object):
     @classmethod
     def _cls_gl_post(cls, url_base, path, token, payload={}, params={}):
         """Make a Gitlab POST request"""
-        params.update({'private_token': token})
-        url = urljoin(url_base, '/api/v3' + path)
+        params.update({"private_token": token})
+        url = urljoin(url_base, "/api/v3" + path)
         r = requests.post(url, params=params, data=payload)
         r.raise_for_status()
         return r.json()
@@ -87,8 +92,8 @@ class Repo(object):
     @classmethod
     def _cls_gl_put(cls, url_base, path, token, payload={}, params={}):
         """Make a Gitlab PUT request"""
-        params.update({'private_token': token})
-        url = urljoin(url_base, '/api/v3' + path)
+        params.update({"private_token": token})
+        url = urljoin(url_base, "/api/v3" + path)
         r = requests.put(url, params=params, data=payload)
         r.raise_for_status()
         return r.json()
@@ -96,8 +101,8 @@ class Repo(object):
     @classmethod
     def _cls_gl_delete(cls, url_base, path, token, params={}):
         """Make a Gitlab DELETE request"""
-        params.update({'private_token': token})
-        url = urljoin(url_base, '/api/v3' + path)
+        params.update({"private_token": token})
+        url = urljoin(url_base, "/api/v3" + path)
         r = requests.delete(url, params=params)
         r.raise_for_status()
         return r.json()
@@ -119,18 +124,24 @@ class Repo(object):
 
     @property
     def namespace_id(self):
-        return self.info['namespace']['id']
+        return self.info["namespace"]["id"]
 
     @property
     def id(self):
-        return self.info['id']
+        return self.info["id"]
 
     @property
     def info(self):
         if not hasattr(self, "_info"):
-            quoted = quote(self.name_with_namespace, safe='')
+            quoted = quote(self.name_with_namespace, safe="")
             url = "/projects/{}".format(quoted)
-            self._info = self._gl_get(url)
+            try:
+                self._info = self._gl_get(url)
+            except HTTPError as e:
+                if e.response.status_code == 404:
+                    self._info = None
+                else:
+                    raise
         return self._info
 
     @property
@@ -142,11 +153,17 @@ class Repo(object):
 
     @property
     def ssh_url(self):
-        return self.info['ssh_url_to_repo']
+        return self.info["ssh_url_to_repo"]
+
+    def already_exists(self):
+        if self.info:
+            return True
+        return False
 
     def clone_to(self, dir_name, branch=None):
         if branch:
-            self._repo = git.Repo.clone_from(self.ssh_url, dir_name, branch=branch)
+            self._repo = git.Repo.clone_from(self.ssh_url, dir_name,
+                                             branch=branch)
         else:
             self._repo = git.Repo.clone_from(self.ssh_url, dir_name)
         logging.info("Cloned {}.".format(self.name))
@@ -159,33 +176,52 @@ class Repo(object):
     # TODO: this should really go elsewhere
     @classmethod
     def get_user_id(cls, username, url_base, token):
-        data = cls._cls_gl_get(url_base, "/users", token, params={'search': username})
+        data = cls._cls_gl_get(url_base, "/users", token,
+                               params={"search": username})
 
         if len(data) == 0:
-            logging.warn("Did not find any users matching {}.".format(username))
+            logging.warn(
+                "Did not find any users matching {}.".format(username)
+            )
             raise RepoError("No user {}.".format(username))
 
         for result in data:
-            if result['username'] == username:
-                logging.info("Got id {} for user {}.".format(data[0]['id'], username))
-                return result['id']
+            if result["username"] == username:
+                logging.info(
+                    "Got id {} for user {}.".format(data[0]["id"], username)
+                )
+                return result["id"]
 
         # Fall back to first result if all else fails
         logging.warn("Got {} users for {}.".format(len(data), username))
         logging.warn("Failed to find an exact match for {}.".format(username))
-        logging.info("Got id {} for user {}.".format(data[0]['id'], data[0]['username']))
-        return data[0]['id']
+        logging.info(
+            "Got id {} for user {}.".format(data[0]["id"], data[0]["username"])
+        )
+        return data[0]["id"]
 
     def add_member(self, user_id, level):
-        payload = {'id': self.id, 'user_id': user_id, 'access_level': level.value}
+        payload = {
+            "id": self.id,
+            "user_id": user_id,
+            "access_level": level.value
+        }
         return self._gl_post("/projects/{}/members".format(self.id), payload)
 
     def edit_member(self, user_id, level):
-        payload = {'id': self.id, 'user_id': user_id, 'access_level': level.value}
-        return self._gl_put("/projects/{}/members/{}".format(self.id, user_id), payload)
+        payload = {
+            "id": self.id,
+            "user_id": user_id,
+            "access_level": level.value
+        }
+        return self._gl_put(
+            "/projects/{}/members/{}".format(self.id, user_id), payload
+        )
 
     def delete_member(self, user_id):
-        return self._gl_delete("/projects/{}/members/{}".format(self.id, user_id))
+        return self._gl_delete(
+            "/projects/{}/members/{}".format(self.id, user_id)
+        )
 
     def _gl_get(self, path, params={}):
         return self.__class__._cls_gl_get(
@@ -212,27 +248,34 @@ class BaseRepo(Repo):
 
     @classmethod
     def new(cls, name, namespace, url_base, token):
-        namespaces = cls._cls_gl_get(url_base, "/namespaces", token, {'search': namespace})
-        logging.debug("Got {} namespaces matching {}.".format(len(namespaces), namespace))
-        logging.debug("Using namespace {} with ID {}.".format(namespaces[0]["path"], namespaces[0]["id"]))
+        namespaces = cls._cls_gl_get(url_base, "/namespaces",
+                                     token, {"search": namespace})
+        logging.debug(
+            "Got {} namespaces matching {}.".format(len(namespaces), namespace)
+        )
+        logging.debug(
+            "Using namespace " +
+            "{} with ID {}.".format(namespaces[0]["path"], namespaces[0]["id"])
+        )
 
         payload = {
-            'name': name,
-            'namespace_id': namespaces[0]["id"],
-            'issues_enabled': False,
-            'merge_requests_enabled': False,
-            'builds_enabled': False,
-            'wiki_enabled': False,
-            'snippets_enabled': True,  # Why not?
-            'visibility_level': Visibility.private,
+            "name": name,
+            "namespace_id": namespaces[0]["id"],
+            "issues_enabled": False,
+            "merge_requests_enabled": False,
+            "builds_enabled": False,
+            "wiki_enabled": False,
+            "snippets_enabled": True,  # Why not?
+            "visibility_level": Visibility.private,
         }
 
         result = cls._cls_gl_post(url_base, "/projects", token, payload)
 
-        return cls.from_url(result['http_url_to_repo'], token)
+        return cls.from_url(result["http_url_to_repo"], token)
 
     def push_to(self, student_repo, branch="master"):
-        r = git.Remote.add(self.repo, student_repo.name, student_repo.ssh_url)
+        r = git.Remote.add(self.repo, student_repo.name,
+                           student_repo.ssh_url)
         r.push(branch)
         logging.info("Pushed {} to {}.".format(self.name, student_repo.name))
 
@@ -244,28 +287,29 @@ class StudentRepo(Repo):
     def new(cls, base_repo, semester, section, username, token):
         """Create a new repository on GitLab"""
         payload = {
-            'name': cls.name(semester, section, base_repo.name, username),
-            'namespace_id': base_repo.namespace_id,
-            'issues_enabled': False,
-            'merge_requests_enabled': False,
-            'builds_enabled': False,
-            'wiki_enabled': False,
-            'snippets_enabled': True,  # Why not?
-            'visibility_level': Visibility.private,
+            "name": cls.name(semester, section, base_repo.name, username),
+            "namespace_id": base_repo.namespace_id,
+            "issues_enabled": False,
+            "merge_requests_enabled": False,
+            "builds_enabled": False,
+            "wiki_enabled": False,
+            "snippets_enabled": True,  # Why not?
+            "visibility_level": Visibility.private,
         }
 
-        result = cls._cls_gl_post(base_repo.url_base, "/projects", token, payload)
+        result = cls._cls_gl_post(base_repo.url_base, "/projects",
+                                  token, payload)
 
-        return cls.from_url(result['http_url_to_repo'], token)
+        return cls.from_url(result["http_url_to_repo"], token)
 
     @classmethod
     def name(cls, semester, section, assignment, user):
         fmt = {
-            'semester': semester,
-            'section': section,
-            'assignment': assignment,
+            "semester": semester,
+            "section": section,
+            "assignment": assignment,
             # Replace .s with -s
-            'user': user.translate(str.maketrans('.', '-'))
+            "user": user.translate(str.maketrans(".", "-"))
         }
 
         return "{semester}-{section}-{assignment}-{user}".format(**fmt)
@@ -275,7 +319,7 @@ class StudentRepo(Repo):
         base_repo.push_to(self, branch)
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     # Need to make this module if'n you're going to run this
     from secret import token
 

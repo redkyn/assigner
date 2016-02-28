@@ -5,6 +5,14 @@ import yaml
 from collections import UserDict
 
 
+def config_context(func):
+    def wrapper(cmdargs, *args):
+        with config(cmdargs.config) as conf:
+            retval = func(conf, cmdargs, *args)
+        return retval
+    return wrapper
+
+
 def config(filename):
     """Get you a brand new config manager"""
     return _Config(filename)
@@ -104,7 +112,7 @@ class _Config(UserDict):
         return self
 
     def __exit__(self, *args):
-        with open(self._filename, 'w') as f:
+        with open(self._filename, "w") as f:
             yaml.dump(self.data, f, indent=2, default_flow_style=False)
 
         return False  # propagate exceptions from the calling context
