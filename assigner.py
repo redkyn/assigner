@@ -5,6 +5,8 @@ import os
 import re
 import csv
 import tempfile
+import sys
+import traceback
 
 from requests.exceptions import HTTPError
 from colorlog import ColoredFormatter
@@ -20,61 +22,81 @@ description = "An automated grading tool for programming assignments."
 
 
 def new(args):
+    """Creates a new base repository for an assignment so that you can add the
+    instructions, sample code, etc.
+    """
+    hw_name = args.name
+    dry_run = args.dry_run
+
     with config(args.config) as conf:
-        if args.dry_run:
-            url = Repo.build_url(conf['gitlab-host'], conf['namespace'], args.name)
-            print("Created repo at ", url)
+        host = conf['gitlab-host']
+        namespace = conf['namespace']
+        token = conf['token']
+
+        if dry_run:
+            url = Repo.build_url(host, namespace, hw_name)
+            print("Created repo at {}.".format(url))
         else:
             try:
-                repo = BaseRepo.new(args.name, conf['namespace'], conf['gitlab-host'], conf['token'])
-                print("Created repo at ", repo.url)
+                repo = BaseRepo.new(hw_name, namespace, host, token)
+                print("Created repo at {}.".format(repo.url))
             except HTTPError as e:
                 if e.response.status_code == 400:
-                    logger.warning("Repository %s already exists!", args.name)
+                    logger.warning("Repository {} already exists!".format(hw_name))
                 else:
                     raise
 
 
 def assign(args):
-    if args.dry_run:
+    """Creates homework repositories for an assignment for each student
+    in the roster.
+    """
+    hw_name = args.name
+    branch = args.branch
+    section = args.section
+    dry_run = args.dry_run
+    force = args.force
+    target = args.student  # used if assigning to a single student
+
+    if dry_run:
         raise NotImplementedError("'--dry-run' is not implemented")
-    if args.student:
+    if target:
         raise NotImplementedError("'--student' is not implemented")
 
     with config(args.config) as conf, tempfile.TemporaryDirectory() as tmpdirname:
-        base = BaseRepo(conf['gitlab-host'], conf['namespace'], args.name, conf['token'])
-        if args.branch:
-            base.clone_to(tmpdirname, args.branch)
-        else:
-            base.clone_to(tmpdirname)
+        host = conf['gitlab-host']
+        namespace = conf['namespace']
+        token = conf['token']
+        roster = conf['roster']
+        semester = conf['semester']
+
+        base = BaseRepo(host, namespace, hw_name, token)
+        base.clone_to(tmpdirname, branch)
 
         count = 0
-        for student in conf['roster']:
-            if args.section and student['section'] != args.section:
+        for student in roster:
+            username = student['username']
+            s_section = student['section']
+
+            if section and s_section != section:
                 continue
 
             try:
-                name = StudentRepo.name(conf['semester'], student['section'], args.name, student['username'])
+                full_name = StudentRepo.name(semester, s_section, hw_name, username)
+                repo = StudentRepo(host, namespace, full_name, token)
 
-                repo = StudentRepo(conf['gitlab-host'], conf['namespace'], name, conf['token'])
-                repo.info
+                logging.warning("Student repository {} already exists.".format(repo.name))
 
-                logging.warning("Student repository %s already exists.", repo.name)
-
-                if args.force:
+                if force:
                     logging.warning("Deleting...")
                     repo.delete()
-                    repo = StudentRepo.new(base, conf['semester'], student['section'], student['username'], conf['token'])
-
-                    if args.branch:
-                        repo.push(base, args.branch)
-                    else:
-                        repo.push(base)
+                    repo = StudentRepo.new(base, semester, s_section, username, token)
+                    repo.push(base, args.branch)
 
                     count += 1
                 else:
                     # If we have an explicit branch, push anyways
-                    if args.branch:
+                    if branch:
                         repo.push(base, args.branch)
                         count += 1
                     else:
@@ -82,111 +104,160 @@ def assign(args):
 
             except HTTPError as e:
                 if e.response.status_code == 404:
-                    repo = StudentRepo.new(base, conf['semester'], student['section'], student['username'], conf['token'])
-                    if args.branch:
-                        repo.push(base, args.branch)
-                    else:
-                        repo.push(base)
+                    repo = StudentRepo.new(base, semester, s_section, username, token)
+                    repo.push(base, branch)
                     count += 1
                 else:
                     raise
 
-    print("Assigned homework ", args.name, " to ", count, " students")
+    print("Assigned homework {} to {} students.".format(hw_name, count))
 
 
 def open_assignment(args):
+    """Adds each student in the roster to their respective homework
+    repositories as Developers so they can pull/commit/push their work.
+    """
+    hw_name = args.name
+    section = args.section
+
     with config(args.config) as conf:
+        host = conf['gitlab-host']
+        namespace = conf['namespace']
+        token = conf['token']
+        roster = conf['roster']
+        semester = conf['semester']
+
         count = 0
-        for student in conf['roster']:
-            if args.section and student['section'] != args.section:
+        for student in roster:
+            username = student['username']
+            s_section = student['section']
+
+            if section and s_section != section:
                 continue
 
-            name = StudentRepo.name(conf['semester'], student['section'], args.name, student['username'])
+            full_name = StudentRepo.name(semester, s_section, hw_name, username)
 
             try:
-                repo = StudentRepo(conf['gitlab-host'], conf['namespace'], name, conf['token'])
+                repo = StudentRepo(host, namespace, full_name, token)
                 if 'id' not in student:
-                    student['id'] = Repo.get_user_id(student['username'], conf['gitlab-host'], conf['token'])
+                    student['id'] = Repo.get_user_id(username, host, token)
 
                 repo.add_member(student['id'], Access.developer)
                 count += 1
             except RepoError:
-                logging.warn("Could not add %s to %s", student['username'], name)
+                logging.warn("Could not add {} to {}.".format(username, full_name))
             except HTTPError as e:
                 raise
                 if e.response.status_code == 404:
-                    logging.warn("Repository %s does not exist.", name)
+                    logging.warn("Repository {} does not exist.".format(full_name))
                 else:
                     raise
 
-    print("Granted access to ", count, " repositories")
+    print("Granted access to {} repositories.".format(count))
 
 
 def get(args):
-    if args.student:
+    """Creates a folder for the assignment in the CWD (or <path>, if specified)
+    and clones each students' repository into subfolders.
+    """
+    hw_name = args.name
+    hw_path = args.path
+    section = args.section
+    target = args.student  # used if assigning to a single student
+
+    if target:
         raise NotImplementedError("'--student' is not implemented")
 
     with config(args.config) as conf:
-        path = os.path.join(args.path, args.name)
+        host = conf['gitlab-host']
+        namespace = conf['namespace']
+        token = conf['token']
+        roster = conf['roster']
+        semester = conf['semester']
+        path = os.path.join(hw_path, hw_name)
         os.makedirs(path, mode=0o700, exist_ok=True)
 
         count = 0
-        for student in conf['roster']:
-            if args.section and student['section'] != args.section:
+        for student in roster:
+            username = student['username']
+            s_section = student['section']
+
+            if section and s_section != section:
                 continue
 
-            name = StudentRepo.name(conf['semester'], student['section'], args.name, student['username'])
+            full_name = StudentRepo.name(semester, s_section, args.name, username)
 
             try:
-                repo = StudentRepo(conf['gitlab-host'], conf['namespace'], name, conf['token'])
-                repo.clone_to(os.path.join(path, student['username']))
+                repo = StudentRepo(host, namespace, full_name, token)
+                repo.clone_to(os.path.join(path, username))
                 count += 1
             except HTTPError as e:
                 if e.response.status_code == 404:
-                    logging.warn("Repository %s does not exist.", name)
+                    logging.warn("Repository {} does not exist.".format(full_name))
                 else:
                     raise
 
-    print("Cloned ", count, " repositories")
+    print("Cloned {} repositories.".format(count))
 
 
 def lock(args):
+    """Sets each student to Reporter status on their homework repository so
+    they cannot push changes, etc.
+    """
     return manage_users(args, Access.reporter)
 
 
 def unlock(args):
+    """Sets each student to Developer status on their homework repository.
+    """
     return manage_users(args, Access.developer)
 
 
 def manage_users(args, level):
-    if args.dry_run:
+    """Creates a folder for the assignment in the CWD (or <path>, if specified)
+    and clones each students' repository into subfolders.
+    """
+    hw_name = args.name
+    dry_run = args.dry_run
+    section = args.section
+    target = args.student  # used if assigning to a single student
+
+    if dry_run:
         raise NotImplementedError("'--dry-run' is not implemented")
-    if args.student:
+    if target:
         raise NotImplementedError("'--student' is not implemented")
 
     with config(args.config) as conf:
+        host = conf['gitlab-host']
+        namespace = conf['namespace']
+        token = conf['token']
+        roster = conf['roster']
+        semester = conf['semester']
+
         count = 0
-        for student in conf['roster']:
-            if args.section and student['section'] != args.section:
+        for student in roster:
+            username = student['username']
+            s_section = student['section']
+
+            if section and s_section != section:
+                continue
+            if 'id' not in student:
+                logging.warning("Student {} does not have a gitlab account.".format(username))
                 continue
 
-            name = StudentRepo.name(conf['semester'], student['section'], args.name, student['username'])
-
-            if 'id' in student:
-                try:
-                    repo = StudentRepo(conf['gitlab-host'], conf['namespace'], name, conf['token'])
-                    repo.edit_member(student['id'], level)
-                    count += 1
-                except HTTPError as e:
+            full_name = StudentRepo.name(semester, s_section, hw_name, username)
+            try:
+                repo = StudentRepo(host, namespace, full_name, token)
+                repo.edit_member(student['id'], level)
+                count += 1
+            except HTTPError as e:
+                raise
+                if e.response.status_code == 404:
+                    logging.warning("Repository {} does not exist.".format(full_name))
+                else:
                     raise
-                    if e.response.status_code == 404:
-                        logging.warning("Repository %s does not exist.", name)
-                    else:
-                        raise
-            else:
-                logging.warning("Student %s does not have a gitlab account.", student['username'])
 
-    print("Changed ", count, " repositories.")
+    print("Changed {} repositories.".format(count))
 
 
 def status(args):
@@ -194,6 +265,10 @@ def status(args):
 
 
 def import_students(args):
+    """Imports students from a CSV file to the roster.
+    """
+    section = args.section
+
     # TODO: This should probably move to another file
     email_re = re.compile(r'^(?P<user>[^@]+)')
     with open(args.file) as fh, config(args.config) as conf:
@@ -212,18 +287,20 @@ def import_students(args):
             conf['roster'].append({
                 'name': row[3],
                 'username': match.group("user"),
-                'section': args.section
+                'section': section
             })
 
             try:
                 conf['roster'][-1]['id'] = Repo.get_user_id(match.group("user"), conf['gitlab-host'], conf['token'])
             except RepoError:
-                logger.warning("Student %s does not have a Gitlab account.", row[3])
+                logger.warning("Student {} does not have a Gitlab account.".format(row[3]))
 
-    print("Imported ", count, " students.")
+    print("Imported {} students.".format(count))
 
 
 def set_conf(args):
+    """Sets <key> to <value> in the config.
+    """
     with config(args.config) as conf:
         conf[args.key] = args.value
 

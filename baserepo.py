@@ -53,8 +53,7 @@ class Repo(object):
         match = cls.PATH_RE.match(parts.path)
         if not match:
             raise RepoError(
-                "Bad path. Can't separate namespace from "
-                "repo name {}".format(parts.path)
+                "Bad path. Can't separate namespace from repo name {}.".format(parts.path)
             )
 
         namespace = match.group("namespace")
@@ -63,7 +62,7 @@ class Repo(object):
         self = cls(urlunsplit((parts.scheme, parts.netloc, '', '', '')), namespace, name, token, url)
 
         logging.debug(json.dumps(self.info))
-        logging.info("Found %s", self.name_with_namespace)
+        logging.info("Found {}.".format(self.name_with_namespace))
 
         return self
 
@@ -150,12 +149,12 @@ class Repo(object):
             self._repo = git.Repo.clone_from(self.ssh_url, dir_name, branch=branch)
         else:
             self._repo = git.Repo.clone_from(self.ssh_url, dir_name)
-        logging.info("Cloned %s", self.name)
+        logging.info("Cloned {}.".format(self.name))
         return self._repo
 
     def delete(self):
         self._gl_delete("/projects/{}".format(self.id))
-        logging.info("Deleted %s", self.name)
+        logging.info("Deleted {}.".format(self.name))
 
     # TODO: this should really go elsewhere
     @classmethod
@@ -163,18 +162,18 @@ class Repo(object):
         data = cls._cls_gl_get(url_base, "/users", token, params={'search': username})
 
         if len(data) == 0:
-            logging.warn("Did not find any users matching %s", username)
-            raise RepoError("No user {}".format(username))
+            logging.warn("Did not find any users matching {}.".format(username))
+            raise RepoError("No user {}.".format(username))
 
         for result in data:
             if result['username'] == username:
-                logging.info("Got id %d for user %s", data[0]['id'], username)
+                logging.info("Got id {} for user {}.".format(data[0]['id'], username))
                 return result['id']
 
         # Fall back to first result if all else fails
-        logging.warn("Got %d users for %s", len(data), username)
-        logging.warn("Failed to find an exact match for %s", username)
-        logging.info("Got id %d for user %s", data[0]['id'], data[0]['username'])
+        logging.warn("Got {} users for {}.".format(len(data), username))
+        logging.warn("Failed to find an exact match for {}.".format(username))
+        logging.info("Got id {} for user {}.".format(data[0]['id'], data[0]['username']))
         return data[0]['id']
 
     def add_member(self, user_id, level):
@@ -214,8 +213,8 @@ class BaseRepo(Repo):
     @classmethod
     def new(cls, name, namespace, url_base, token):
         namespaces = cls._cls_gl_get(url_base, "/namespaces", token, {'search': namespace})
-        logging.debug("Got %d namespaces matching %s", len(namespaces), namespace)
-        logging.debug("Using namespace %s with ID %d", namespaces[0]["path"], namespaces[0]["id"])
+        logging.debug("Got {} namespaces matching {}.".format(len(namespaces), namespace))
+        logging.debug("Using namespace {} with ID {}.".format(namespaces[0]["path"], namespaces[0]["id"]))
 
         payload = {
             'name': name,
@@ -235,7 +234,7 @@ class BaseRepo(Repo):
     def push_to(self, student_repo, branch="master"):
         r = git.Remote.add(self.repo, student_repo.name, student_repo.ssh_url)
         r.push(branch)
-        logging.info("Pushed %s to %s", self.name, student_repo.name)
+        logging.info("Pushed {} to {}.".format(self.name, student_repo.name))
 
 
 class StudentRepo(Repo):
