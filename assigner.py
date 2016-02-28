@@ -58,8 +58,6 @@ def assign(args):
     force = args.force
     target = args.student  # used if assigning to a single student
 
-    if dry_run:
-        raise NotImplementedError("'--dry-run' is not implemented")
     if target:
         raise NotImplementedError("'--student' is not implemented")
 
@@ -67,45 +65,52 @@ def assign(args):
         host = conf['gitlab-host']
         namespace = conf['namespace']
         token = conf['token']
-        roster = conf['roster']
         semester = conf['semester']
+        if section:
+            roster = [s for s in conf['roster'] if s['section'] == section]
+        else:
+            roster = conf['roster']
 
         base = BaseRepo(host, namespace, hw_name, token)
-        base.clone_to(tmpdirname, branch)
+        if not dry_run:
+            base.clone_to(tmpdirname, branch)
 
         count = 0
+        s_count = len(roster)
+        logging.info("Assigning {} to {} student{} in {}.".format(
+            hw_name, s_count,
+            "s" if s_count != 1 else "",
+            "section " + section if section else "any section")
+        )
         for student in roster:
             username = student['username']
             s_section = student['section']
+            full_name = StudentRepo.name(semester, s_section, hw_name, username)
+            repo = StudentRepo(host, namespace, full_name, token)
 
-            if section and s_section != section:
-                continue
-
+            logging.warning("Student repository {} already exists.".format(repo.name))
             try:
-                full_name = StudentRepo.name(semester, s_section, hw_name, username)
-                repo = StudentRepo(host, namespace, full_name, token)
-
-                logging.warning("Student repository {} already exists.".format(repo.name))
-
                 if force:
                     logging.warning("Deleting...")
-                    repo.delete()
-                    repo = StudentRepo.new(base, semester, s_section, username, token)
-                    repo.push(base, args.branch)
-
+                    if not dry_run:
+                        repo.delete()
+                        repo = StudentRepo.new(base, semester, s_section, username, token)
+                        repo.push(base, args.branch)
                     count += 1
                 else:
                     # If we have an explicit branch, push anyways
                     if branch:
-                        repo.push(base, args.branch)
+                        if not dry_run:
+                            repo.push(base, args.branch)
                         count += 1
                     else:
                         logging.warning("Skipping...")
 
             except HTTPError as e:
                 if e.response.status_code == 404:
-                    repo = StudentRepo.new(base, semester, s_section, username, token)
-                    repo.push(base, branch)
+                    if not dry_run:
+                        repo = StudentRepo.new(base, semester, s_section, username, token)
+                        repo.push(base, branch)
                     count += 1
                 else:
                     raise
