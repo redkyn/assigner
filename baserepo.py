@@ -67,7 +67,7 @@ class Repo(object):
                    namespace, name, token, url)
 
         logging.debug(json.dumps(self.info))
-        logging.info("Found {}.".format(self.name_with_namespace))
+        logging.debug("{} is valid.".format(self.name_with_namespace))
 
         return self
 

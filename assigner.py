@@ -50,7 +50,6 @@ def assign(conf, args):
     section = args.section
     dry_run = args.dry_run
     force = args.force
-    verbose = args.verbose
     target = args.student  # used if assigning to a single student
     host = conf.gitlab_host
     namespace = conf.namespace
@@ -75,7 +74,8 @@ def assign(conf, args):
         base = BaseRepo(host, namespace, hw_name, token)
         if not dry_run:
             base.clone_to(tmpdirname, branch)
-
+        if force:
+            logging.warning("Repos will be overwritten.")
         for i, student in enumerate(roster):
             username = student["username"]
             student_section = student["section"]
@@ -90,30 +90,25 @@ def assign(conf, args):
                                            username, token)
                     repo.push(base, branch)
                 actual_count += 1
-                if verbose:
-                    logging.info("Assigned.")
-            elif verbose:
+                logging.debug("Assigned.")
+            elif force:
                 logging.info("{}: Already exists.".format(full_name))
-            if force:
-                if verbose:
-                    logging.warning("{}: Deleting...".format(full_name))
+                logging.info("{}: Deleting...".format(full_name))
                 if not dry_run:
                     repo.delete()
                     repo = StudentRepo.new(base, semester, student_section,
                                            username, token)
                     repo.push(base, branch)
                 actual_count += 1
-                if verbose:
-                    logging.info("Assigned.")
+                logging.debug("Assigned.")
             elif branch:
+                logging.info("{}: Already exists.".format(full_name))
                 # If we have an explicit branch, push anyways
                 repo.push(base, branch) if not dry_run else None
                 actual_count += 1
-                if verbose:
-                    logging.info("Assigned.")
+                logging.debug("Assigned.")
             else:
-                if verbose:
-                    logging.warning("Skipping...")
+                logging.warning("Skipping...")
             i += 1
 
     print("Assigned '{}' to {} student{}.".format(
@@ -319,7 +314,7 @@ def set_conf(conf, args):
 def configure_logging():
     root_logger = logging.getLogger()
     console = logging.StreamHandler()
-    console.setLevel(logging.INFO)
+    console.setLevel(logging.DEBUG)
 
     # Create a colorized formatter
     formatter = ColoredFormatter(
@@ -383,8 +378,6 @@ def make_parser():
                            help="ID of the student to assign to.")
     subparser.add_argument("--dry-run", action="store_true",
                            help="Don't actually do it.")
-    subparser.add_argument("--verbose", action="store_true",
-                           help="Show logs instead of progress bar.")
     subparser.add_argument("-f", "--force", action="store_true", dest="force",
                            help="Delete and recreate already existing " +
                                 "student repos.")
