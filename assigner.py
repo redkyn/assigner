@@ -22,9 +22,9 @@ def new(conf, args):
     """
     hw_name = args.name
     dry_run = args.dry_run
-    host = conf["gitlab-host"]
-    namespace = conf["namespace"]
-    token = conf["token"]
+    host = conf.gitlab_host
+    namespace = conf.namespace
+    token = conf.token
 
     if dry_run:
         url = Repo.build_url(host, namespace, hw_name)
@@ -52,14 +52,14 @@ def assign(conf, args):
     force = args.force
     verbose = args.verbose
     target = args.student  # used if assigning to a single student
-    host = conf["gitlab-host"]
-    namespace = conf["namespace"]
-    token = conf["token"]
-    semester = conf["semester"]
+    host = conf.gitlab_host
+    namespace = conf.namespace
+    token = conf.token
+    semester = conf.semester
     if section:
-        roster = [s for s in conf["roster"] if s["section"] == section]
+        roster = [s for s in conf.roster if s["section"] == section]
     else:
-        roster = conf["roster"]
+        roster = conf.roster
     actual_count = 0  # Represents the number of repos actually pushed to
     student_count = len(roster)
 
@@ -134,14 +134,14 @@ def open_assignment(conf, args):
     """
     hw_name = args.name
     section = args.section
-    host = conf["gitlab-host"]
-    namespace = conf["namespace"]
-    token = conf["token"]
-    semester = conf["semester"]
+    host = conf.gitlab_host
+    namespace = conf.namespace
+    token = conf.token
+    semester = conf.semester
     if section:
-        roster = [s for s in conf["roster"] if s["section"] == section]
+        roster = [s for s in conf.roster if s["section"] == section]
     else:
-        roster = conf["roster"]
+        roster = conf.roster
 
     count = 0
     for student in roster:
@@ -176,14 +176,14 @@ def get(conf, args):
     target = args.student  # used if assigning to a single student
     if target:
         raise NotImplementedError("'--student' is not implemented")
-    host = conf["gitlab-host"]
-    namespace = conf["namespace"]
-    token = conf["token"]
-    semester = conf["semester"]
+    host = conf.gitlab_host
+    namespace = conf.namespace
+    token = conf.token
+    semester = conf.semester
     if section:
-        roster = [s for s in conf["roster"] if s["section"] == section]
+        roster = [s for s in conf.roster if s["section"] == section]
     else:
-        roster = conf["roster"]
+        roster = conf.roster
     path = os.path.join(hw_path, hw_name)
     os.makedirs(path, mode=0o700, exist_ok=True)
 
@@ -235,14 +235,14 @@ def manage_users(conf, args, level):
     if target:
         raise NotImplementedError("'--student' is not implemented")
 
-    host = conf["gitlab-host"]
-    namespace = conf["namespace"]
-    token = conf["token"]
-    semester = conf["semester"]
+    host = conf.gitlab_host
+    namespace = conf.namespace
+    token = conf.token
+    semester = conf.semester
     if section:
-        roster = [s for s in conf["roster"] if s["section"] == section]
+        roster = [s for s in conf.roster if s["section"] == section]
     else:
-        roster = conf["roster"]
+        roster = conf.roster
 
     count = 0
     for student in roster:
@@ -291,15 +291,15 @@ def import_students(conf, args):
         for row in reader:
             count += 1
             match = email_re.match(row[4])
-            conf["roster"].append({
+            conf.roster.append({
                 "name": row[3],
                 "username": match.group("user"),
                 "section": section
             })
 
             try:
-                conf["roster"][-1]["id"] = Repo.get_user_id(
-                    match.group("user"), conf["gitlab-host"], conf["token"]
+                conf.roster[-1]["id"] = Repo.get_user_id(
+                    match.group("user"), conf.gitlab_host, conf.token
                 )
             except RepoError:
                 logger.warning(

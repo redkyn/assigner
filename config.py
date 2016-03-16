@@ -7,18 +7,12 @@ from collections import UserDict
 
 def config_context(func):
     def wrapper(cmdargs, *args):
-        with config(cmdargs.config) as conf:
-            retval = func(conf, cmdargs, *args)
-        return retval
+        with Config(cmdargs.config) as conf:
+            return func(conf, cmdargs, *args)
     return wrapper
 
 
-def config(filename):
-    """Get you a brand new config manager"""
-    return _Config(filename)
-
-
-class _Config(UserDict):
+class Config(UserDict):
     """Context manager for config; automatically saves changes"""
 
     CONFIG_SCHEMA = {
@@ -116,3 +110,11 @@ class _Config(UserDict):
             yaml.dump(self.data, f, indent=2, default_flow_style=False)
 
         return False  # propagate exceptions from the calling context
+
+    def __getattr__(self, key):
+        attr = getattr(super(Config, self), key, None)
+        if attr:
+            return attr
+        # Keys contained dashes can be called using an underscore
+        key = key.replace("_", "-")
+        return self.data[key]
