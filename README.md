@@ -8,7 +8,7 @@ By doing this, students do not need group permission (which would allow them to 
 
 The student repositories that are created receive some initial content from some base repo, a link to which must be provided to *Assigner* as an argument.
 
-The list of students is retrieved from a JSON file, the name of which must be provided to *Assigner* as an argument.
+The list of students is retrieved from either a default YAML file or a specified one.
 
 ## Installation
 
@@ -22,8 +22,8 @@ It is recommended that you use `virtualenv`.
 - `open <assignment>` Adds each student in the roster to their respective homework repositories as Developers so they can pull/commit/push their work.
 - `get <assignment> [<path>]` Creates a folder for the assignment in the CWD (or `<path>`, if specified) and clones each students' repository into subfolders.
 - `lock <assignment>` Sets each student to Reporter status on their homework repository so they cannot push changes, etc.
-- `unlock <assignment>` Sets each student to Developer status on their homework repository. 
-- `import <file> <section>` Imports students from a CSV file to the roster. 
+- `unlock <assignment>` Sets each student to Developer status on their homework repository.
+- `import <file> <section>` Imports students from a CSV file to the roster.
 - `config <key> <value>` Sets `<key>` to `<value>` in the config.
 - `help` What it says on the tin.
 
@@ -32,7 +32,7 @@ Your GitLab account must have an SSH key set up in order to push the assignment 
 
 #### Configuration File
 *Assigner* will create a `_config.yml` file that will persist your GitLab private token and other settings.
-You can use a different config file by specifying the `--config` option. 
+You can use a different config file by specifying the `--config` option.
 
 *Assigner* needs you to set a few config keys before it will work:
 - `gitlab-host`: Hostname of your gitlab instance
@@ -45,12 +45,12 @@ You can set these keys by either manually adding them to the config or through u
 #### Importing
 Joe'SS offers a button to download a table of all the students in a section.
 For whatever reason, the developers at Oracle decided that this button should give you an HTML table in a file named `pg.xls` (or something like that).
-You can download this file, open in LibreOffice (or some other piece of software that tramples your freedom), and save as a `.csv` file. 
-The `import` command can read the resulting `.csv` and import your students' data for you. 
+You can download this file, open in LibreOffice (or some other piece of software that tramples your freedom), and save as a `.csv` file.
+The `import` command can read the resulting `.csv` and import your students' data for you.
 
 #### Extra Help
-If you are particularly baffled, you can pass the `-h` or `--help` flag to any *Assigner* command for more details on what it offers. 
-For example, `get --help` will get you help with `get`. 
+If you are particularly baffled, you can pass the `-h` or `--help` flag to any *Assigner* command for more details on what it offers.
+For example, `get --help` will get you help with `get`.
 
 ## Credits
 
