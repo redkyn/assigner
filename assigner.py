@@ -487,7 +487,10 @@ def main():
     except Exception as e:
         if args.tracebacks:
             raise e
-        logger.error(str(e))
+        if isinstance(e, KeyError):
+            logger.error(str(e) + " is missing")
+        else:
+            logger.error(str(e))
         raise SystemExit(1) from e
 
 
