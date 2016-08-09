@@ -46,7 +46,10 @@ def assign(conf, args):
     in the roster.
     """
     hw_name = args.name
-    branch = args.branch
+    if args.branch:
+        branch = args.branch
+    else:
+        branch = "master"
     section = args.section
     dry_run = args.dry_run
     force = args.force
