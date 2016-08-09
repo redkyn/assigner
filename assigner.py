@@ -193,6 +193,8 @@ def get(conf, args):
             repo = StudentRepo(host, namespace, full_name, token)
             repo.clone_to(os.path.join(path, username))
             count += 1
+        except RepoError as e:
+            logging.warn(str(e))
         except HTTPError as e:
             if e.response.status_code == 404:
                 logging.warn("Repository {} does not exist.".format(full_name))

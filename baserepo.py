@@ -161,6 +161,9 @@ class Repo(object):
         return False
 
     def clone_to(self, dir_name, branch=None):
+        if not self.already_exists():
+            raise RepoError("Repo {} does not exist on Gitlab".format(self.name))
+
         if branch:
             self._repo = git.Repo.clone_from(self.ssh_url, dir_name,
                                              branch=branch)
