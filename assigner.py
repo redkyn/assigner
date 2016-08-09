@@ -1,4 +1,5 @@
 #!/usr/bin/env python3
+import time
 import argparse
 import logging
 import os
@@ -99,6 +100,9 @@ def assign(conf, args):
                 logging.info("{}: Deleting...".format(full_name))
                 if not dry_run:
                     repo.delete()
+                    # HACK: Gitlab will throw a 400 if you delete and immediately recreate a repo.
+                    # A bit more than half a second was experimentally determined to prevent this issue.
+                    time.sleep(0.55)
                     repo = StudentRepo.new(base, semester, student_section,
                                            username, token)
                     repo.push(base, branch)
