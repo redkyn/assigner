@@ -12,8 +12,11 @@ The list of students is retrieved from either a default YAML file or a specified
 
 ## Installation
 
-It is recommended that you use `virtualenv`.
-`requirements.txt` contains all of the needed packages which you can pass to `pip` once you've activated `virtualenv`.
+Just clone the repo somewhere and run the `assigner` script.
+It will fetch all necessary dependencies the first time it is run.
+
+You can place a symlink to `assigner` in a folder in your `$PATH` if you desire.
+For instance, `ln -s $(pwd)/assigner ~/bin/assigner`.
 
 ## Commands
 
@@ -51,6 +54,11 @@ The `import` command can read the resulting `.csv` and import your students' dat
 #### Extra Help
 If you are particularly baffled, you can pass the `-h` or `--help` flag to any *Assigner* command for more details on what it offers.
 For example, `get --help` will get you help with `get`.
+
+## Developing
+
+It is recommended that you use `virtualenv`.
+`requirements.txt` contains all of the needed packages which you can pass to `pip` once you've activated `virtualenv`.
 
 ## Credits
 
