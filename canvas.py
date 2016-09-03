@@ -5,8 +5,6 @@ import time
 
 __author__ = 'Islam Elnabarawy'
 
-logging.basicConfig(level=logging.DEBUG)
-
 
 class CanvasAPI:
     REQUEST_HEADER = {
