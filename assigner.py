@@ -8,6 +8,8 @@ import tempfile
 
 from requests.exceptions import HTTPError
 from colorlog import ColoredFormatter
+
+from canvas import CanvasAPI
 from config import config_context
 from baserepo import Access, RepoError, Repo, BaseRepo, StudentRepo
 
@@ -310,6 +312,71 @@ def import_students(conf, args):
 
 
 @config_context
+def import_from_canvas(conf, args):
+    """Imports students from a Canvas course to the roster.
+    """
+    if 'canvas-token' not in conf:
+        logging.error("canvas-token configuration is missing! Please set the Canvas API access "
+                      "token before attempting to import users from Canvas")
+        print("Import from canvas failed: missing Canvas API access token.")
+        return
+
+    if "roster" not in conf:
+        conf["roster"] = []
+
+    course_id = args.id
+    section = args.section
+
+    canvas = CanvasAPI(conf["canvas-token"])
+
+    students = canvas.get_course_students(course_id)
+
+    for s in students:
+        conf.roster.append({
+            "name": s['sortable_name'],
+            "username": s['sis_user_id'],
+            "section": section
+        })
+
+        try:
+            conf.roster[-1]["id"] = Repo.get_user_id(
+                s['sis_user_id'], conf.gitlab_host, conf.token
+            )
+        except RepoError:
+            logger.warning(
+                "Student {} does not have a Gitlab account.".format(s['name'])
+            )
+
+    print("Imported {} students.".format(len(students)))
+
+
+@config_context
+def print_canvas_courses(conf, args):
+    """Show a list of current teacher's courses from Canvas via the API.
+    """
+    if 'canvas-token' not in conf:
+        logging.error("canvas-token configuration is missing! Please set the Canvas API access "
+                      "token before attempting to use Canvas API functionality")
+        print("Canvas course listing failed: missing Canvas API access token.")
+        return
+
+    canvas = CanvasAPI(conf["canvas-token"])
+
+    courses = canvas.get_teacher_courses()
+
+    if not courses:
+        print("No courses found where current user is a teacher.")
+        return
+
+    print('-'*92)
+    print("| # | %-6s | %-75s |" % ('ID', 'Course Title'))
+    print('-'*92)
+    for ix, c in enumerate(courses):
+        print("| %s | %-6s | %-75s |" % (ix+1, c['id'], c['name']))
+    print('-'*92)
+
+
+@config_context
 def set_conf(conf, args):
     """Sets <key> to <value> in the config.
     """
@@ -456,6 +523,18 @@ def make_parser():
     subparser.add_argument("file", help="CSV file to import from")
     subparser.add_argument("section", help="Section being imported")
     subparser.set_defaults(run=import_students)
+
+    # "canvas_import" command
+    subparser = subparsers.add_parser("canvas_import",
+                                      help="Import students from Canvas via the API")
+    subparser.add_argument("id", help="Canvas ID for course to import from")
+    subparser.add_argument("section", help="Section being imported")
+    subparser.set_defaults(run=import_from_canvas)
+
+    # "list_courses" command
+    subparser = subparsers.add_parser("list_courses",
+                                      help="Show a list of current teacher's courses from Canvas via the API")
+    subparser.set_defaults(run=print_canvas_courses)
 
     # "set" command
     subparser = subparsers.add_parser("config",

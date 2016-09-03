@@ -85,6 +85,11 @@ class Config(UserDict):
                     "additionalProperties": False,
                 },
             },
+
+            # Canvas API token
+            "canvas-token": {
+                "type": "string",
+            },
         },
         "required": ["gitlab-host", "namespace", "token", "semester"],
         "additionalProperties": False,
