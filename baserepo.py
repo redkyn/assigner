@@ -226,6 +226,12 @@ class Repo(object):
             "/projects/{}/members/{}".format(self.id, user_id)
         )
 
+    def archive(self):
+        return self._gl_post("/projects/{}/archive".format(self.id))
+
+    def unarchive(self):
+        return self._gl_post("/projects/{}/unarchive".format(self.id))
+
     def _gl_get(self, path, params={}):
         return self.__class__._cls_gl_get(
             self.url_base, path, self.token, params
