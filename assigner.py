@@ -581,7 +581,7 @@ def make_parser():
                            help="Don't actually do it.")
     subparser.set_defaults(run=archive)
 
-    # "unlock" command
+    # "unarchive" command
     subparser = subparsers.add_parser("unarchive",
                                       help="Unarchive students repos")
     subparser.add_argument("name",
