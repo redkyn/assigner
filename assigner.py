@@ -222,6 +222,18 @@ def unlock(args):
     return manage_users(args, Access.developer)
 
 
+def archive(args):
+    """Archive each student repository so it won't show up in the project list.
+    """
+    return manage_repos(args, 'archive')
+
+
+def unarchive(args):
+    """Unarchive each student repository so it will show back up in the project list.
+    """
+    return manage_repos(args, 'unarchive')
+
+
 @config_context
 def manage_users(conf, args, level):
     """Creates a folder for the assignment in the CWD (or <path>, if specified)
@@ -377,6 +389,56 @@ def print_canvas_courses(conf, args):
 
 
 @config_context
+def manage_repos(conf, args, action):
+    """Performs an action (archive|unarchive) on all student repos
+    """
+    hw_name = args.name
+    dry_run = args.dry_run
+    section = args.section
+    target = args.student  # used if assigning to a single student
+
+    if dry_run:
+        raise NotImplementedError("'--dry-run' is not implemented")
+    if target:
+        raise NotImplementedError("'--student' is not implemented")
+    if action not in ['archive', 'unarchive']:
+        raise ValueError("Unexpected action '{}', accepted actions are 'archive' and 'unarchive'.".format(action))
+
+    host = conf.gitlab_host
+    namespace = conf.namespace
+    token = conf.token
+    semester = conf.semester
+    if section:
+        roster = [s for s in conf.roster if s["section"] == section]
+    else:
+        roster = conf.roster
+
+    count = 0
+    for student in roster:
+        username = student["username"]
+        student_section = student["section"]
+        if "id" not in student:
+            logging.warning(
+                "Student {} does not have a gitlab account.".format(username)
+            )
+            continue
+        full_name = StudentRepo.name(semester, student_section,
+                                     hw_name, username)
+
+        try:
+            repo = StudentRepo(host, namespace, full_name, token)
+            if action == 'archive':
+                repo.archive()
+            else:
+                repo.unarchive()
+            count += 1
+        except HTTPError:
+            raise
+
+    print("Changed {} repositories.".format(count))
+
+
+@config_context
 def set_conf(conf, args):
     """Sets <key> to <value> in the config.
     """
@@ -505,6 +567,32 @@ def make_parser():
     subparser.add_argument("--dry-run", action="store_true",
                            help="Don't actually do it.")
     subparser.set_defaults(run=unlock)
+
+    # "archive" command
+    subparser = subparsers.add_parser("archive",
+                                      help="Archive students repos")
+    subparser.add_argument("name",
+                           help="Name of the assignment to archive.")
+    subparser.add_argument("--section", nargs="?",
+                           help="Section to archive")
+    subparser.add_argument("--student", metavar="id",
+                           help="ID of student whose assignment to archive.")
+    subparser.add_argument("--dry-run", action="store_true",
+                           help="Don't actually do it.")
+    subparser.set_defaults(run=archive)
+
+    # "unarchive" command
+    subparser = subparsers.add_parser("unarchive",
+                                      help="Unarchive students repos")
+    subparser.add_argument("name",
+                           help="Name of the assignment to unarchive.")
+    subparser.add_argument("--section", nargs="?",
+                           help="Section to unarchive")
+    subparser.add_argument("--student", metavar="id",
+                           help="ID of student whose assignment to unarchive.")
+    subparser.add_argument("--dry-run", action="store_true",
+                           help="Don't actually do it.")
+    subparser.set_defaults(run=unarchive)
 
     # "status" command
     subparser = subparsers.add_parser("status",
