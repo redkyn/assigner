@@ -513,6 +513,8 @@ def make_parser():
                                         "access to")
     subparser.add_argument("--section", nargs="?",
                            help="Section to grant access to")
+    subparser.add_argument("--student", metavar="id",
+                           help="ID of the student to assign to.")
     subparser.set_defaults(run=open_assignment)
 
     # "get" command
