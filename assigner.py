@@ -60,15 +60,18 @@ def assign(conf, args):
     namespace = conf.namespace
     token = conf.token
     semester = conf.semester
-    if section:
+    if target:
+        roster = [s for s in conf.roster if s["username"] == target]
+    elif section:
         roster = [s for s in conf.roster if s["section"] == section]
     else:
         roster = conf.roster
+
+    if not roster:
+        raise ValueError("No matching students found in roster.")
+
     actual_count = 0  # Represents the number of repos actually pushed to
     student_count = len(roster)
-
-    if target:
-        raise NotImplementedError("'--student' is not implemented")
 
     with tempfile.TemporaryDirectory() as tmpdirname:
         print("Assigning '{}' to {} student{} in {}.".format(
@@ -134,14 +137,20 @@ def open_assignment(conf, args):
     """
     hw_name = args.name
     section = args.section
+    target = args.student  # used if assigning to a single student
     host = conf.gitlab_host
     namespace = conf.namespace
     token = conf.token
     semester = conf.semester
-    if section:
+    if target:
+        roster = [s for s in conf.roster if s["username"] == target]
+    elif section:
         roster = [s for s in conf.roster if s["section"] == section]
     else:
         roster = conf.roster
+
+    if not roster:
+        raise ValueError("No matching students found in roster.")
 
     count = 0
     for student in roster:
@@ -174,16 +183,21 @@ def get(conf, args):
     hw_path = args.path
     section = args.section
     target = args.student  # used if assigning to a single student
-    if target:
-        raise NotImplementedError("'--student' is not implemented")
     host = conf.gitlab_host
     namespace = conf.namespace
     token = conf.token
     semester = conf.semester
-    if section:
+
+    if target:
+        roster = [s for s in conf.roster if s["username"] == target]
+    elif section:
         roster = [s for s in conf.roster if s["section"] == section]
     else:
         roster = conf.roster
+
+    if not roster:
+        raise ValueError("No matching students found in roster.")
+
     path = os.path.join(hw_path, hw_name)
     os.makedirs(path, mode=0o700, exist_ok=True)
 
@@ -246,17 +260,20 @@ def manage_users(conf, args, level):
 
     if dry_run:
         raise NotImplementedError("'--dry-run' is not implemented")
-    if target:
-        raise NotImplementedError("'--student' is not implemented")
 
     host = conf.gitlab_host
     namespace = conf.namespace
     token = conf.token
     semester = conf.semester
-    if section:
+    if target:
+        roster = [s for s in conf.roster if s["username"] == target]
+    elif section:
         roster = [s for s in conf.roster if s["section"] == section]
     else:
         roster = conf.roster
+
+    if not roster:
+        raise ValueError("No matching students found in roster.")
 
     count = 0
     for student in roster:
@@ -399,8 +416,6 @@ def manage_repos(conf, args, action):
 
     if dry_run:
         raise NotImplementedError("'--dry-run' is not implemented")
-    if target:
-        raise NotImplementedError("'--student' is not implemented")
     if action not in ['archive', 'unarchive']:
         raise ValueError("Unexpected action '{}', accepted actions are 'archive' and 'unarchive'.".format(action))
 
@@ -408,10 +423,16 @@ def manage_repos(conf, args, action):
     namespace = conf.namespace
     token = conf.token
     semester = conf.semester
-    if section:
+
+    if target:
+        roster = [s for s in conf.roster if s["username"] == target]
+    elif section:
         roster = [s for s in conf.roster if s["section"] == section]
     else:
         roster = conf.roster
+
+    if not roster:
+        raise ValueError("No matching students found in roster.")
 
     count = 0
     for student in roster:
