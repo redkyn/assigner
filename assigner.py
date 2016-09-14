@@ -8,6 +8,7 @@ import tempfile
 
 from requests.exceptions import HTTPError
 from colorlog import ColoredFormatter
+from prettytable import PrettyTable
 
 from canvas import CanvasAPI
 from config import config_context
@@ -279,11 +280,8 @@ def status(conf, args):
     if sort_key:
         roster.sort(key=lambda s: s[sort_key])
 
-    format_str = "| %-2s | %-3s | %-10s | %-40s | %-10s |"
-    separator = "-"*81
-    print(separator)
-    print(format_str % ("#", "Sec", "SID", "Name", "Status"))
-    print(separator)
+    output = PrettyTable(["#", "Sec", "SID", "Name", "Status"])
+    output.align["Name"] = "l"
 
     for i, student in enumerate(roster):
         name = student["name"]
@@ -299,7 +297,7 @@ def status(conf, args):
 
             if not repo.info:
                 row[-1] = "Not Assigned"
-                print(format_str % tuple(row))
+                output.add_row(row)
                 continue
 
             if "id" not in student:
@@ -308,24 +306,24 @@ def status(conf, args):
             members = repo.list_members()
             if student["id"] not in [s["id"] for s in members]:
                 row[-1] = "Not Opened"
-                print(format_str % tuple(row))
+                output.add_row(row)
                 continue
 
             if repo.info["archived"]:
                 row[-1] = 'Archived'
-                print(format_str % tuple(row))
+                output.add_row(row)
                 continue
 
             level = Access([s["access_level"] for s in members if s["id"] == student["id"]][0])
             row[-1] = "Open" if level is Access.developer else "Locked"
-            print(format_str % tuple(row))
+            output.add_row(row)
 
         except RepoError:
             logging.warning("Could not add {} to {}.".format(username, full_name))
         except HTTPError:
             raise
 
-    print(separator)
+    print(output)
 
 
 @config_context
