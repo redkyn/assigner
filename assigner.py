@@ -338,9 +338,10 @@ def status(conf, args):
                 head = commits[0]
                 row[6] = head["short_id"]
                 row[7] = head["author_name"]
-                # HACK: Strip the last 6 characters because strptime's %z doesn't like
-                #       the fact that GitLab's UTC Offset has a colon in it...
-                row[8] = datetime.strptime(head["created_at"][:-6], "%Y-%m-%dT%H:%M:%S.%f")
+                created_at = head["created_at"]
+                # Fix UTC offset format in GitLab's datetime
+                created_at = created_at[:-6] + created_at[-6:].replace(':', '')
+                row[8] = datetime.strptime(created_at, "%Y-%m-%dT%H:%M:%S.%f%z")
 
             output.add_row(row)
 
