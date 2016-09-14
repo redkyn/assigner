@@ -52,29 +52,23 @@ def assign(conf, args):
         branch = args.branch
     else:
         branch = "master"
-    section = args.section
     dry_run = args.dry_run
     force = args.force
-    target = args.student  # used if assigning to a single student
     host = conf.gitlab_host
     namespace = conf.namespace
     token = conf.token
     semester = conf.semester
-    if section:
-        roster = [s for s in conf.roster if s["section"] == section]
-    else:
-        roster = conf.roster
+
+    roster = get_filtered_roster(conf.roster, args.section, args.student)
+
     actual_count = 0  # Represents the number of repos actually pushed to
     student_count = len(roster)
-
-    if target:
-        raise NotImplementedError("'--student' is not implemented")
 
     with tempfile.TemporaryDirectory() as tmpdirname:
         print("Assigning '{}' to {} student{} in {}.".format(
             hw_name, student_count,
             "s" if student_count != 1 else "",
-            "section " + section if section else "all sections")
+            "section " + args.section if args.section else "all sections")
         )
         base = BaseRepo(host, namespace, hw_name, token)
         if not dry_run:
@@ -133,15 +127,12 @@ def open_assignment(conf, args):
     repositories as Developers so they can pull/commit/push their work.
     """
     hw_name = args.name
-    section = args.section
     host = conf.gitlab_host
     namespace = conf.namespace
     token = conf.token
     semester = conf.semester
-    if section:
-        roster = [s for s in conf.roster if s["section"] == section]
-    else:
-        roster = conf.roster
+
+    roster = get_filtered_roster(conf.roster, args.section, args.student)
 
     count = 0
     for student in roster:
@@ -172,18 +163,13 @@ def get(conf, args):
     """
     hw_name = args.name
     hw_path = args.path
-    section = args.section
-    target = args.student  # used if assigning to a single student
-    if target:
-        raise NotImplementedError("'--student' is not implemented")
     host = conf.gitlab_host
     namespace = conf.namespace
     token = conf.token
     semester = conf.semester
-    if section:
-        roster = [s for s in conf.roster if s["section"] == section]
-    else:
-        roster = conf.roster
+
+    roster = get_filtered_roster(conf.roster, args.section, args.student)
+
     path = os.path.join(hw_path, hw_name)
     os.makedirs(path, mode=0o700, exist_ok=True)
 
@@ -241,22 +227,16 @@ def manage_users(conf, args, level):
     """
     hw_name = args.name
     dry_run = args.dry_run
-    section = args.section
-    target = args.student  # used if assigning to a single student
 
     if dry_run:
         raise NotImplementedError("'--dry-run' is not implemented")
-    if target:
-        raise NotImplementedError("'--student' is not implemented")
 
     host = conf.gitlab_host
     namespace = conf.namespace
     token = conf.token
     semester = conf.semester
-    if section:
-        roster = [s for s in conf.roster if s["section"] == section]
-    else:
-        roster = conf.roster
+
+    roster = get_filtered_roster(conf.roster, args.section, args.student)
 
     count = 0
     for student in roster:
@@ -394,13 +374,9 @@ def manage_repos(conf, args, action):
     """
     hw_name = args.name
     dry_run = args.dry_run
-    section = args.section
-    target = args.student  # used if assigning to a single student
 
     if dry_run:
         raise NotImplementedError("'--dry-run' is not implemented")
-    if target:
-        raise NotImplementedError("'--student' is not implemented")
     if action not in ['archive', 'unarchive']:
         raise ValueError("Unexpected action '{}', accepted actions are 'archive' and 'unarchive'.".format(action))
 
@@ -408,10 +384,8 @@ def manage_repos(conf, args, action):
     namespace = conf.namespace
     token = conf.token
     semester = conf.semester
-    if section:
-        roster = [s for s in conf.roster if s["section"] == section]
-    else:
-        roster = conf.roster
+
+    roster = get_filtered_roster(conf.roster, args.section, args.student)
 
     count = 0
     for student in roster:
@@ -436,6 +410,16 @@ def manage_repos(conf, args, action):
             raise
 
     print("Changed {} repositories.".format(count))
+
+
+def get_filtered_roster(roster, section, target):
+    if target:
+        roster = [s for s in roster if s["username"] == target]
+    elif section:
+        roster = [s for s in roster if s["section"] == section]
+    if not roster:
+        raise ValueError("No matching students found in roster.")
+    return roster
 
 
 @config_context
@@ -524,6 +508,8 @@ def make_parser():
                                         "access to")
     subparser.add_argument("--section", nargs="?",
                            help="Section to grant access to")
+    subparser.add_argument("--student", metavar="id",
+                           help="ID of the student to assign to.")
     subparser.set_defaults(run=open_assignment)
 
     # "get" command
