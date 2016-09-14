@@ -236,6 +236,25 @@ class Repo(object):
             "/projects/{}/members/{}".format(self.id, user_id)
         )
 
+    def list_commits(self, ref_name="master"):
+        params = {
+            "id": self.id,
+            "ref_name": ref_name
+        }
+        return self._gl_get(
+            "/projects/{}/repository/commits".format(self.id), params
+        )
+
+    def list_branchs(self):
+        return self._gl_get(
+            "/projects/{}/repository/branches".format(self.id)
+        )
+
+    def get_branch(self, branch):
+        return self._gl_get(
+            "/projects/{}/repository/branches/{}".format(self.id, branch)
+        )
+
     def archive(self):
         return self._gl_post("/projects/{}/archive".format(self.id))
 

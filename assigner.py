@@ -6,6 +6,8 @@ import re
 import csv
 import tempfile
 
+from datetime import datetime
+
 from requests.exceptions import HTTPError
 from colorlog import ColoredFormatter
 from prettytable import PrettyTable
@@ -281,8 +283,11 @@ def status(conf, args):
     if sort_key:
         roster.sort(key=lambda s: s[sort_key])
 
-    output = PrettyTable(["#", "Sec", "SID", "Name", "Status"])
+    output = PrettyTable([
+        "#", "Sec", "SID", "Name", "Status", "Branches",
+        "HEAD", "Last Commit Author", "Last Commit Time"])
     output.align["Name"] = "l"
+    output.align["Last Commit Author"] = "l"
 
     progress = ProgressBar(max_value=len(roster))
 
@@ -295,13 +300,13 @@ def status(conf, args):
         full_name = StudentRepo.name(semester, student_section,
                                      hw_name, username)
 
-        row = [i+1, student_section, username, name, ""]
+        row = [i+1, student_section, username, name, "", "", "", "", ""]
 
         try:
             repo = StudentRepo(host, namespace, full_name, token)
 
-            if not repo.info:
-                row[-1] = "Not Assigned"
+            if not repo.already_exists():
+                row[4] = "Not Assigned"
                 output.add_row(row)
                 continue
 
@@ -310,17 +315,33 @@ def status(conf, args):
 
             members = repo.list_members()
             if student["id"] not in [s["id"] for s in members]:
-                row[-1] = "Not Opened"
+                row[4] = "Not Opened"
                 output.add_row(row)
                 continue
 
             if repo.info["archived"]:
-                row[-1] = 'Archived'
+                row[4] = 'Archived'
                 output.add_row(row)
                 continue
 
             level = Access([s["access_level"] for s in members if s["id"] == student["id"]][0])
-            row[-1] = "Open" if level is Access.developer else "Locked"
+            row[4] = "Open" if level is Access.developer else "Locked"
+
+            branches = repo.list_branchs()
+
+            if branches:
+                row[5] = ", ".join([b["name"] for b in branches])
+
+            commits = repo.list_commits()
+
+            if commits:
+                head = commits[0]
+                row[6] = head["short_id"]
+                row[7] = head["author_name"]
+                # HACK: Strip the last 6 characters because strptime's %z doesn't like
+                #       the fact that GitLab's UTC Offset has a colon in it...
+                row[8] = datetime.strptime(head["created_at"][:-6], "%Y-%m-%dT%H:%M:%S.%f")
+
             output.add_row(row)
 
         except RepoError:
