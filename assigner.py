@@ -9,6 +9,7 @@ import tempfile
 from requests.exceptions import HTTPError
 from colorlog import ColoredFormatter
 from prettytable import PrettyTable
+from progressbar import ProgressBar
 
 from canvas import CanvasAPI
 from config import config_context
@@ -283,7 +284,11 @@ def status(conf, args):
     output = PrettyTable(["#", "Sec", "SID", "Name", "Status"])
     output.align["Name"] = "l"
 
+    progress = ProgressBar(max_value=len(roster))
+
     for i, student in enumerate(roster):
+        progress.update(i)
+
         name = student["name"]
         username = student["username"]
         student_section = student["section"]
@@ -323,6 +328,7 @@ def status(conf, args):
         except HTTPError:
             raise
 
+    progress.finish()
     print(output)
 
 
