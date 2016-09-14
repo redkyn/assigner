@@ -345,8 +345,6 @@ def status(conf, args):
 
             output.add_row(row)
 
-        except RepoError:
-            logging.warning("Could not add {} to {}.".format(username, full_name))
         except HTTPError:
             raise
 
