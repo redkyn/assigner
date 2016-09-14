@@ -203,6 +203,16 @@ class Repo(object):
         )
         return data[0]["id"]
 
+    def list_members(self):
+        return self._gl_get(
+            "/projects/{}/members".format(self.id)
+        )
+
+    def get_member(self, user_id):
+        return self._gl_get(
+            "/projects/{}/members/{}".format(self.id, user_id)
+        )
+
     def add_member(self, user_id, level):
         payload = {
             "id": self.id,

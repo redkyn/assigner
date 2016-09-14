@@ -260,8 +260,69 @@ def manage_users(conf, args, level):
     print("Changed {} repositories.".format(count))
 
 
-def status(args):
-    raise NotImplementedError("'status' command is not available")
+@config_context
+def status(conf, args):
+    """Retrieves and prints the status of repos"""
+    hw_name = args.name
+
+    host = conf.gitlab_host
+    namespace = conf.namespace
+    token = conf.token
+    semester = conf.semester
+
+    roster = get_selected_roster(args)
+    sort_key = args.sort
+
+    if sort_key:
+        roster.sort(key=lambda s: s[sort_key])
+
+    format_str = "| %-2s | %-10s | %-40s | %-10s |"
+    separator = "-"*75
+    print(separator)
+    print(format_str % ("#", "SID", "Name", "Status"))
+    print(separator)
+
+    for i, student in enumerate(roster):
+        name = student["name"]
+        username = student["username"]
+        student_section = student["section"]
+        full_name = StudentRepo.name(semester, student_section,
+                                     hw_name, username)
+
+        row = [i+1, username, name, ""]
+
+        try:
+            repo = StudentRepo(host, namespace, full_name, token)
+
+            if not repo.info:
+                row[-1] = "Not Assigned"
+                print(format_str % tuple(row))
+                continue
+
+            if "id" not in student:
+                student["id"] = Repo.get_user_id(username, host, token)
+
+            members = repo.list_members()
+            if student["id"] not in [s["id"] for s in members]:
+                row[-1] = "Not Opened"
+                print(format_str % tuple(row))
+                continue
+
+            if repo.info["archived"]:
+                row[-1] = 'Archived'
+                print(format_str % tuple(row))
+                continue
+
+            level = Access([s["access_level"] for s in members if s["id"] == student["id"]][0])
+            row[-1] = "Open" if level is Access.developer else "Locked"
+            print(format_str % tuple(row))
+
+        except RepoError:
+            logging.warning("Could not add {} to {}.".format(username, full_name))
+        except HTTPError:
+            raise
+
+    print(separator)
 
 
 @config_context
@@ -592,6 +653,9 @@ def make_parser():
                            help="Section to get status of")
     subparser.add_argument("--student", metavar="id",
                            help="ID of student.")
+    subparser.add_argument("--sort", nargs="?", default="name",
+                           choices=["name", "username"],
+                           help="Key to sort users by.")
     subparser.add_argument("name", nargs="?",
                            help="Name of the assignment to look up.")
     subparser.set_defaults(run=status)
