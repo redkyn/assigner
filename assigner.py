@@ -59,7 +59,7 @@ def assign(conf, args):
     token = conf.token
     semester = conf.semester
 
-    roster = get_selected_roster(args)
+    roster = get_filtered_roster(conf.roster, args.section, args.student)
 
     actual_count = 0  # Represents the number of repos actually pushed to
     student_count = len(roster)
@@ -132,7 +132,7 @@ def open_assignment(conf, args):
     token = conf.token
     semester = conf.semester
 
-    roster = get_selected_roster(args)
+    roster = get_filtered_roster(conf.roster, args.section, args.student)
 
     count = 0
     for student in roster:
@@ -168,7 +168,7 @@ def get(conf, args):
     token = conf.token
     semester = conf.semester
 
-    roster = get_selected_roster(args)
+    roster = get_filtered_roster(conf.roster, args.section, args.student)
 
     path = os.path.join(hw_path, hw_name)
     os.makedirs(path, mode=0o700, exist_ok=True)
@@ -236,7 +236,7 @@ def manage_users(conf, args, level):
     token = conf.token
     semester = conf.semester
 
-    roster = get_selected_roster(args)
+    roster = get_filtered_roster(conf.roster, args.section, args.student)
 
     count = 0
     for student in roster:
@@ -385,7 +385,7 @@ def manage_repos(conf, args, action):
     token = conf.token
     semester = conf.semester
 
-    roster = get_selected_roster(args)
+    roster = get_filtered_roster(conf.roster, args.section, args.student)
 
     count = 0
     for student in roster:
@@ -412,16 +412,11 @@ def manage_repos(conf, args, action):
     print("Changed {} repositories.".format(count))
 
 
-@config_context
-def get_selected_roster(conf, args):
-    section = args.section
-    target = args.student  # used if assigning to a single student
+def get_filtered_roster(roster, section, target):
     if target:
-        roster = [s for s in conf.roster if s["username"] == target]
+        roster = [s for s in roster if s["username"] == target]
     elif section:
-        roster = [s for s in conf.roster if s["section"] == section]
-    else:
-        roster = conf.roster
+        roster = [s for s in roster if s["section"] == section]
     if not roster:
         raise ValueError("No matching students found in roster.")
     return roster
