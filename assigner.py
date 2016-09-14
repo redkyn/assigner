@@ -265,6 +265,9 @@ def status(conf, args):
     """Retrieves and prints the status of repos"""
     hw_name = args.name
 
+    if not hw_name:
+        raise ValueError("Missing assignment name.")
+
     host = conf.gitlab_host
     namespace = conf.namespace
     token = conf.token
@@ -276,10 +279,10 @@ def status(conf, args):
     if sort_key:
         roster.sort(key=lambda s: s[sort_key])
 
-    format_str = "| %-2s | %-10s | %-40s | %-10s |"
-    separator = "-"*75
+    format_str = "| %-2s | %-3s | %-10s | %-40s | %-10s |"
+    separator = "-"*81
     print(separator)
-    print(format_str % ("#", "SID", "Name", "Status"))
+    print(format_str % ("#", "Sec", "SID", "Name", "Status"))
     print(separator)
 
     for i, student in enumerate(roster):
@@ -289,7 +292,7 @@ def status(conf, args):
         full_name = StudentRepo.name(semester, student_section,
                                      hw_name, username)
 
-        row = [i+1, username, name, ""]
+        row = [i+1, student_section, username, name, ""]
 
         try:
             repo = StudentRepo(host, namespace, full_name, token)
