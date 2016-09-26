@@ -321,11 +321,9 @@ def status(conf, args):
 
             if repo.info["archived"]:
                 row[4] = 'Archived'
-                output.add_row(row)
-                continue
-
-            level = Access([s["access_level"] for s in members if s["id"] == student["id"]][0])
-            row[4] = "Open" if level is Access.developer else "Locked"
+            else:
+                level = Access([s["access_level"] for s in members if s["id"] == student["id"]][0])
+                row[4] = "Open" if level is Access.developer else "Locked"
 
             branches = repo.list_branchs()
 
