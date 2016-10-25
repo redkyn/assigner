@@ -104,7 +104,7 @@ def assign(conf, args):
                     repo.push(base, branch)
                 actual_count += 1
                 logging.debug("Assigned.")
-            elif branch:
+            elif args.branch:
                 logging.info("{}: Already exists.".format(full_name))
                 # If we have an explicit branch, push anyways
                 repo.push(base, branch) if not dry_run else None
