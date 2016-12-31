@@ -450,13 +450,13 @@ def print_canvas_courses(conf, args):
         print("No courses found where current user is a teacher.")
         return
 
-    print('-'*92)
-    print("| # | %-6s | %-75s |" % ('ID', 'Course Title'))
-    print('-'*92)
-    for ix, c in enumerate(courses):
-        print("| %s | %-6s | %-75s |" % (ix+1, c['id'], c['name']))
-    print('-'*92)
+    output = PrettyTable(["#", "ID", "Name"])
+    output.align["Name"] = "l"
 
+    for ix, c in enumerate(courses):
+        output.add_row((ix+1, c['id'], c['name']))
+
+    print(output)
 
 @config_context
 def manage_repos(conf, args, action):
