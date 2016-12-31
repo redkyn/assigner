@@ -203,6 +203,16 @@ class Repo(object):
         )
         return data[0]["id"]
 
+    def list_members(self):
+        return self._gl_get(
+            "/projects/{}/members".format(self.id)
+        )
+
+    def get_member(self, user_id):
+        return self._gl_get(
+            "/projects/{}/members/{}".format(self.id, user_id)
+        )
+
     def add_member(self, user_id, level):
         payload = {
             "id": self.id,
@@ -224,6 +234,25 @@ class Repo(object):
     def delete_member(self, user_id):
         return self._gl_delete(
             "/projects/{}/members/{}".format(self.id, user_id)
+        )
+
+    def list_commits(self, ref_name="master"):
+        params = {
+            "id": self.id,
+            "ref_name": ref_name
+        }
+        return self._gl_get(
+            "/projects/{}/repository/commits".format(self.id), params
+        )
+
+    def list_branchs(self):
+        return self._gl_get(
+            "/projects/{}/repository/branches".format(self.id)
+        )
+
+    def get_branch(self, branch):
+        return self._gl_get(
+            "/projects/{}/repository/branches/{}".format(self.id, branch)
         )
 
     def archive(self):
