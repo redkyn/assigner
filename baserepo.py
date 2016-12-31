@@ -245,7 +245,7 @@ class Repo(object):
             "/projects/{}/repository/commits".format(self.id), params
         )
 
-    def list_branchs(self):
+    def list_branches(self):
         return self._gl_get(
             "/projects/{}/repository/branches".format(self.id)
         )

@@ -329,7 +329,7 @@ def status(conf, args):
                 level = Access([s["access_level"] for s in members if s["id"] == student["id"]][0])
                 row[4] = "Open" if level is Access.developer else "Locked"
 
-            branches = repo.list_branchs()
+            branches = repo.list_branches()
 
             if branches:
                 row[5] = ", ".join([b["name"] for b in branches])
