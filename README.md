@@ -65,6 +65,14 @@ You can use the `list_courses` command to list your course sections, and make no
 If you are particularly baffled, you can pass the `-h` or `--help` flag to any *Assigner* command for more details on what it offers.
 For example, `get --help` will get you help with `get`.
 
+## Generating Access Tokens
+
+### GitLab Token:
+To generate an access token for GitLab, log onto the GitLab website (e.g. https://git-classes.mst.edu/), and go to your *Profile Settings*. Go to the *Access Token* tab, then add a personal access token using the form on the page. Leave the expiry date empty to create a token that never expires, and select the **api** checkbox to allow API access using your token. Make sure you copy the generated token, since you won't be able to retrieve it afterwards.
+
+### Canvas Token:
+To generate an API token for Canvas, log onto your Canvas account (e.g. https://canvas.mst.edu/), and click on *Account* at the top left corner of the page, then go to *Settings*. From there scroll down to *Approved Integrations* and click the **New Access Token** button, then use the form to create a new API token. Make sure you copy the generated token, since you won't be able to retrieve it afterwards.
+
 ## Developing
 
 It is recommended that you use `virtualenv`.
