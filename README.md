@@ -8,7 +8,7 @@ By doing this, students do not need group permission (which would allow them to 
 
 The student repositories that are created receive some initial content from some base repo, a link to which must be provided to *Assigner* as an argument.
 
-The list of students is retrieved from either a default YAML file or a specified one.
+The list of students is retrieved from either a default YAML file or a specified one. See `_config.example.yml` for an example YAML configuration file.
 
 ## Installation
 
@@ -26,7 +26,12 @@ For instance, `ln -s $(pwd)/assigner ~/bin/assigner`.
 - `get <assignment> [<path>]` Creates a folder for the assignment in the CWD (or `<path>`, if specified) and clones each students' repository into subfolders.
 - `lock <assignment>` Sets each student to Reporter status on their homework repository so they cannot push changes, etc.
 - `unlock <assignment>` Sets each student to Developer status on their homework repository.
+- `archive <assignment>` Archives student repositories, disallowing pushes and hiding the repository from the project listing on GitLab.
+- `unarchive <assignment>` Restores archived student repositories to their previous state.
+- `status <assignment>` Shows the status of student homework repositories, as well as the last commit author and timestamp for each repository.
 - `import <file> <section>` Imports students from a CSV file to the roster.
+- `canvas_import <id> <section>` Imports students from Canvas through the Canvas API using the Canvas course ID.
+- `list_courses` Shows the list of courses associated with the Canvas API account accessed by the Canvas token in the configuration file.
 - `config <key> <value>` Sets `<key>` to `<value>` in the config.
 - `help` What it says on the tin.
 
@@ -42,14 +47,19 @@ You can use a different config file by specifying the `--config` option.
 - `namespace`: Group or user to create repositories in
 - `semester`: The semester; recommended formatting: `2016SP`
 - `token`: Your gitlab API token, retrievable from your gitlab settings page
+- `canvas-token`: Your Canvas API token, retrievable from your Canvas settings page
 
 You can set these keys by either manually adding them to the config or through using the `config` subcommand.
 
-#### Importing
+#### Importing from Joe'SS via CSV file
 Joe'SS offers a button to download a table of all the students in a section.
 For whatever reason, the developers at Oracle decided that this button should give you an HTML table in a file named `pg.xls` (or something like that).
 You can download this file, open in LibreOffice (or some other piece of software that tramples your freedom), and save as a `.csv` file.
 The `import` command can read the resulting `.csv` and import your students' data for you.
+
+#### Importing from Canvas via the Canvas API
+The Canvas API can be used to retrieve the list of students for each course section.
+You can use the `list_courses` command to list your course sections, and make note of the ID of the course you would like to import students from. Then you can use the `canvas_import` command with the appropriate course ID to import the students from the course section into your configuration file.
 
 #### Extra Help
 If you are particularly baffled, you can pass the `-h` or `--help` flag to any *Assigner* command for more details on what it offers.
