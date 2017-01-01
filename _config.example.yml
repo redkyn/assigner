@@ -1,0 +1,14 @@
+canvas-token: xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
+gitlab-host: https://git-classes.mst.edu/
+namespace: 2016-Fall-CS1001
+roster:
+- id: 000
+  name: Smith, John
+  section: A
+  username: xxxxxx
+- id: 001
+  name: Smith, Jane
+  section: A
+  username: xxxxxx
+semester: 2016FS
+token: xxxxxxxxxxxxxxxx
