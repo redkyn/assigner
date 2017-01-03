@@ -304,7 +304,7 @@ class BaseRepo(Repo):
             "builds_enabled": False,
             "wiki_enabled": False,
             "snippets_enabled": True,  # Why not?
-            "visibility_level": Visibility.private,
+            "visibility_level": Visibility.private.value,
         }
 
         result = cls._cls_gl_post(url_base, "/projects", token, payload)
@@ -332,7 +332,7 @@ class StudentRepo(Repo):
             "builds_enabled": False,
             "wiki_enabled": False,
             "snippets_enabled": True,  # Why not?
-            "visibility_level": Visibility.private,
+            "visibility_level": Visibility.private.value,
         }
 
         result = cls._cls_gl_post(base_repo.url_base, "/projects",
