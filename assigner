@@ -4,7 +4,7 @@ VENV_DIR="$SCRIPT_DIR/.assigner-virtualenv"
 
 if [ ! -d "$VENV_DIR" ]; then
 	echo "Setting up virtual environment in $VENV_DIR"
-	virtualenv --python=python3.5 "$VENV_DIR"
+	virtualenv --python=python3 "$VENV_DIR"
 	echo "Installing dependencies"
 	# Calling virtualenv's pip directly breaks if there are spaces in the pathname
 	# see https://github.com/pypa/pip/issues/923
