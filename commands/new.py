@@ -1,3 +1,5 @@
+import logging
+
 from requests.exceptions import HTTPError
 
 from baserepo import BaseRepo, Repo

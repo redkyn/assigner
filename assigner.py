@@ -1,11 +1,13 @@
 #!/usr/bin/env python3
-import time
 import argparse
+import csv
+import importlib
 import logging
 import os
 import re
-import csv
+import time
 
+from collections import OrderedDict
 from datetime import datetime
 
 from requests.exceptions import HTTPError
@@ -23,16 +25,16 @@ logger = logging.getLogger(__name__)
 description = "An automated tool for assigning programming homework."
 
 subcommands = OrderedDict([
-    ("new", "assigner.commands.new"),
-    ("assign", "assigner.commands.assign"),
-    ("open", "assigner.commands.open"),
-    ("get", "assigner.commands.get"),
-    ("lock", "assigner.commands.lock"),
-    ("unlock", "assigner.commands.unlock"),
-    ("archive", "assigner.commands.archive"),
-    ("unarchive", "assigner.commands.unarchive"),
-    ("status", "assigner.commands.status"),
-    ("import", "assigner.commands.import"),
+    ("new", "commands.new"),
+    ("assign", "commands.assign"),
+    ("open", "commands.open"),
+    ("get", "commands.get"),
+    ("lock", "commands.lock"),
+    ("unlock", "commands.unlock"),
+    ("archive", "commands.archive"),
+    ("unarchive", "commands.unarchive"),
+    ("status", "commands.status"),
+    ("import", "commands.import"),
 ])
 
 
