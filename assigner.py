@@ -14,37 +14,18 @@ from colorlog import ColoredFormatter
 from prettytable import PrettyTable
 from progressbar import ProgressBar
 
+import commands
 from canvas import CanvasAPI
 from config import config_context
 from baserepo import Access, RepoError, Repo, BaseRepo, StudentRepo
 
 logger = logging.getLogger(__name__)
+
 description = "An automated tool for assigning programming homework."
 
-
-@config_context
-def new(conf, args):
-    """Creates a new base repository for an assignment so that you can add the
-    instructions, sample code, etc.
-    """
-    hw_name = args.name
-    dry_run = args.dry_run
-    host = conf.gitlab_host
-    namespace = conf.namespace
-    token = conf.token
-
-    if dry_run:
-        url = Repo.build_url(host, namespace, hw_name)
-        print("Created repo at {}.".format(url))
-    else:
-        try:
-            repo = BaseRepo.new(hw_name, namespace, host, token)
-            print("Created repo at {}.".format(repo.url))
-        except HTTPError as e:
-            if e.response.status_code == 400:
-                logger.warning("Repository {} already exists!".format(hw_name))
-            else:
-                raise
+subcommands = OrderedDict([
+    ("new", "assigner.commands.new"),
+])
 
 
 @config_context
@@ -549,6 +530,7 @@ def configure_logging():
 def make_parser():
     """Construct and return a CLI argument parser.
     """
+        
     parser = argparse.ArgumentParser(description=description)
     parser.add_argument("--config", default="_config.yml",
                         help="Path a config file")
@@ -564,14 +546,10 @@ def make_parser():
     # Set up subcommands for each package
     subparsers = parser.add_subparsers(title="subcommands")
 
-    # "new" command
-    subparser = subparsers.add_parser("new",
-                                      help="Create a new base repo")
-    subparser.add_argument("name",
-                           help="Name of the assignment.")
-    subparser.add_argument("--dry-run", action="store_true",
-                           help="Don't actually do it.")
-    subparser.set_defaults(run=new)
+    for name, path in subcommands.items():
+        module = importlib.import_module(path)
+        subparser = subparsers.add_parser(name, help=module.help)
+        module.setup_parser(subparser)
 
     # "assign" command
     subparser = subparsers.add_parser("assign",
