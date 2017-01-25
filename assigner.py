@@ -35,6 +35,9 @@ subcommands = OrderedDict([
     ("unarchive", "commands.unarchive"),
     ("status", "commands.status"),
     ("import", "commands.import"),
+    ("canvas_import", "commands.canvas_import"),
+    ("list_courses", "commands.list_courses"),
+    ("set", "commands.set"),
 ])
 
 
@@ -117,31 +120,6 @@ def import_from_canvas(conf, args):
     print("Imported {} students.".format(len(students)))
 
 
-@config_context
-def print_canvas_courses(conf, args):
-    """Show a list of current teacher's courses from Canvas via the API.
-    """
-    if 'canvas-token' not in conf:
-        logging.error("canvas-token configuration is missing! Please set the Canvas API access "
-                      "token before attempting to use Canvas API functionality")
-        print("Canvas course listing failed: missing Canvas API access token.")
-        return
-
-    canvas = CanvasAPI(conf["canvas-token"])
-
-    courses = canvas.get_teacher_courses()
-
-    if not courses:
-        print("No courses found where current user is a teacher.")
-        return
-
-    output = PrettyTable(["#", "ID", "Name"])
-    output.align["Name"] = "l"
-
-    for ix, c in enumerate(courses):
-        output.add_row((ix+1, c['id'], c['name']))
-
-    print(output)
 
 @config_context
 def manage_repos(conf, args, action):
@@ -197,11 +175,6 @@ def get_filtered_roster(roster, section, target):
     return roster
 
 
-@config_context
-def set_conf(conf, args):
-    """Sets <key> to <value> in the config.
-    """
-    conf[args.key] = args.value
 
 
 def configure_logging():
@@ -254,25 +227,6 @@ def make_parser():
         module = importlib.import_module(path)
         subparser = subparsers.add_parser(name, help=module.help)
         module.setup_parser(subparser)
-
-    # "canvas_import" command
-    subparser = subparsers.add_parser("canvas_import",
-                                      help="Import students from Canvas via the API")
-    subparser.add_argument("id", help="Canvas ID for course to import from")
-    subparser.add_argument("section", help="Section being imported")
-    subparser.set_defaults(run=import_from_canvas)
-
-    # "list_courses" command
-    subparser = subparsers.add_parser("list_courses",
-                                      help="Show a list of current teacher's courses from Canvas via the API")
-    subparser.set_defaults(run=print_canvas_courses)
-
-    # "set" command
-    subparser = subparsers.add_parser("config",
-                                      help="Set configuration values")
-    subparser.add_argument("key", help="Key to set")
-    subparser.add_argument("value", help="Value to set")
-    subparser.set_defaults(run=set_conf)
 
     # The "help" command shows the help screen
     help_parser = subparsers.add_parser("help",
