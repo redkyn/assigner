@@ -10,7 +10,7 @@ logger = logging.getLogger(__name__)
 def unarchive(args):
     """Unarchive each student repository so it will show back up in the project list.
     """
-    return manage_repos(args, 'unarchive')
+    return manage_repos(args, lambda repo: repo.archive())
 
 
 def setup_parser(parser):

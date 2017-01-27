@@ -57,6 +57,7 @@ def assign(conf, args):
                     repo = StudentRepo.new(base, semester, student_section,
                                            username, token)
                     repo.push(base, branch)
+                    repo.unprotect(branch)
                 actual_count += 1
                 logging.debug("Assigned.")
             elif force:
@@ -70,12 +71,15 @@ def assign(conf, args):
                     repo = StudentRepo.new(base, semester, student_section,
                                            username, token)
                     repo.push(base, branch)
+                    repo.unprotect(branch)
                 actual_count += 1
                 logging.debug("Assigned.")
             elif args.branch:
                 logging.info("{}: Already exists.".format(full_name))
                 # If we have an explicit branch, push anyways
-                repo.push(base, branch) if not dry_run else None
+                if not dry_run:
+                    repo.push(base, branch)
+                    repo.unprotect(branch)
                 actual_count += 1
                 logging.debug("Assigned.")
             else:
