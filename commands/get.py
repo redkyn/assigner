@@ -53,12 +53,12 @@ def get(conf, args):
 
 def setup_parser(parser):
     parser.add_argument("name",
-                           help="Name of the openment to retrieve.")
+                           help="Name of the assignment to retrieve.")
     parser.add_argument("path", default=".", nargs="?",
                            help="Path to clone student repositories to")
     parser.add_argument("--section", nargs="?",
                            help="Section to retrieve")
     parser.add_argument("--student", metavar="id",
-                           help="ID of student whose openment needs " +
+                           help="ID of student whose assignment needs " +
                                 "retrieving.")
     parser.set_defaults(run=get)
