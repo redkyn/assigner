@@ -14,9 +14,14 @@ The list of students is retrieved from either a default YAML file or a specified
 
 Just clone the repo somewhere and run the `assigner` script.
 It will fetch all necessary dependencies the first time it is run.
+You need to have `virtualenv` installed for this to work.
 
-You can place a symlink to `assigner` in a folder in your `$PATH` if you desire.
+On Linux (or things with `readlink -f`), you can place a symlink to `assigner` in a folder in your `$PATH` if you desire.
 For instance, `ln -s $(pwd)/assigner ~/bin/assigner`.
+
+For macOS, we recommend placing a small script that calls `assigner` in a folder in your `$PATH`.
+
+Alternatively, you could add the folder containing the `assigner` source to your `$PATH`.
 
 ## Commands
 
