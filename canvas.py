@@ -11,16 +11,16 @@ class CanvasAPI:
         "Authorization": "Bearer ",
         "Content-Type": "application/json"
     }
-    WEBSITE_ROOT = "https://mst.instructure.com"
 
-    def __init__(self, canvas_token):
+    def __init__(self, canvas_token, website_root):
         self.REQUEST_HEADER['Authorization'] += canvas_token
+        self.website_root = website_root
 
     def _request(self, method: str, url: str, params: dict = None, retries: int = 3) -> http.client.HTTPResponse:
         tries = 0
         while tries <= retries:
             try:
-                connection = http.client.HTTPSConnection('mst.instructure.com', 443)
+                connection = http.client.HTTPSConnection(self.website_root, 443)
                 connection.connect()
                 header = self.REQUEST_HEADER
                 connection.request(method, url, (json.dumps(params) if params is not None else None), header)
@@ -33,8 +33,7 @@ class CanvasAPI:
                                 tries, retries - tries, exc_info=True)
                 time.sleep(1)
 
-    @staticmethod
-    def _decode_links(link):
+    def _decode_links(self, link):
         """
         Extract pagination links from the Canvas API response header's Links field
         :param link: value of the Links field in Canvas API's response header
@@ -44,7 +43,7 @@ class CanvasAPI:
         result = {}
         for l in links:
             f, s = l.split(';')
-            result[s[6:-1]] = f[1:-1].replace(CanvasAPI.WEBSITE_ROOT, '')
+            result[s[6:-1]] = f[1:-1].replace(self.website_root, '')
         return result
 
     def _get_all_pages(self, url: str, params: dict = None) -> list:
@@ -56,7 +55,7 @@ class CanvasAPI:
         """
         response = self._request('GET', url, params)
         result = json.loads(response.read().decode())
-        links = CanvasAPI._decode_links(response.getheader("Link"))
+        links = self._decode_links(response.getheader("Link"))
         count = len(result)
         page = 1
         while 'next' in links:
@@ -66,7 +65,7 @@ class CanvasAPI:
             logging.info("Getting next page for " + url + " via " + next_url)
             response = self._request('GET', next_url, params)
             result.extend(json.loads(response.read().decode()))
-            links = CanvasAPI._decode_links(response.getheader("Link"))
+            links = self._decode_links(response.getheader("Link"))
 
         return result
 

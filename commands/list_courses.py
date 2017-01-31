@@ -19,7 +19,7 @@ def print_canvas_courses(conf, args):
         print("Canvas course listing failed: missing Canvas API access token.")
         return
 
-    canvas = CanvasAPI(conf["canvas-token"])
+    canvas = CanvasAPI(conf["canvas-token"], conf["canvas-host"])
 
     courses = canvas.get_instructor_courses()
 

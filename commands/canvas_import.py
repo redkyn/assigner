@@ -25,7 +25,7 @@ def import_from_canvas(conf, args):
     course_id = args.id
     section = args.section
 
-    canvas = CanvasAPI(conf["canvas-token"])
+    canvas = CanvasAPI(conf["canvas-token"], conf["canvas-host"])
 
     students = canvas.get_course_students(course_id)
 
