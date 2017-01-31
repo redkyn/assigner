@@ -70,9 +70,12 @@ class CanvasAPI:
 
         return result
 
-    def get_teacher_courses(self):
-        result = self._get_all_pages('/api/v1/courses',
-                                     {'enrollment_type': 'teacher', 'state': ['available']})
+    def get_instructor_courses(self):
+        get = lambda x: self._get_all_pages('/api/v1/courses',
+                                     {'enrollment_type': x, 'state': ['available']})
+        result = get('teacher')
+        result.extend(get('ta'))
+        result.extend(get('grader'))
         return result
 
     def get_course_students(self, course_id):
