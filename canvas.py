@@ -35,14 +35,25 @@ class CanvasAPI:
 
     @staticmethod
     def _decode_links(link):
+        """
+        Extract pagination links from the Canvas API response header's Links field
+        :param link: value of the Links field in Canvas API's response header
+        :return: A dictionary with the name and value of each link
+        """
         links = link.split(',')
         result = {}
         for l in links:
             f, s = l.split(';')
-            result[s[6:-1]] = f[1:-2].replace(CanvasAPI.WEBSITE_ROOT, '')
+            result[s[6:-1]] = f[1:-1].replace(CanvasAPI.WEBSITE_ROOT, '')
         return result
 
     def _get_all_pages(self, url: str, params: dict = None) -> list:
+        """
+        Get the full results from a query by following pagination links until the last page
+        :param url: The URL for the query request
+        :param params: A dictionary of parameter names and values to be sent with the request
+        :return: The full list of result objects returned by the query
+        """
         response = self._request('GET', url, params)
         result = json.loads(response.read().decode())
         links = CanvasAPI._decode_links(response.getheader("Link"))
