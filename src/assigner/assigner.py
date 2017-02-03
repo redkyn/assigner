@@ -12,7 +12,6 @@ from datetime import datetime
 
 from requests.exceptions import HTTPError
 from colorlog import ColoredFormatter
-from prettytable import PrettyTable
 from progressbar import ProgressBar
 
 import commands
@@ -35,8 +34,7 @@ subcommands = OrderedDict([
     ("unarchive", "commands.unarchive"),
     ("status", "commands.status"),
     ("import", "commands.import"),
-    ("canvas_import", "commands.canvas_import"),
-    ("list_courses", "commands.list_courses"),
+    ("canvas", "commands.canvas"),
     ("set", "commands.set"),
 ])
 
@@ -79,46 +77,6 @@ def manage_users(conf, args, level):
             raise
 
     print("Changed {} repositories.".format(count))
-
-
-@config_context
-def import_from_canvas(conf, args):
-    """Imports students from a Canvas course to the roster.
-    """
-    if 'canvas-token' not in conf:
-        logging.error("canvas-token configuration is missing! Please set the Canvas API access "
-                      "token before attempting to import users from Canvas")
-        print("Import from canvas failed: missing Canvas API access token.")
-        return
-
-    if "roster" not in conf:
-        conf["roster"] = []
-
-    course_id = args.id
-    section = args.section
-
-    canvas = CanvasAPI(conf["canvas-token"])
-
-    students = canvas.get_course_students(course_id)
-
-    for s in students:
-        conf.roster.append({
-            "name": s['sortable_name'],
-            "username": s['sis_user_id'],
-            "section": section
-        })
-
-        try:
-            conf.roster[-1]["id"] = Repo.get_user_id(
-                s['sis_user_id'], conf.gitlab_host, conf.token
-            )
-        except RepoError:
-            logger.warning(
-                "Student {} does not have a Gitlab account.".format(s['name'])
-            )
-
-    print("Imported {} students.".format(len(students)))
-
 
 
 @config_context
