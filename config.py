@@ -90,6 +90,10 @@ class Config(UserDict):
             "canvas-token": {
                 "type": "string",
             },
+            # Canvas domain
+            "canvas-host": {
+                "type": "string",
+            }
         },
         "required": ["gitlab-host", "namespace", "token", "semester"],
         "additionalProperties": False,
