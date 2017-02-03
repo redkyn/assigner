@@ -12,7 +12,6 @@ from datetime import datetime
 
 from requests.exceptions import HTTPError
 from colorlog import ColoredFormatter
-from prettytable import PrettyTable
 from progressbar import ProgressBar
 
 import commands
@@ -35,8 +34,7 @@ subcommands = OrderedDict([
     ("unarchive", "commands.unarchive"),
     ("status", "commands.status"),
     ("import", "commands.import"),
-    ("canvas_import", "commands.canvas_import"),
-    ("list_courses", "commands.list_courses"),
+    ("canvas", "commands.canvas"),
     ("set", "commands.set"),
 ])
 
