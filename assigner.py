@@ -1,12 +1,13 @@
 #!/usr/bin/env python3
-import time
 import argparse
+import csv
+import importlib
 import logging
 import os
 import re
-import csv
-import tempfile
+import time
 
+from collections import OrderedDict
 from datetime import datetime
 
 from requests.exceptions import HTTPError
@@ -14,218 +15,30 @@ from colorlog import ColoredFormatter
 from prettytable import PrettyTable
 from progressbar import ProgressBar
 
+import commands
 from canvas import CanvasAPI
 from config import config_context
 from baserepo import Access, RepoError, Repo, BaseRepo, StudentRepo
 
 logger = logging.getLogger(__name__)
+
 description = "An automated tool for assigning programming homework."
 
-
-@config_context
-def new(conf, args):
-    """Creates a new base repository for an assignment so that you can add the
-    instructions, sample code, etc.
-    """
-    hw_name = args.name
-    dry_run = args.dry_run
-    host = conf.gitlab_host
-    namespace = conf.namespace
-    token = conf.token
-
-    if dry_run:
-        url = Repo.build_url(host, namespace, hw_name)
-        print("Created repo at {}.".format(url))
-    else:
-        try:
-            repo = BaseRepo.new(hw_name, namespace, host, token)
-            print("Created repo at {}.".format(repo.url))
-        except HTTPError as e:
-            if e.response.status_code == 400:
-                logger.warning("Repository {} already exists!".format(hw_name))
-            else:
-                raise
-
-
-@config_context
-def assign(conf, args):
-    """Creates homework repositories for an assignment for each student
-    in the roster.
-    """
-    hw_name = args.name
-    if args.branch:
-        branch = args.branch
-    else:
-        branch = "master"
-    dry_run = args.dry_run
-    force = args.force
-    host = conf.gitlab_host
-    namespace = conf.namespace
-    token = conf.token
-    semester = conf.semester
-
-    roster = get_filtered_roster(conf.roster, args.section, args.student)
-
-    actual_count = 0  # Represents the number of repos actually pushed to
-    student_count = len(roster)
-
-    with tempfile.TemporaryDirectory() as tmpdirname:
-        print("Assigning '{}' to {} student{} in {}.".format(
-            hw_name, student_count,
-            "s" if student_count != 1 else "",
-            "section " + args.section if args.section else "all sections")
-        )
-        base = BaseRepo(host, namespace, hw_name, token)
-        if not dry_run:
-            base.clone_to(tmpdirname, branch)
-        if force:
-            logging.warning("Repos will be overwritten.")
-        for i, student in enumerate(roster):
-            username = student["username"]
-            student_section = student["section"]
-            full_name = StudentRepo.name(semester, student_section,
-                                         hw_name, username)
-            repo = StudentRepo(host, namespace, full_name, token)
-
-            print("{}/{} - {}".format(i+1, student_count, full_name))
-            if not repo.already_exists():
-                if not dry_run:
-                    repo = StudentRepo.new(base, semester, student_section,
-                                           username, token)
-                    repo.push(base, branch)
-                actual_count += 1
-                logging.debug("Assigned.")
-            elif force:
-                logging.info("{}: Already exists.".format(full_name))
-                logging.info("{}: Deleting...".format(full_name))
-                if not dry_run:
-                    repo.delete()
-                    # HACK: Gitlab will throw a 400 if you delete and immediately recreate a repo.
-                    # A bit more than half a second was experimentally determined to prevent this issue.
-                    time.sleep(0.55)
-                    repo = StudentRepo.new(base, semester, student_section,
-                                           username, token)
-                    repo.push(base, branch)
-                actual_count += 1
-                logging.debug("Assigned.")
-            elif args.branch:
-                logging.info("{}: Already exists.".format(full_name))
-                # If we have an explicit branch, push anyways
-                repo.push(base, branch) if not dry_run else None
-                actual_count += 1
-                logging.debug("Assigned.")
-            else:
-                logging.warning("Skipping...")
-            i += 1
-
-    print("Assigned '{}' to {} student{}.".format(
-        hw_name,
-        actual_count,
-        "s" if actual_count != 1 else ""
-    ))
-    if actual_count == 0:
-        logging.warning(
-            "Consider using --force if you want to override existing repos."
-        )
-
-
-@config_context
-def open_assignment(conf, args):
-    """Adds each student in the roster to their respective homework
-    repositories as Developers so they can pull/commit/push their work.
-    """
-    hw_name = args.name
-    host = conf.gitlab_host
-    namespace = conf.namespace
-    token = conf.token
-    semester = conf.semester
-
-    roster = get_filtered_roster(conf.roster, args.section, args.student)
-
-    count = 0
-    for student in roster:
-        username = student["username"]
-        student_section = student["section"]
-        full_name = StudentRepo.name(semester, student_section,
-                                     hw_name, username)
-
-        try:
-            repo = StudentRepo(host, namespace, full_name, token)
-            if "id" not in student:
-                student["id"] = Repo.get_user_id(username, host, token)
-
-            repo.add_member(student["id"], Access.developer)
-            count += 1
-        except RepoError:
-            logging.warn("Could not add {} to {}.".format(username, full_name))
-        except HTTPError:
-            raise
-
-    print("Granted access to {} repositories.".format(count))
-
-
-@config_context
-def get(conf, args):
-    """Creates a folder for the assignment in the CWD (or <path>, if specified)
-    and clones each students' repository into subfolders.
-    """
-    hw_name = args.name
-    hw_path = args.path
-    host = conf.gitlab_host
-    namespace = conf.namespace
-    token = conf.token
-    semester = conf.semester
-
-    roster = get_filtered_roster(conf.roster, args.section, args.student)
-
-    path = os.path.join(hw_path, hw_name)
-    os.makedirs(path, mode=0o700, exist_ok=True)
-
-    count = 0
-    for student in roster:
-        username = student["username"]
-        student_section = student["section"]
-        full_name = StudentRepo.name(semester, student_section,
-                                     hw_name, username)
-
-        try:
-            repo = StudentRepo(host, namespace, full_name, token)
-            repo.clone_to(os.path.join(path, username))
-            count += 1
-        except RepoError as e:
-            logging.warn(str(e))
-        except HTTPError as e:
-            if e.response.status_code == 404:
-                logging.warn("Repository {} does not exist.".format(full_name))
-            else:
-                raise
-
-    print("Cloned {} repositories.".format(count))
-
-
-def lock(args):
-    """Sets each student to Reporter status on their homework repository so
-    they cannot push changes, etc.
-    """
-    return manage_users(args, Access.reporter)
-
-
-def unlock(args):
-    """Sets each student to Developer status on their homework repository.
-    """
-    return manage_users(args, Access.developer)
-
-
-def archive(args):
-    """Archive each student repository so it won't show up in the project list.
-    """
-    return manage_repos(args, 'archive')
-
-
-def unarchive(args):
-    """Unarchive each student repository so it will show back up in the project list.
-    """
-    return manage_repos(args, 'unarchive')
+subcommands = OrderedDict([
+    ("new", "commands.new"),
+    ("assign", "commands.assign"),
+    ("open", "commands.open"),
+    ("get", "commands.get"),
+    ("lock", "commands.lock"),
+    ("unlock", "commands.unlock"),
+    ("archive", "commands.archive"),
+    ("unarchive", "commands.unarchive"),
+    ("status", "commands.status"),
+    ("import", "commands.import"),
+    ("canvas_import", "commands.canvas_import"),
+    ("list_courses", "commands.list_courses"),
+    ("set", "commands.set"),
+])
 
 
 @config_context
@@ -269,131 +82,6 @@ def manage_users(conf, args, level):
 
 
 @config_context
-def status(conf, args):
-    """Retrieves and prints the status of repos"""
-    hw_name = args.name
-
-    if not hw_name:
-        raise ValueError("Missing assignment name.")
-
-    host = conf.gitlab_host
-    namespace = conf.namespace
-    token = conf.token
-    semester = conf.semester
-
-    roster = get_filtered_roster(conf.roster, args.section, args.student)
-    sort_key = args.sort
-
-    if sort_key:
-        roster.sort(key=lambda s: s[sort_key])
-
-    output = PrettyTable([
-        "#", "Sec", "SID", "Name", "Status", "Branches",
-        "HEAD", "Last Commit Author", "Last Commit Time"])
-    output.align["Name"] = "l"
-    output.align["Last Commit Author"] = "l"
-
-    progress = ProgressBar(max_value=len(roster))
-
-    for i, student in enumerate(roster):
-        progress.update(i)
-
-        name = student["name"]
-        username = student["username"]
-        student_section = student["section"]
-        full_name = StudentRepo.name(semester, student_section,
-                                     hw_name, username)
-
-        row = [i+1, student_section, username, name, "", "", "", "", ""]
-
-        try:
-            repo = StudentRepo(host, namespace, full_name, token)
-
-            if not repo.already_exists():
-                row[4] = "Not Assigned"
-                output.add_row(row)
-                continue
-
-            if "id" not in student:
-                student["id"] = Repo.get_user_id(username, host, token)
-
-            members = repo.list_members()
-            if student["id"] not in [s["id"] for s in members]:
-                row[4] = "Not Opened"
-                output.add_row(row)
-                continue
-
-            if repo.info["archived"]:
-                row[4] = 'Archived'
-            else:
-                level = Access([s["access_level"] for s in members if s["id"] == student["id"]][0])
-                row[4] = "Open" if level is Access.developer else "Locked"
-
-            branches = repo.list_branches()
-
-            if branches:
-                row[5] = ", ".join([b["name"] for b in branches])
-
-            commits = repo.list_commits()
-
-            if commits:
-                head = commits[0]
-                row[6] = head["short_id"]
-                row[7] = head["author_name"]
-                created_at = head["created_at"]
-                # Fix UTC offset format in GitLab's datetime
-                created_at = created_at[:-6] + created_at[-6:].replace(':', '')
-                row[8] = datetime.strptime(created_at, "%Y-%m-%dT%H:%M:%S.%f%z")
-
-            output.add_row(row)
-
-        except HTTPError:
-            raise
-
-    progress.finish()
-    print(output)
-
-
-@config_context
-def import_students(conf, args):
-    """Imports students from a CSV file to the roster.
-    """
-    section = args.section
-
-    # TODO: This should probably move to another file
-    email_re = re.compile(r"^(?P<user>[^@]+)")
-    with open(args.file) as fh:
-        reader = csv.reader(fh)
-
-        if "roster" not in conf:
-            conf["roster"] = []
-
-        # Note: This is incredibly hardcoded.
-        # However, peoplesoft never updates anything, so we're probably good.
-        reader.__next__()  # Skip the header
-        count = 0
-        for row in reader:
-            count += 1
-            match = email_re.match(row[4])
-            conf.roster.append({
-                "name": row[3],
-                "username": match.group("user"),
-                "section": section
-            })
-
-            try:
-                conf.roster[-1]["id"] = Repo.get_user_id(
-                    match.group("user"), conf.gitlab_host, conf.token
-                )
-            except RepoError:
-                logger.warning(
-                    "Student {} does not have a Gitlab account.".format(row[3])
-                )
-
-    print("Imported {} students.".format(count))
-
-
-@config_context
 def import_from_canvas(conf, args):
     """Imports students from a Canvas course to the roster.
     """
@@ -432,31 +120,6 @@ def import_from_canvas(conf, args):
     print("Imported {} students.".format(len(students)))
 
 
-@config_context
-def print_canvas_courses(conf, args):
-    """Show a list of current teacher's courses from Canvas via the API.
-    """
-    if 'canvas-token' not in conf:
-        logging.error("canvas-token configuration is missing! Please set the Canvas API access "
-                      "token before attempting to use Canvas API functionality")
-        print("Canvas course listing failed: missing Canvas API access token.")
-        return
-
-    canvas = CanvasAPI(conf["canvas-token"])
-
-    courses = canvas.get_teacher_courses()
-
-    if not courses:
-        print("No courses found where current user is a teacher.")
-        return
-
-    output = PrettyTable(["#", "ID", "Name"])
-    output.align["Name"] = "l"
-
-    for ix, c in enumerate(courses):
-        output.add_row((ix+1, c['id'], c['name']))
-
-    print(output)
 
 @config_context
 def manage_repos(conf, args, action):
@@ -512,11 +175,6 @@ def get_filtered_roster(roster, section, target):
     return roster
 
 
-@config_context
-def set_conf(conf, args):
-    """Sets <key> to <value> in the config.
-    """
-    conf[args.key] = args.value
 
 
 def configure_logging():
@@ -549,6 +207,7 @@ def configure_logging():
 def make_parser():
     """Construct and return a CLI argument parser.
     """
+        
     parser = argparse.ArgumentParser(description=description)
     parser.add_argument("--config", default="_config.yml",
                         help="Path a config file")
@@ -564,151 +223,10 @@ def make_parser():
     # Set up subcommands for each package
     subparsers = parser.add_subparsers(title="subcommands")
 
-    # "new" command
-    subparser = subparsers.add_parser("new",
-                                      help="Create a new base repo")
-    subparser.add_argument("name",
-                           help="Name of the assignment.")
-    subparser.add_argument("--dry-run", action="store_true",
-                           help="Don't actually do it.")
-    subparser.set_defaults(run=new)
-
-    # "assign" command
-    subparser = subparsers.add_parser("assign",
-                                      help="Assign a base repo to students")
-    subparser.add_argument("name",
-                           help="Name of the assignment to assign.")
-    subparser.add_argument("--branch", nargs="?",
-                           help="Branch to push")
-    subparser.add_argument("--section", nargs="?",
-                           help="Section to assign homework to")
-    subparser.add_argument("--student", metavar="id",
-                           help="ID of the student to assign to.")
-    subparser.add_argument("--dry-run", action="store_true",
-                           help="Don't actually do it.")
-    subparser.add_argument("-f", "--force", action="store_true", dest="force",
-                           help="Delete and recreate already existing " +
-                                "student repos.")
-    subparser.set_defaults(run=assign)
-
-    # "open" command
-    subparser = subparsers.add_parser("open", help="Grant students access " +
-                                                   "to their repos")
-    subparser.add_argument("name", help="Name of the assignment to grant " +
-                                        "access to")
-    subparser.add_argument("--section", nargs="?",
-                           help="Section to grant access to")
-    subparser.add_argument("--student", metavar="id",
-                           help="ID of the student to assign to.")
-    subparser.set_defaults(run=open_assignment)
-
-    # "get" command
-    subparser = subparsers.add_parser("get",
-                                      help="Clone student repos")
-    subparser.add_argument("name",
-                           help="Name of the assignment to retrieve.")
-    subparser.add_argument("path", default=".", nargs="?",
-                           help="Path to clone student repositories to")
-    subparser.add_argument("--section", nargs="?",
-                           help="Section to retrieve")
-    subparser.add_argument("--student", metavar="id",
-                           help="ID of student whose assignment needs " +
-                                "retrieving.")
-    subparser.set_defaults(run=get)
-
-    # "lock" command
-    subparser = subparsers.add_parser("lock",
-                                      help="Lock students out of repos")
-    subparser.add_argument("name",
-                           help="Name of the assignment to lock.")
-    subparser.add_argument("--section", nargs="?",
-                           help="Section to lock")
-    subparser.add_argument("--student", metavar="id",
-                           help="ID of student whose assignment needs " +
-                                "locking.")
-    subparser.add_argument("--dry-run", action="store_true",
-                           help="Don't actually do it.")
-    subparser.set_defaults(run=lock)
-
-    # "unlock" command
-    subparser = subparsers.add_parser("unlock",
-                                      help="unlock students from repos")
-    subparser.add_argument("name",
-                           help="Name of the assignment to unlock.")
-    subparser.add_argument("--section", nargs="?",
-                           help="Section to unlock")
-    subparser.add_argument("--student", metavar="id",
-                           help="ID of student whose assignment needs " +
-                                "unlocking.")
-    subparser.add_argument("--dry-run", action="store_true",
-                           help="Don't actually do it.")
-    subparser.set_defaults(run=unlock)
-
-    # "archive" command
-    subparser = subparsers.add_parser("archive",
-                                      help="Archive students repos")
-    subparser.add_argument("name",
-                           help="Name of the assignment to archive.")
-    subparser.add_argument("--section", nargs="?",
-                           help="Section to archive")
-    subparser.add_argument("--student", metavar="id",
-                           help="ID of student whose assignment to archive.")
-    subparser.add_argument("--dry-run", action="store_true",
-                           help="Don't actually do it.")
-    subparser.set_defaults(run=archive)
-
-    # "unarchive" command
-    subparser = subparsers.add_parser("unarchive",
-                                      help="Unarchive students repos")
-    subparser.add_argument("name",
-                           help="Name of the assignment to unarchive.")
-    subparser.add_argument("--section", nargs="?",
-                           help="Section to unarchive")
-    subparser.add_argument("--student", metavar="id",
-                           help="ID of student whose assignment to unarchive.")
-    subparser.add_argument("--dry-run", action="store_true",
-                           help="Don't actually do it.")
-    subparser.set_defaults(run=unarchive)
-
-    # "status" command
-    subparser = subparsers.add_parser("status",
-                                      help="Retrieve status of repos")
-    subparser.add_argument("--section", nargs="?",
-                           help="Section to get status of")
-    subparser.add_argument("--student", metavar="id",
-                           help="ID of student.")
-    subparser.add_argument("--sort", nargs="?", default="name",
-                           choices=["name", "username"],
-                           help="Key to sort users by.")
-    subparser.add_argument("name", nargs="?",
-                           help="Name of the assignment to look up.")
-    subparser.set_defaults(run=status)
-
-    # "import" command
-    subparser = subparsers.add_parser("import",
-                                      help="Import students from a csv")
-    subparser.add_argument("file", help="CSV file to import from")
-    subparser.add_argument("section", help="Section being imported")
-    subparser.set_defaults(run=import_students)
-
-    # "canvas_import" command
-    subparser = subparsers.add_parser("canvas_import",
-                                      help="Import students from Canvas via the API")
-    subparser.add_argument("id", help="Canvas ID for course to import from")
-    subparser.add_argument("section", help="Section being imported")
-    subparser.set_defaults(run=import_from_canvas)
-
-    # "list_courses" command
-    subparser = subparsers.add_parser("list_courses",
-                                      help="Show a list of current teacher's courses from Canvas via the API")
-    subparser.set_defaults(run=print_canvas_courses)
-
-    # "set" command
-    subparser = subparsers.add_parser("config",
-                                      help="Set configuration values")
-    subparser.add_argument("key", help="Key to set")
-    subparser.add_argument("value", help="Value to set")
-    subparser.set_defaults(run=set_conf)
+    for name, path in subcommands.items():
+        module = importlib.import_module(path)
+        subparser = subparsers.add_parser(name, help=module.help)
+        module.setup_parser(subparser)
 
     # The "help" command shows the help screen
     help_parser = subparsers.add_parser("help",
