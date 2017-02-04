@@ -1,23 +1,14 @@
 #!/usr/bin/env python3
 import argparse
-import csv
 import importlib
 import logging
-import os
-import re
-import time
-
 from collections import OrderedDict
-from datetime import datetime
 
-from requests.exceptions import HTTPError
 from colorlog import ColoredFormatter
-from progressbar import ProgressBar
+from requests.exceptions import HTTPError
 
-import commands
-from canvas import CanvasAPI
+from baserepo import StudentRepo
 from config import config_context
-from baserepo import Access, RepoError, Repo, BaseRepo, StudentRepo
 
 logger = logging.getLogger(__name__)
 
