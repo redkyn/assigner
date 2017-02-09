@@ -34,23 +34,11 @@ def import_from_canvas(conf, args):
     for s in students:
         if 'sis_user_id' not in s:
             logger.error("Could not get username for {}".format(s['sortable_name']))
-        elif not force and any([r['username'] == s['sis_user_id'] for r in conf.roster]):
-            logger.warning("User {} is already in the roster, skipping".format(s['sis_user_id']))
-        else:
-            conf.roster.append({
-                "name": s['sortable_name'],
-                "username": s['sis_user_id'],
-                "section": section
-            })
 
-            try:
-                conf.roster[-1]["id"] = Repo.get_user_id(
-                    s['sis_user_id'], conf.gitlab_host, conf.token
-                )
-            except RepoError:
-                logger.warning(
-                    "Student {} does not have a Gitlab account.".format(s['name'])
-                )
+        try:
+            add_to_roster(conf, conf.roster, s['sortable_name'], s['sis_user_id'], section, force)
+        except DuplicateUserError:
+            logger.warning("User {} is already in the roster, skipping".format(s['sis_user_id']))
 
     print("Imported {} students.".format(len(students)))
 

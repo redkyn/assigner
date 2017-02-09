@@ -31,20 +31,11 @@ def import_students(conf, args):
         for row in reader:
             count += 1
             match = email_re.match(row[4])
-            conf.roster.append({
-                "name": row[3],
-                "username": match.group("user"),
-                "section": section
-            })
 
             try:
-                conf.roster[-1]["id"] = Repo.get_user_id(
-                    match.group("user"), conf.gitlab_host, conf.token
-                )
-            except RepoError:
-                logger.warning(
-                    "Student {} does not have a Gitlab account.".format(row[3])
-                )
+                add_to_roster(conf, conf.roster, row[3], match.group("user"), section, force)
+            except DuplicateUserError:
+                logger.warning("User {} is already in the roster, skipping".format(match.group("user")))
 
     print("Imported {} students.".format(count))
 
