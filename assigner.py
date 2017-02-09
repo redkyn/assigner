@@ -7,8 +7,8 @@ from collections import OrderedDict
 from colorlog import ColoredFormatter
 from requests.exceptions import HTTPError
 
-from baserepo import StudentRepo
-from config import config_context
+from baserepo import Repo, StudentRepo, RepoError
+from config import config_context, DuplicateUserError
 
 logger = logging.getLogger(__name__)
 
@@ -27,6 +27,7 @@ subcommands = OrderedDict([
     ("import", "commands.import"),
     ("canvas", "commands.canvas"),
     ("set", "commands.set"),
+    ("roster", "commands.roster"),
 ])
 
 
@@ -123,7 +124,26 @@ def get_filtered_roster(roster, section, target):
         raise ValueError("No matching students found in roster.")
     return roster
 
+def add_to_roster(conf, roster, name, username, section, force=False):
+    student = {
+        "name": name,
+        "username": username,
+        "section": section
+    }
 
+    if not force and any([s['username'] == username for s in roster]):
+      raise DuplicateUserError("Student already exists in roster!")
+
+    try:
+        student["id"] = Repo.get_user_id(
+            username, conf.gitlab_host, conf.token
+        )
+    except RepoError:
+        logger.warning(
+            "Student {} does not have a Gitlab account.".format(name)
+        )
+
+    roster.append(student)
 
 
 def configure_logging():
