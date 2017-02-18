@@ -23,12 +23,13 @@ subcommands = OrderedDict([
     ("unlock", "commands.unlock"),
     ("archive", "commands.archive"),
     ("unarchive", "commands.unarchive"),
+    ("protect", "commands.protect"),
+    ("unprotect", "commands.unprotect"),
     ("status", "commands.status"),
     ("import", "commands.import"),
     ("canvas", "commands.canvas"),
     ("set", "commands.set"),
 ])
-
 
 @config_context
 def manage_users(conf, args, level):
@@ -72,15 +73,10 @@ def manage_users(conf, args, level):
 
 @config_context
 def manage_repos(conf, args, action):
-    """Performs an action (archive|unarchive) on all student repos
+    """Performs an action (lambda) on all student repos
     """
     hw_name = args.name
     dry_run = args.dry_run
-
-    if dry_run:
-        raise NotImplementedError("'--dry-run' is not implemented")
-    if action not in ['archive', 'unarchive']:
-        raise ValueError("Unexpected action '{}', accepted actions are 'archive' and 'unarchive'.".format(action))
 
     host = conf.gitlab_host
     namespace = conf.namespace
@@ -103,10 +99,8 @@ def manage_repos(conf, args, action):
 
         try:
             repo = StudentRepo(host, namespace, full_name, token)
-            if action == 'archive':
-                repo.archive()
-            else:
-                repo.unarchive()
+            if not dry_run:
+                action(repo)
             count += 1
         except HTTPError:
             raise

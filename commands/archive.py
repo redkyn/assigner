@@ -10,7 +10,7 @@ logger = logging.getLogger(__name__)
 def archive(args):
     """Archive each student repository so it won't show up in the project list.
     """
-    return manage_repos(args, 'archive')
+    return manage_repos(args, lambda repo: repo.archive())
 
 
 def setup_parser(parser):

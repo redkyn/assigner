@@ -267,6 +267,12 @@ class Repo(object):
     def unarchive(self):
         return self._gl_post("/projects/{}/unarchive".format(self.id))
 
+    def protect(self, branch="master"):
+        return self._gl_put("/projects/{}/repository/branches/{}/protect".format(self.id, branch))
+
+    def unprotect(self, branch="master"):
+        return self._gl_put("/projects/{}/repository/branches/{}/unprotect".format(self.id, branch))
+
     def _gl_get(self, path, params={}):
         return self.__class__._cls_gl_get(
             self.url_base, path, self.token, params
