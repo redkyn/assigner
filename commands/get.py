@@ -3,7 +3,7 @@ import os
 
 from requests.exceptions import HTTPError
 
-from assigner import get_filtered_roster
+from roster_util import get_filtered_roster
 from baserepo import RepoError, StudentRepo
 from config import config_context
 

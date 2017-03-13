@@ -7,8 +7,8 @@ from collections import OrderedDict
 from colorlog import ColoredFormatter
 from requests.exceptions import HTTPError
 
-from baserepo import Repo, StudentRepo, RepoError
-from config import config_context, DuplicateUserError
+from baserepo import Repo, StudentRepo
+from config import config_context
 
 logger = logging.getLogger(__name__)
 
@@ -113,37 +113,6 @@ def manage_repos(conf, args, action):
             raise
 
     print("Changed {} repositories.".format(count))
-
-
-def get_filtered_roster(roster, section, target):
-    if target:
-        roster = [s for s in roster if s["username"] == target]
-    elif section:
-        roster = [s for s in roster if s["section"] == section]
-    if not roster:
-        raise ValueError("No matching students found in roster.")
-    return roster
-
-def add_to_roster(conf, roster, name, username, section, force=False):
-    student = {
-        "name": name,
-        "username": username,
-        "section": section
-    }
-
-    if not force and any([s['username'] == username for s in roster]):
-      raise DuplicateUserError("Student already exists in roster!")
-
-    try:
-        student["id"] = Repo.get_user_id(
-            username, conf.gitlab_host, conf.token
-        )
-    except RepoError:
-        logger.warning(
-            "Student {} does not have a Gitlab account.".format(name)
-        )
-
-    roster.append(student)
 
 
 def configure_logging():

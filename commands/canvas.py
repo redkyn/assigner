@@ -6,6 +6,8 @@ from config import config_context
 
 from prettytable import PrettyTable
 
+from roster_util import add_to_roster
+
 help = "Get Canvas course information"
 
 logger = logging.getLogger(__name__)

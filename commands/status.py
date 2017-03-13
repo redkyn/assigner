@@ -5,7 +5,7 @@ from requests.exceptions import HTTPError
 from prettytable import PrettyTable
 from progressbar import ProgressBar
 
-from assigner import get_filtered_roster
+from roster_util import get_filtered_roster
 from config import config_context
 from baserepo import Access, Repo, StudentRepo
 

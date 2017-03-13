@@ -2,7 +2,7 @@ import logging
 
 from config import config_context, DuplicateUserError
 from prettytable import PrettyTable
-from assigner import get_filtered_roster, add_to_roster
+from roster_util import get_filtered_roster, add_to_roster
 
 help = "Manage class roster"
 
