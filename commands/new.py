@@ -23,11 +23,11 @@ def new(conf, args):
 
     if dry_run:
         url = Repo.build_url(host, namespace, hw_name)
-        print("Created repo at {}.".format(url))
+        print("Created repo for {}:\n\t{}\n\t{}".format(hw_name, url, "(ssh url not available)"))
     else:
         try:
             repo = BaseRepo.new(hw_name, namespace, host, token)
-            print("Created repo at {}.".format(repo.url))
+            print("Created repo for {}:\n\t{}\n\t{}".format(hw_name, repo.url, repo.ssh_url))
         except HTTPError as e:
             if e.response.status_code == 400:
                 logger.warning("Repository {} already exists!".format(hw_name))
