@@ -267,8 +267,12 @@ class Repo(object):
     def unarchive(self):
         return self._gl_post("/projects/{}/unarchive".format(self.id))
 
-    def protect(self, branch="master"):
-        return self._gl_put("/projects/{}/repository/branches/{}/protect".format(self.id, branch))
+    def protect(self, branch="master", developer_push=True, developer_merge=True): # NOTE: these are not the same defaults that Gitlab uses
+        params = {
+            "developers_can_push": developer_push,
+            "developers_can_merge": developer_merge,
+          }
+        return self._gl_put("/projects/{}/repository/branches/{}/protect".format(self.id, branch), params)
 
     def unprotect(self, branch="master"):
         return self._gl_put("/projects/{}/repository/branches/{}/unprotect".format(self.id, branch))
