@@ -75,7 +75,7 @@ def print_canvas_courses(conf, args):
     output = PrettyTable(["#", "ID", "Name"])
     output.align["Name"] = "l"
 
-    for ix, c in enumerate(courses):
+    for ix, c in enumerate(sorted(courses, key=lambda c: c['id'], reverse=True)):
         output.add_row((ix+1, c['id'], c['name']))
 
     print(output)
