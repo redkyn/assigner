@@ -7,7 +7,7 @@ from collections import OrderedDict
 from colorlog import ColoredFormatter
 from requests.exceptions import HTTPError
 
-from baserepo import StudentRepo
+from baserepo import Repo, StudentRepo
 from config import config_context
 
 logger = logging.getLogger(__name__)
@@ -29,6 +29,7 @@ subcommands = OrderedDict([
     ("import", "commands.import"),
     ("canvas", "commands.canvas"),
     ("set", "commands.set"),
+    ("roster", "commands.roster"),
 ])
 
 @config_context
@@ -106,18 +107,6 @@ def manage_repos(conf, args, action):
             raise
 
     print("Changed {} repositories.".format(count))
-
-
-def get_filtered_roster(roster, section, target):
-    if target:
-        roster = [s for s in roster if s["username"] == target]
-    elif section:
-        roster = [s for s in roster if s["section"] == section]
-    if not roster:
-        raise ValueError("No matching students found in roster.")
-    return roster
-
-
 
 
 def configure_logging():

@@ -4,6 +4,8 @@ import yaml
 
 from collections import UserDict
 
+class DuplicateUserError(Exception):
+    pass
 
 def config_context(func):
     def wrapper(cmdargs, *args):
