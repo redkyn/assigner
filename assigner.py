@@ -9,6 +9,7 @@ from requests.exceptions import HTTPError
 
 from baserepo import Repo, StudentRepo
 from config import config_context
+from roster_util import get_filtered_roster
 
 logger = logging.getLogger(__name__)
 
