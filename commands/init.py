@@ -18,10 +18,10 @@ def prompt(explanation, default=None):
     if value == '':
         if default is not None:
             return default
-        else:
-            return prompt(explanation, default)
-    else:
-        return value
+
+        return prompt(explanation, default)
+
+    return value
 
 def guess_semester():
     now = datetime.datetime.now()
@@ -42,7 +42,7 @@ def init(conf, args):
     conf['semester'] = prompt("Year and semester, in the format YYYY-(FS|SP|SS)", guess_semester())
     conf['namespace'] = prompt("Gitlab group to create repositories under", "{}-CS1001".format(conf['semester']))
     do_canvas = input("Do you want to configure Canvas integration? [y/N]: ")
-    if do_canvas == 'y' or do_canvas == 'Y':
+    if do_canvas.loewr() == 'y':
         conf['canvas-host'] = prompt("Canvas server to use (???.instructure.com)")
         conf['canvas-token'] = prompt("Canvas access token (from {}/profile/settings)".format(conf['canvas-host']))
 
