@@ -2,7 +2,7 @@ import logging
 
 from baserepo import Repo, RepoError
 from canvas import CanvasAPI
-from config import config_context
+from config import config_context,DuplicateUserError
 
 from prettytable import PrettyTable
 
