@@ -31,6 +31,7 @@ subcommands = OrderedDict([
     ("canvas", "commands.canvas"),
     ("set", "commands.set"),
     ("roster", "commands.roster"),
+    ("init", "commands.init"),
 ])
 
 @config_context
