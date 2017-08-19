@@ -145,6 +145,7 @@ class Repo(object):
                 self._info = self._gl_get(url)
             except HTTPError as e:
                 if e.response.status_code == 404:
+                    logging.debug("Could not find repo with url {}/api/v3{}.".format(self.url_base,url))
                     self._info = None
                 else:
                     raise
@@ -170,6 +171,7 @@ class Repo(object):
         return False
 
     def clone_to(self, dir_name, branch=None):
+        logging.debug("Cloning {}...".format(self.ssh_url))
         if branch:
             self._repo = git.Repo.clone_from(self.ssh_url, dir_name,
                                              branch=branch)
