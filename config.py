@@ -50,7 +50,7 @@ class Config(UserDict):
             # Current semester
             "semester": {
                 "type": "string",
-                "pattern": r"^\d{4}(SP|FS|SS)$"
+                "pattern": r"^\d{4}-(SP|FS|SS)$"
             },
 
             # Roster of students

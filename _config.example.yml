@@ -1,7 +1,10 @@
+gitlab-host: https://git-classes.mst.edu/
+token: xxxxxxxxxxxxxxxx
+namespace: 2016-Fall-CS1001
+semester: 2016-FS
+# optional; for canvas integration
 canvas-token: xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
 canvas-host: mst.instructure.com
-gitlab-host: https://git-classes.mst.edu/
-namespace: 2016-Fall-CS1001
 # we recommend using one of the import commands to automatically populate the roster
 roster:
 - name: Smith, John
@@ -10,5 +13,3 @@ roster:
 - name: Smith, Jane
   section: A
   username: xyz123
-semester: 2016FS
-token: xxxxxxxxxxxxxxxx
