@@ -33,11 +33,14 @@ Alternatively, you could add the folder containing the `assigner` source to your
 - `unlock <assignment>` Sets each student to Developer status on their homework repository.
 - `archive <assignment>` Archives student repositories, disallowing pushes and hiding the repository from the project listing on GitLab.
 - `unarchive <assignment>` Restores archived student repositories to their previous state.
+- `protect <branch>` Protect a repo branch (prevent force pushes)
+- `unprotect <branch>` Unprotect a repo branch
 - `status <assignment>` Shows the status of student homework repositories, as well as the last commit author and timestamp for each repository.
 - `import <file> <section>` Imports students from a CSV file to the roster.
-- `canvas_import <id> <section>` Imports students from Canvas through the Canvas API using the Canvas course ID.
-- `list_courses` Shows the list of courses associated with the Canvas API account accessed by the Canvas token in the configuration file.
-- `config <key> <value>` Sets `<key>` to `<value>` in the config.
+- `canvas` Lists Canvas courses or imports students from a Canvas course to the roster.
+- `set <key> <value>` Sets `<key>` to `<value>` in the config.
+- `roster` Manages the course roster.
+- `init` Creates a new configuration file, interactively prompting for required values.
 - `help` What it says on the tin.
 
 #### SSH
