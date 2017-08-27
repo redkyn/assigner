@@ -75,8 +75,9 @@ This process is a little hacky, so if you run into trouble, please [report a bug
     If you hover your mouse cursor over the button, it should display 'Download Enrolled Students Table to Excel'.
     Click this button and save the resulting file somewhere.
 3. Open the file you downloaded in step 2 in Excel or LibreOffice and save it as a CSV.
-    (You may notice that the name of the file you downloaded ends in `.csv`.
-     This is a convenient lie; PeopleSoft actually exports an HTML table and relies on Excel to detect and import this correctly.)
+    (You may notice that the name of the file you downloaded already ends in `.csv`.
+     This is a convenient lie; PeopleSoft actually exports an HTML table and relies on Excel to detect and import this correctly.
+     Assigner expects an actual honest-to-goodness CSV file, so you need to use Excel to generate one.)
 4. Run `assigner import <path to file generated in step #3> <section letter>`.
     You can import several sections into the same roster by specifying different section letters.
 
@@ -115,7 +116,7 @@ Commit your changes and push them to GitLab.
 
 Once you have created a base repo, you can make student repos from it by running `assigner assign hw1`.
 This step *only* creates the repositories; it does not add the students to them.
-You should open GitLab and verify that the student repos look correct.
+You should open GitLab and verify that the students' repo contents look correct.
 Each repository should be named something along the lines of `2017-FS-A-hw1-bob123`.
 
 By default, `assigner assign` copies only the `master` branch from the base repo.
