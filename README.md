@@ -12,6 +12,8 @@ The list of students is retrieved from either a default YAML file or a specified
 
 ## Installation
 
+### Linux or macOS
+
 Just clone the repo somewhere and run the `assigner` script.
 It will fetch all necessary dependencies the first time it is run.
 You need to have `virtualenv` installed for this to work.
@@ -22,6 +24,17 @@ For instance, `ln -s $(pwd)/assigner ~/bin/assigner`.
 For macOS, we recommend placing a small script that calls `assigner` in a folder in your `$PATH`.
 
 Alternatively, you could add the folder containing the `assigner` source to your `$PATH`.
+
+### Windows
+
+We have not tested *Assigner* on Windows; however, we expect that it should work without much of a hitch.
+To run *Assigner*, have a look at the steps the `assigner` script takes; you will need to do these manually or write a batch script that does them.
+
+The gist is:
+
+1. Initialize a new virtualenv with Python 3 support.
+2. Install the dependencies listed in `requirements.txt` in the virtualenv.
+3. Run `assigner.py` using your virtualenv's `python`.
 
 ## Commands
 
