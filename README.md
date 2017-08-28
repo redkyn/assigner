@@ -67,7 +67,7 @@ The `import` command can read the resulting `.csv` and import your students' dat
 
 #### Importing from Canvas via the Canvas API
 The Canvas API can be used to retrieve the list of students for each course section.
-You can use the `list_courses` command to list your course sections, and make note of the ID of the course you would like to import students from. Then you can use the `canvas_import` command with the appropriate course ID to import the students from the course section into your configuration file.
+You can use the `canvas list` command to list your course sections, and make note of the ID of the course you would like to import students from. Then you can use the `canvas import` command with the appropriate course ID to import the students from the course section into your configuration file.
 
 #### Extra Help
 If you are particularly baffled, you can pass the `-h` or `--help` flag to any *Assigner* command for more details on what it offers.
