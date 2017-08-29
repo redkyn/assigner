@@ -7,7 +7,7 @@ from progressbar import ProgressBar
 
 from roster_util import get_filtered_roster
 from config import config_context
-from baserepo import Access, Repo, StudentRepo
+from baserepo import Access, Repo, StudentRepo, RepoError
 
 help="Retrieve status of repos"
 
@@ -61,7 +61,12 @@ def status(conf, args):
                 continue
 
             if "id" not in student:
-                student["id"] = Repo.get_user_id(username, host, token)
+                try:
+                    student["id"] = Repo.get_user_id(username, host, token)
+                except RepoError:
+                    row[4] = "No Gitlab user"
+                    output.add_row(row)
+                    continue
 
             members = repo.list_members()
             if student["id"] not in [s["id"] for s in members]:
