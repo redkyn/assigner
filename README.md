@@ -38,6 +38,8 @@ The gist is:
 
 ## Commands
 
+Check out the [tutorial](https://github.com/redkyn/assigner/blob/master/TUTORIAL.md) for a walkthrough of how to use Assigner's features!
+
 - `new <assignment>` Creates a new base repository for an assignment so that you can add the instructions, sample code, etc.
 - `assign <assignment>` Creates homework repositories for an assignment for each student in the roster.
 - `open <assignment>` Adds each student in the roster to their respective homework repositories as Developers so they can pull/commit/push their work.
