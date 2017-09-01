@@ -2,8 +2,9 @@ import csv
 import logging
 import re
 
-from config import config_context
+from config import config_context, DuplicateUserError
 from baserepo import Repo, RepoError
+from roster_util import add_to_roster
 
 help="Import users from a csv"
 
@@ -33,7 +34,7 @@ def import_students(conf, args):
             match = email_re.match(row[4])
 
             try:
-                add_to_roster(conf, conf.roster, row[3], match.group("user"), section, force)
+                add_to_roster(conf, conf.roster, row[3], match.group("user"), section, args.force)
             except DuplicateUserError:
                 logger.warning("User {} is already in the roster, skipping".format(match.group("user")))
 
@@ -42,4 +43,5 @@ def import_students(conf, args):
 def setup_parser(parser):
     parser.add_argument("file", help="CSV file to import from")
     parser.add_argument("section", help="Section being imported")
+    parser.add_argument("--force", action="store_true", help="Import duplicate students anyway")
     parser.set_defaults(run=import_students)
