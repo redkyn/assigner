@@ -41,6 +41,8 @@ It will prompt you for the following information:
     1. The Canvas server to use, typically of the form `<institution name>.instructure.com`.
     2. A Canvas API access token. As with GitLab, you must generate one of these yourself. Assigner provides a URL to the page where you can do that.
 
+In addition, you will need to [configure GitLab with your SSH public key](https://docs.gitlab.com/ce/ssh/README.html).
+
 ### Adding students to the roster
 
 Once you have set up Assigner for your course, you should add students to your course roster so that you can assign them homework!
