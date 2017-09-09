@@ -132,7 +132,7 @@ class Config(UserDict):
         try:
             return self.data[key]
         except KeyError as e:
-            if key == 'roster':
+            if key == "roster":
                 self.data[key] = []
                 return self.data[key]
             raise e
