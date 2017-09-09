@@ -71,14 +71,14 @@ def assign(conf, args):
                     # We retry w/ exponential backoff up to 5 times
                     wait = 0.1
                     retries = 0
-                    while(True):
+                    while True:
                         try:
                             repo = StudentRepo.new(base, semester, student_section,
                                                    username, token)
                             logger.debug("Success!")
                             break
                         except HTTPError as e:
-                            if retries > 5 or e.response.status_code != 400:
+                            if retries >= 5 or e.response.status_code != 400:
                                 logger.debug("Critical Failure!")
                                 raise
                             logger.debug("Failed, retrying...")
