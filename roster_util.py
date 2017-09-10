@@ -20,6 +20,8 @@ def add_to_roster(conf, roster, name, username, section, force=False):
         "section": section
     }
 
+    logger.debug("{}".format(roster))
+
     if not force and any([s['username'] == username for s in roster]):
       raise DuplicateUserError("Student already exists in roster!")
 
