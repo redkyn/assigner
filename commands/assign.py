@@ -4,6 +4,7 @@ import time
 
 from roster_util import get_filtered_roster
 from baserepo import BaseRepo, StudentRepo
+from requests.exceptions import HTTPError
 from config import config_context
 
 help="Assign a base repo to students"
@@ -65,11 +66,27 @@ def assign(conf, args):
                 logging.info("{}: Deleting...".format(full_name))
                 if not dry_run:
                     repo.delete()
-                    # HACK: Gitlab will throw a 400 if you delete and immediately recreate a repo.
-                    # A bit more than half a second was experimentally determined to prevent this issue.
-                    time.sleep(0.55)
-                    repo = StudentRepo.new(base, semester, student_section,
-                                           username, token)
+
+                    # Gitlab will throw a 400 if you delete and immediately recreate a repo.
+                    # We retry w/ exponential backoff up to 5 times
+                    wait = 0.1
+                    retries = 0
+                    while True:
+                        try:
+                            repo = StudentRepo.new(base, semester, student_section,
+                                                   username, token)
+                            logger.debug("Success!")
+                            break
+                        except HTTPError as e:
+                            if retries >= 5 or e.response.status_code != 400:
+                                logger.debug("Critical Failure!")
+                                raise
+                            logger.debug("Failed, retrying...")
+
+                        # Delay and try again
+                        time.sleep(wait * 2**retries)
+                        retries += 1
+
                     repo.push(base, branch)
                     repo.protect(branch)
                 actual_count += 1
