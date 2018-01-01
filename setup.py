@@ -95,12 +95,9 @@ setup(
     #    'test': ['coverage'],
     #},
 
-    # If there are data files included in your packages that need to be
-    # installed, specify them here.
-    package_data={
-        'assigner': ['TUTORIAL.md'],
-    },
-
+    data_files=[
+        ('share/assigner', ['TUTORIAL.md', '_config.example.yml'])
+    ],
     # To provide executable scripts, use entry points in preference to the
     # "scripts" keyword. Entry points provide cross-platform support and allow
     # `pip` to create the appropriate form of executable for the target
