@@ -3,9 +3,9 @@ import os
 
 from requests.exceptions import HTTPError
 
-from roster_util import get_filtered_roster
-from baserepo import RepoError, StudentRepo
-from config import config_context
+from assigner.roster_util import get_filtered_roster
+from assigner.baserepo import RepoError, StudentRepo
+from assigner.config import config_context
 
 help="Clone student repos"
 

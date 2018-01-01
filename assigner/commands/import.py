@@ -2,9 +2,8 @@ import csv
 import logging
 import re
 
-from config import config_context, DuplicateUserError
-from baserepo import Repo, RepoError
-from roster_util import add_to_roster
+from assigner.config import config_context, DuplicateUserError
+from assigner.roster_util import add_to_roster
 
 help="Import users from a csv"
 

@@ -1,7 +1,7 @@
 import logging
 import datetime
 
-from config import config_context
+from assigner.config import config_context
 
 help="Interactively initialize a new configuration"
 

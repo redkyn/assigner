@@ -1,7 +1,7 @@
 import logging
 
 from assigner import manage_users
-from baserepo import Access
+from assigner.baserepo import Access
 
 help="Unlock student's repo"
 

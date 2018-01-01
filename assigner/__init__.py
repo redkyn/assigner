@@ -2,37 +2,36 @@
 import argparse
 import importlib
 import logging
-from collections import OrderedDict
 
 from colorlog import ColoredFormatter
 from requests.exceptions import HTTPError
 
-from baserepo import Repo, StudentRepo
-from config import config_context
-from roster_util import get_filtered_roster
+from assigner.baserepo import StudentRepo
+from assigner.config import config_context
+from assigner.roster_util import get_filtered_roster
 
 logger = logging.getLogger(__name__)
 
 description = "An automated tool for assigning programming homework."
 
-subcommands = OrderedDict([
-    ("new", "commands.new"),
-    ("assign", "commands.assign"),
-    ("open", "commands.open"),
-    ("get", "commands.get"),
-    ("lock", "commands.lock"),
-    ("unlock", "commands.unlock"),
-    ("archive", "commands.archive"),
-    ("unarchive", "commands.unarchive"),
-    ("protect", "commands.protect"),
-    ("unprotect", "commands.unprotect"),
-    ("status", "commands.status"),
-    ("import", "commands.import"),
-    ("canvas", "commands.canvas"),
-    ("set", "commands.set"),
-    ("roster", "commands.roster"),
-    ("init", "commands.init"),
-])
+subcommands = [
+    "new",
+    "assign",
+    "open",
+    "get",
+    "lock",
+    "unlock",
+    "archive",
+    "unarchive",
+    "protect",
+    "unprotect",
+    "status",
+    "import",
+    "canvas",
+    "set",
+    "roster",
+    "init",
+]
 
 @config_context
 def manage_users(conf, args, level):
@@ -157,8 +156,8 @@ def make_parser():
     # Set up subcommands for each package
     subparsers = parser.add_subparsers(title="subcommands")
 
-    for name, path in subcommands.items():
-        module = importlib.import_module(path)
+    for name in subcommands:
+        module = importlib.import_module("assigner.commands." + name)
         subparser = subparsers.add_parser(name, help=module.help)
         module.setup_parser(subparser)
 

@@ -2,9 +2,9 @@ import logging
 
 from requests.exceptions import HTTPError
 
-from roster_util import get_filtered_roster
-from baserepo import Access, Repo, RepoError, StudentRepo
-from config import config_context
+from assigner.roster_util import get_filtered_roster
+from assigner.baserepo import Access, Repo, RepoError, StudentRepo
+from assigner.config import config_context
 
 help="Grants students access to their repos"
 

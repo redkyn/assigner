@@ -5,9 +5,9 @@ from requests.exceptions import HTTPError
 from prettytable import PrettyTable
 from progressbar import ProgressBar
 
-from roster_util import get_filtered_roster
-from config import config_context
-from baserepo import Access, Repo, StudentRepo, RepoError
+from assigner.roster_util import get_filtered_roster
+from assigner.config import config_context
+from assigner.baserepo import Access, Repo, StudentRepo, RepoError
 
 help="Retrieve status of repos"
 

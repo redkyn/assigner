@@ -1,5 +1,5 @@
-from config import DuplicateUserError
-from baserepo import Repo, RepoError
+from assigner.config import DuplicateUserError
+from assigner.baserepo import Repo, RepoError
 
 import logging
 logger = logging.getLogger(__name__)
