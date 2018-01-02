@@ -75,7 +75,7 @@ class Repo(object):
     def _cls_gl_get(cls, url_base, path, token, params={}):
         """Make a Gitlab GET request"""
         params.update({"private_token": token})
-        url = urljoin(url_base, "/api/v3" + path)
+        url = urljoin(url_base, "/api/v4" + path)
         r = requests.get(url, params=params)
         r.raise_for_status()
         return r.json()
@@ -84,7 +84,7 @@ class Repo(object):
     def _cls_gl_post(cls, url_base, path, token, payload={}, params={}):
         """Make a Gitlab POST request"""
         params.update({"private_token": token})
-        url = urljoin(url_base, "/api/v3" + path)
+        url = urljoin(url_base, "/api/v4" + path)
         r = requests.post(url, params=params, data=payload)
         r.raise_for_status()
         return r.json()
@@ -93,7 +93,7 @@ class Repo(object):
     def _cls_gl_put(cls, url_base, path, token, payload={}, params={}):
         """Make a Gitlab PUT request"""
         params.update({"private_token": token})
-        url = urljoin(url_base, "/api/v3" + path)
+        url = urljoin(url_base, "/api/v4" + path)
         r = requests.put(url, params=params, data=payload)
         r.raise_for_status()
         return r.json()
@@ -102,7 +102,7 @@ class Repo(object):
     def _cls_gl_delete(cls, url_base, path, token, params={}):
         """Make a Gitlab DELETE request"""
         params.update({"private_token": token})
-        url = urljoin(url_base, "/api/v3" + path)
+        url = urljoin(url_base, "/api/v4" + path)
         r = requests.delete(url, params=params)
         r.raise_for_status()
         return r.json()
@@ -145,7 +145,7 @@ class Repo(object):
                 self._info = self._gl_get(url)
             except HTTPError as e:
                 if e.response.status_code == 404:
-                    logging.debug("Could not find repo with url {}/api/v3{}.".format(self.url_base,url))
+                    logging.debug("Could not find repo with url {}/api/v4{}.".format(self.url_base,url))
                     self._info = None
                 else:
                     raise
