@@ -172,12 +172,16 @@ class Repo(object):
 
     def clone_to(self, dir_name, branch=None):
         logging.debug("Cloning {}...".format(self.ssh_url))
-        if branch:
-            self._repo = git.Repo.clone_from(self.ssh_url, dir_name,
-                                             branch=branch)
-        else:
-            self._repo = git.Repo.clone_from(self.ssh_url, dir_name)
-        logging.info("Cloned {}.".format(self.name))
+        try:
+            if branch:
+                self._repo = git.Repo.clone_from(self.ssh_url, dir_name,
+                                                branch=branch)
+            else:
+                self._repo = git.Repo.clone_from(self.ssh_url, dir_name)
+            logging.info("Cloned {}.".format(self.name))
+        except git.exc.GitCommandError as e:
+            raise RepoError(e)
+
         return self._repo
 
     def delete(self):
