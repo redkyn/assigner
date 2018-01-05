@@ -49,7 +49,7 @@ You can use a different config file by specifying the `--config` option.
 - `gitlab-host`: Hostname of your gitlab instance
 - `namespace`: Group or user to create repositories in
 - `semester`: The semester; recommended formatting: `2016SP`
-- `token`: Your gitlab API token, retrievable from your gitlab settings page
+- `gitlab-token`: Your gitlab API token, retrievable from your gitlab settings page
 - `canvas-token`: Your Canvas API token, retrievable from your Canvas settings page
 
 You can set these keys by either manually adding them to the config or through using the `config` subcommand.
