@@ -93,7 +93,9 @@ def status(conf, args):
                 created_at = head["created_at"]
                 # Fix UTC offset format in GitLab's datetime
                 created_at = created_at[:-6] + created_at[-6:].replace(':', '')
-                row[8] = datetime.strptime(created_at, "%Y-%m-%dT%H:%M:%S.%f%z")
+                row[8] = datetime.strptime(
+                    created_at, "%Y-%m-%dT%H:%M:%S.%f%z"
+                ).astimezone().strftime("%c")
 
             output.add_row(row)
 
