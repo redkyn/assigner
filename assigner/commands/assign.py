@@ -2,10 +2,10 @@ import logging
 import tempfile
 import time
 
-from roster_util import get_filtered_roster
-from baserepo import BaseRepo, StudentRepo
+from assigner.roster_util import get_filtered_roster
+from assigner.baserepo import BaseRepo, StudentRepo
+from assigner.config import config_context
 from requests.exceptions import HTTPError
-from config import config_context
 
 help="Assign a base repo to students"
 

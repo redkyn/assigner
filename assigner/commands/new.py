@@ -2,8 +2,8 @@ import logging
 
 from requests.exceptions import HTTPError
 
-from baserepo import BaseRepo, Repo
-from config import config_context
+from assigner.baserepo import BaseRepo, Repo
+from assigner.config import config_context
 
 help = "Create a new base repo"
 

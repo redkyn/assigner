@@ -1,6 +1,6 @@
 import logging
 
-from config import config_context
+from assigner.config import config_context
 
 
 help = "Set configuration values"

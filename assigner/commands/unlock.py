@@ -1,28 +1,27 @@
 import logging
 
 from assigner import manage_users
-from baserepo import Access
+from assigner.baserepo import Access
 
-help="Lock students out of repos"
+help="Unlock student's repo"
 
 logger = logging.getLogger(__name__)
 
 
-def lock(args):
-    """Sets each student to Reporter status on their homework repository so
-    they cannot push changes, etc.
+def unlock(args):
+    """Sets each student to Developer status on their homework repository.
     """
-    return manage_users(args, Access.reporter)
+    return manage_users(args, Access.developer)
 
 
 def setup_parser(parser):
     parser.add_argument("name",
-                           help="Name of the assignment to lock.")
+                           help="Name of the assignment to unlock.")
     parser.add_argument("--section", nargs="?",
-                           help="Section to lock")
+                           help="Section to unlock")
     parser.add_argument("--student", metavar="id",
                            help="ID of student whose assignment needs " +
-                                "locking.")
+                                "unlocking.")
     parser.add_argument("--dry-run", action="store_true",
                            help="Don't actually do it.")
-    parser.set_defaults(run=lock)
+    parser.set_defaults(run=unlock)

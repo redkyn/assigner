@@ -1,12 +1,11 @@
 import logging
 
-from baserepo import Repo, RepoError
-from canvas import CanvasAPI
-from config import config_context,DuplicateUserError
+from assigner.canvas import CanvasAPI
+from assigner.config import config_context,DuplicateUserError
 
 from prettytable import PrettyTable
 
-from roster_util import add_to_roster
+from assigner.roster_util import add_to_roster
 
 help = "Get Canvas course information"
 
