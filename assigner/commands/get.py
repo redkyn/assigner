@@ -21,7 +21,7 @@ def get(conf, args):
     hw_path = args.path
     host = conf.gitlab_host
     namespace = conf.namespace
-    token = conf.token
+    token = conf.gitlab_token
     semester = conf.semester
 
     roster = get_filtered_roster(conf.roster, args.section, args.student)

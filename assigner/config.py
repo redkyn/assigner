@@ -23,7 +23,7 @@ class Config(UserDict):
         "type": "object",
         "properties": {
             # GitLab private token
-            "token": {
+            "gitlab-token": {
                 "type": "string",
             },
 
@@ -97,7 +97,7 @@ class Config(UserDict):
                 "type": "string",
             }
         },
-        "required": ["gitlab-host", "namespace", "token", "semester"],
+        "required": ["gitlab-host", "namespace", "gitlab-token", "semester"],
         "additionalProperties": False,
     }
 
@@ -107,6 +107,13 @@ class Config(UserDict):
         try:
             with open(filename) as f:
                 self.data = yaml.safe_load(f)
+
+                # Rename 'token' to 'gitlab-token' if present in config
+                if 'token' in self.data:
+                    logging.info("Migrating configuration: 'token' is now 'gitlab-token'")
+                    self.data['gitlab-token'] = self.data['token']
+                    del self.data['token']
+
                 jsonschema.validate(self.data, self.__class__.CONFIG_SCHEMA)
         except FileNotFoundError:
             pass  # Just make an empty config; create on __exit__()

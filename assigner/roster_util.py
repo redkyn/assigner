@@ -27,7 +27,7 @@ def add_to_roster(conf, roster, name, username, section, force=False):
 
     try:
         student["id"] = Repo.get_user_id(
-            username, conf.gitlab_host, conf.token
+            username, conf.gitlab_host, conf.gitlab_token
         )
     except RepoError:
         logger.warning(

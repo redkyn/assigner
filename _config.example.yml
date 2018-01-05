@@ -1,5 +1,5 @@
 gitlab-host: https://git-classes.mst.edu/
-token: xxxxxxxxxxxxxxxx
+gitlab-token: xxxxxxxxxxxxxxxx
 namespace: 2016-Fall-CS1001
 semester: 2016-FS
 # optional; for canvas integration

@@ -19,7 +19,7 @@ def new(conf, args):
     dry_run = args.dry_run
     host = conf.gitlab_host
     namespace = conf.namespace
-    token = conf.token
+    token = conf.gitlab_token
 
     if dry_run:
         url = Repo.build_url(host, namespace, hw_name)
