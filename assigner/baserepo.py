@@ -253,6 +253,30 @@ class Repo(object):
             "/projects/{}/repository/commits".format(self.id), params
         )
 
+    def list_pushes(self):
+        return self._gl_get(
+            "/projects/{}/events?action=pushed".format(self.id)
+        )
+
+    def get_last_HEAD_commit(self, ref="master"):
+        matching_pushes = list(filter(
+            lambda push: push['push_data']['ref'] == ref, self.list_pushes()
+        ))
+        commits = self.list_commits(ref)
+
+        if not commits:
+            return None
+
+        HEAD = commits[0]
+        # Gitlab's commit created_at time uses the git metadata;
+        # rather than trusting students, we get the time the commit was pushed at
+        if matching_pushes and HEAD['id'] == matching_pushes[0]['push_data']['commit_to']:
+            # For whatever reason, Gitlab uses a different time format here than for commits...
+            unmangled_time = matching_pushes[0]['created_at'][:-1] + "-0000"
+            HEAD['created_at'] = unmangled_time
+
+        return HEAD
+
     def list_branches(self):
         return self._gl_get(
             "/projects/{}/repository/branches".format(self.id)
