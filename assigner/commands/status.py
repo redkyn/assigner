@@ -35,7 +35,7 @@ def status(conf, args):
 
     output = PrettyTable([
         "#", "Sec", "SID", "Name", "Status", "Branches",
-        "HEAD", "Last Commit Author", "Last Commit Time"])
+        "HEAD", "Last Commit Author", "Last Push Time"])
     output.align["Name"] = "l"
     output.align["Last Commit Author"] = "l"
 
@@ -85,16 +85,17 @@ def status(conf, args):
             if branches:
                 row[5] = ", ".join([b["name"] for b in branches])
 
-            commits = repo.list_commits()
+            head = repo.get_last_HEAD_commit()
 
-            if commits:
-                head = commits[0]
+            if head:
                 row[6] = head["short_id"]
                 row[7] = head["author_name"]
                 created_at = head["created_at"]
                 # Fix UTC offset format in GitLab's datetime
                 created_at = created_at[:-6] + created_at[-6:].replace(':', '')
-                row[8] = datetime.strptime(created_at, "%Y-%m-%dT%H:%M:%S.%f%z")
+                row[8] = datetime.strptime(
+                    created_at, "%Y-%m-%dT%H:%M:%S.%f%z"
+                ).astimezone().strftime("%c")
 
             output.add_row(row)
 
