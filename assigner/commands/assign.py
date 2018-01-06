@@ -2,8 +2,6 @@ import logging
 import tempfile
 import time
 
-from os import mkdir
-
 from assigner.roster_util import get_filtered_roster
 from assigner.baserepo import BaseRepo, StudentRepo, RepoError
 from assigner.config import config_context
@@ -49,7 +47,6 @@ def assign(conf, args):
             except RepoError as e:
                 logging.error("Could not clone base repo (have you pushed at least one commit to it?)")
                 logging.debug(e)
-                mkdir(tmpdirname) # Prevent tempfile from complaining about the directory not existing
                 return
 
         if force:
