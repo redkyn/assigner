@@ -3,7 +3,7 @@ import tempfile
 import time
 
 from assigner.roster_util import get_filtered_roster
-from assigner.baserepo import BaseRepo, StudentRepo
+from assigner.baserepo import BaseRepo, StudentRepo, RepoError
 from assigner.config import config_context
 from requests.exceptions import HTTPError
 
@@ -42,7 +42,13 @@ def assign(conf, args):
         )
         base = BaseRepo(host, namespace, hw_name, token)
         if not dry_run:
-            base.clone_to(tmpdirname, branch)
+            try:
+                base.clone_to(tmpdirname, branch)
+            except RepoError as e:
+                logging.error("Could not clone base repo (have you pushed at least one commit to it?)")
+                logging.debug(e)
+                return
+
         if force:
             logging.warning("Repos will be overwritten.")
         for i, student in enumerate(roster):
