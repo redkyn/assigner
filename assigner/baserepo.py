@@ -176,6 +176,10 @@ class Repo(object):
             if branch:
                 self._repo = git.Repo.clone_from(self.ssh_url, dir_name,
                                                 branch=branch)
+                for b in branch:
+                    self._repo.create_head(b, "origin/{}".format(b))
+
+                logging.debug(self._repo.heads)
             else:
                 self._repo = git.Repo.clone_from(self.ssh_url, dir_name)
             logging.info("Cloned {}.".format(self.name))
