@@ -4,6 +4,7 @@
 - Display push time, rather than commit time, in `status` output
 - Show push time in human-readable format in the current locale's timezone
 - Display an informative error message when attempting to push an empty base repo
+- Allow users to assign multiple branches in one call to `assign`
 
 ## 0.1.0
 

@@ -21,7 +21,7 @@ def assign(conf, args):
     if args.branch:
         branch = args.branch
     else:
-        branch = "master"
+        branch = ["master"]
     dry_run = args.dry_run
     force = args.force
     host = conf.gitlab_host
@@ -64,7 +64,8 @@ def assign(conf, args):
                     repo = StudentRepo.new(base, semester, student_section,
                                            username, token)
                     repo.push(base, branch)
-                    repo.protect(branch)
+                    for b in branch:
+                        repo.protect(b)
                 actual_count += 1
                 logging.debug("Assigned.")
             elif force:
@@ -94,7 +95,8 @@ def assign(conf, args):
                         retries += 1
 
                     repo.push(base, branch)
-                    repo.protect(branch)
+                    for b in branch:
+                        repo.protect(b)
                 actual_count += 1
                 logging.debug("Assigned.")
             elif args.branch:
@@ -102,7 +104,8 @@ def assign(conf, args):
                 # If we have an explicit branch, push anyways
                 if not dry_run:
                     repo.push(base, branch)
-                    repo.protect(branch)
+                    for b in branch:
+                        repo.protect(b)
                 actual_count += 1
                 logging.debug("Assigned.")
             else:
@@ -123,8 +126,8 @@ def assign(conf, args):
 def setup_parser(parser):
     parser.add_argument("name",
                            help="Name of the assignment to assign.")
-    parser.add_argument("--branch", nargs="?",
-                           help="Branch to push")
+    parser.add_argument("--branch", "--branches", nargs="+",
+                           help="Branch or branches to push")
     parser.add_argument("--section", nargs="?",
                            help="Section to assign homework to")
     parser.add_argument("--student", metavar="id",

@@ -123,14 +123,9 @@ Each repository should be named something along the lines of `2017-FS-A-hw1-bob1
 
 By default, `assigner assign` copies only the `master` branch from the base repo.
 Typically, this is what you want.
-If you wish to upload additional branches, you can call `assigner assign` again and pass the `--branch` flag.
+If you wish to upload different branches, you can pass the `--branch` flag and list the branches you want to push.
 For example, let's say that in addition to the `master` branch, you want to provide your students with a copy of the `devel` branch from the base repo.
-To do so, you will run `assigner assign` twice, like so:
-
-```
-$ assigner assign hw1
-$ assigner assign hw1 --branch devel
-```
+To do so, you'd run `assigner assign hw1 --branch master devel`.
 
 ### Opening the assignment to students
 
