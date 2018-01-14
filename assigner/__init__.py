@@ -140,7 +140,7 @@ def configure_logging():
 def make_parser():
     """Construct and return a CLI argument parser.
     """
-        
+
     parser = argparse.ArgumentParser(description=description)
     parser.add_argument("--config", default="_config.yml",
                         help="Path a config file")
@@ -154,17 +154,28 @@ def make_parser():
     parser.set_defaults(run=lambda x: parser.print_usage())
 
     # Set up subcommands for each package
-    subparsers = parser.add_subparsers(title="subcommands")
+    subparsers = parser.add_subparsers(title="commands")
 
     for name in subcommands:
         module = importlib.import_module("assigner.commands." + name)
         subparser = subparsers.add_parser(name, help=module.help)
         module.setup_parser(subparser)
 
-    # The "help" command shows the help screen
+    # The "help" command shows the assigner help screen
+    # or a subcommand's help screen
+    def show_help(args):
+        if args.command is None:
+            parser.print_help()
+        elif args.command in subparsers.choices:
+            subparsers.choices[args.command].print_help()
+        else:
+            print("Not sure what you need help with!")
+
     help_parser = subparsers.add_parser("help",
-                                        help="Show this help screen and exit")
-    help_parser.set_defaults(run=lambda x: parser.print_help())
+                                        help="Show help for Assigner or one of its commands")
+    help_parser.add_argument("command", nargs="?",
+                             help="Command to get help with")
+    help_parser.set_defaults(run=show_help)
 
     return parser
 
