@@ -96,11 +96,11 @@ To generate an API token for Canvas, log onto your Canvas account (e.g. https://
 Developing
 ----------
 
-See |DEVELOPING.md|_.
+See |CONTRIBUTING.md|_.
 
 .. this is an awful hack; see http://docutils.sourceforge.net/FAQ.html#is-nested-inline-markup-possible
-.. |DEVELOPING.md| replace:: ``DEVELOPING.md``
-.. _DEVELOPING.md: https://github.com/redkyn/assigner/blob/master/DEVELOPING.md
+.. |CONTRIBUTING.md| replace:: ``CONTRIBUTING.md``
+.. _CONTRIBUTING.md: https://github.com/redkyn/assigner/blob/master/CONTRIBUTING.md
 
 Credits
 -------
