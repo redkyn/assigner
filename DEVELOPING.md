@@ -19,6 +19,21 @@ Before merging:
 - Make sure `pyflakes assigner` passes with no errors/warnings
 - Check `pylint assigner` and make sure it's not too egregious. (Eventually we'll get the code to a point where there are no messages from `pylint`...)
 
+# Design Philosophy
+
+1. Make as few assumptions about how Assigner will be used as possible. This should be a tool that people can use for a variety of class styles.
+1. Users should not be afraid of using Assigner. Commands should be idempotent and not run the risk of losing students' work to the fullest extent possible.
+1. Hold as little metadata as possible. Currently we record nothing about assignments in `_config.yml`;
+    someone could theoretically create a bunch of repos by hand and use `assigner` to manage them, provided they were named properly.
+
+# Versioning
+
+After version 1.0, Assigner's version (x.y.z) is incremented as follows:
+
+- x: Major new feature; typically a new command
+- y: Improvement to an existing command
+- z: Bug fix or error handling improvement
+
 # Distribution
 
 1. Update the version in `setup.py`
