@@ -72,7 +72,7 @@ def print_canvas_courses(conf, args):
 def setup_parser(parser):
     subparsers = parser.add_subparsers(title='Canvas commands')
 
-    list_parser = subparsers.add_parser('list', help='List Canvas courses where you are a teacher, TA, or grader')
+    list_parser = subparsers.add_parser('list', help='List published Canvas courses where you are a teacher, TA, or grader')
     list_parser.set_defaults(run=print_canvas_courses)
 
     import_parser = subparsers.add_parser('import', help='Import the roster from a specific Canvas course')
