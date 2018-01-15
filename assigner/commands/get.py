@@ -9,7 +9,7 @@ from assigner.baserepo import RepoError, StudentRepo
 from assigner.config import config_context
 
 from prettytable import PrettyTable
-from progressbar import ProgressBar
+from assigner.progress import Progress
 
 help="Clone student repos"
 
@@ -39,10 +39,9 @@ def get(conf, args):
     output.align["Name"] = "l"
     output.align["Change"] = "l"
 
-    progress = ProgressBar(max_value=len(roster))
-    for i,student in enumerate(roster):
-        progress.update(i)
+    progress = Progress()
 
+    for i,student in progress.enumerate(roster):
         username = student["username"]
         student_section = student["section"]
         full_name = StudentRepo.name(semester, student_section,
@@ -58,7 +57,6 @@ def get(conf, args):
             name = student["name"]
 
             try:
-                print("\n")
                 logging.debug("Attempting to use local repo {}...".format(repo_dir))
                 repo.add_local_copy(repo_dir)
 
@@ -87,8 +85,8 @@ def get(conf, args):
                         repo.pull(b)
                     except GitCommandError as e:
                         logging.debug(str(e))
-                        print("\n")
-                        logging.warn("Local changes to {} would be overwritten by pull (use --force to overwrite)".format(b))
+                        logging.warn("Local changes to {}/{} would be overwritten by pull".format(username, b))
+                        logging.warn("  (use --force to overwrite)")
 
                 # Check out first branch specified; this is probably what people expect
                 # If there's just one branch, it's already checked out by the loop above
@@ -101,11 +99,9 @@ def get(conf, args):
                 output.add_row([row, sec, sid, name, "Cloned a new copy"])
 
         except RepoError as e:
-            print("\n")
             logging.warn(str(e))
         except HTTPError as e:
             if e.response.status_code == 404:
-                print("\n")
                 logging.warn("Repository {} does not exist.".format(full_name))
             else:
                 raise
