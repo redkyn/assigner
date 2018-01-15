@@ -2,8 +2,8 @@
 
 This document will walk you through the workflow for setting up a class with Assigner and creating, assigning, and fetching student homework.
 
-We'll assume you have installed Assigner and put the `assigner` command somewhere in your `$PATH`.
-While the second step is not strictly necessary, it will greatly improve your experience using Assigner.
+We'll assume you have installed Assigner using `pip install assigner` or `pip3 install assigner`.
+(If you don't have adminstrator access on your machine, you can run `pip install --user assigner` and put `~/.local/bin` in your `$PATH` instead.)
 
 ## Setting up a new class
 
@@ -64,6 +64,7 @@ The simplest way to add students to your Assigner course roster is to import the
 
 1. Run `assigner canvas list` to list the courses on Canvas where you are a teacher, TA, or grader.
     Make a note of the ID of the course whose roster you want to import.
+    **Note**: Assigner currently only shows published Canvas courses.
 2. Run `assigner canvas import <course ID> <section letter>`. Use the course ID from the previous step.
     You can import several sections into the same roster by specifying different section letters.
 
@@ -133,6 +134,10 @@ Now that you have created the student repos, you can add your students to them s
 To do so, run `assigner open hw1`.
 This will grant each student [developer](http://docs.gitlab.com/ce/user/permissions.html) permissions on their associated repository.
 
+If some students have yet to log in to GitLab, you may see some warnings.
+Remind the students to log in to GitLab so they have a user account.
+Once they have, you can re-run `assigner open hw1` to grant them access to their repos.
+
 ### Checking up on student progress
 
 You may want to check from time to time to see if students have made progress on their assignment.
@@ -154,7 +159,7 @@ If you wish to prevent students from submitting after the deadline, you may lock
 This changes each student's access level to reporter, so they may view their repository but not push further changes to it.
 To re-grant them developer access, run `assigner unlock hw1`.
 
-By default, the `master` branch of each student repo is protected; students cannot force-push to it.
+By default, the branches of each student repo created by Assigner are protected; students cannot force-push to it.
 Typically this is what you want; however, should you want to change that, you may unprotect (or re-protect) branches using `assigner protect`.
 For example, to unprotect the `master` branch, run `assigner unprotect hw1`.
 If you want to protect a branch named `devel`, run `assigner protect hw1 --branch devel`.
