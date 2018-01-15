@@ -6,6 +6,7 @@
 - Display an informative error message when attempting to push an empty base repo
 - Allow users to assign multiple branches in one call to `assign`
 - Print help for the subcommand when `assigner help <command>` is run
+- Fetch and pull branches when `get` is run if student repositories have already been cloned
 
 ## 0.1.0
 
