@@ -7,11 +7,11 @@ from git.exc import NoSuchPathError, GitCommandError
 from assigner.roster_util import get_filtered_roster
 from assigner.baserepo import RepoError, StudentRepo
 from assigner.config import config_context
-
-from prettytable import PrettyTable
 from assigner.progress import Progress
 
-help="Clone student repos"
+from prettytable import PrettyTable
+
+help = "Clone or fetch student repos"
 
 logger = logging.getLogger(__name__)
 
@@ -41,7 +41,7 @@ def get(conf, args):
 
     progress = Progress()
 
-    for i,student in progress.enumerate(roster):
+    for i, student in progress.enumerate(roster):
         username = student["username"]
         student_section = student["section"]
         full_name = StudentRepo.name(semester, student_section,
@@ -57,13 +57,18 @@ def get(conf, args):
             name = student["name"]
 
             try:
-                logging.debug("Attempting to use local repo {}...".format(repo_dir))
+                logging.debug("Attempting to use local repo %s...", repo_dir)
                 repo.add_local_copy(repo_dir)
 
                 logging.debug("Local repo exists, fetching...")
                 results = repo.repo.remote().fetch()
                 for result in results:
-                    logging.debug("fetch result: {} {} {}".format(result.ref.name, result.flags, result.note))
+                    logging.debug(
+                        "fetch result: name: %s flags: %s note: %s",
+                        result.ref.name,
+                        result.flags,
+                        result.note
+                    )
 
                     # see http://gitpython.readthedocs.io/en/stable/reference.html#git.remote.FetchInfo
                     if result.flags & result.NEW_HEAD:
@@ -84,9 +89,9 @@ def get(conf, args):
                         repo.get_head(b).checkout(force=force)
                         repo.pull(b)
                     except GitCommandError as e:
-                        logging.debug(str(e))
-                        logging.warn("Local changes to {}/{} would be overwritten by pull".format(username, b))
-                        logging.warn("  (use --force to overwrite)")
+                        logging.debug(e)
+                        logging.warning("Local changes to %s/%s would be overwritten by pull", username, b)
+                        logging.warning("  (use --force to overwrite)")
 
                 # Check out first branch specified; this is probably what people expect
                 # If there's just one branch, it's already checked out by the loop above
@@ -99,10 +104,10 @@ def get(conf, args):
                 output.add_row([row, sec, sid, name, "Cloned a new copy"])
 
         except RepoError as e:
-            logging.warn(str(e))
+            logging.warning(e)
         except HTTPError as e:
             if e.response.status_code == 404:
-                logging.warn("Repository {} does not exist.".format(full_name))
+                logging.warning("Repository %s does not exist.", full_name)
             else:
                 raise
 
@@ -117,16 +122,15 @@ def get(conf, args):
 
 def setup_parser(parser):
     parser.add_argument("name",
-                           help="Name of the assignment to clone or fetch.")
+                        help="Name of the assignment to clone or fetch.")
     parser.add_argument("path", default=".", nargs="?",
-                           help="Path to clone student repositories to")
+                        help="Path to clone student repositories to")
     parser.add_argument("--branch", "--branches", nargs="+", default=["master"],
-                           help="Local branch or branches to pull when fetching")
+                        help="Local branch or branches to pull when fetching")
     parser.add_argument("-f", "--force", action="store_true", dest="force",
-                           help="Discard local changes to student repositories when fetching")
+                        help="Discard local changes to student repositories when fetching")
     parser.add_argument("--section", nargs="?",
-                           help="Section to retrieve")
+                        help="Section to retrieve")
     parser.add_argument("--student", metavar="id",
-                           help="ID of student whose assignment needs " +
-                                "retrieving.")
+                        help="ID of student whose assignment needs retrieving.")
     parser.set_defaults(run=get)
