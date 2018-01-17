@@ -46,7 +46,7 @@ def remove_student(conf, args):
     logger.info("Removed {} entries from the roster".format(previous_len - len(conf.roster)))
 
 def setup_parser(parser):
-    subparsers = parser.add_subparsers(title='Canvas commands')
+    subparsers = parser.add_subparsers(title='Roster commands')
 
     list_parser = subparsers.add_parser('list', help='Print the roster')
     list_parser.add_argument("--section", help="Section to list")
