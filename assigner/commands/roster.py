@@ -3,6 +3,7 @@ import logging
 from assigner.config import config_context, DuplicateUserError
 from prettytable import PrettyTable
 from assigner.roster_util import get_filtered_roster, add_to_roster
+from assigner import make_help_parser
 
 help = "Manage class roster"
 
@@ -64,6 +65,4 @@ def setup_parser(parser):
     remove_parser.add_argument("username", help="Username of student to remove")
     remove_parser.set_defaults(run=remove_student)
 
-    help_parser = subparsers.add_parser("help",
-                                        help="Show this help screen and exit")
-    help_parser.set_defaults(run=lambda x: parser.print_help())
+    make_help_parser(parser, subparsers, "Show help for roster or one of its commands")
