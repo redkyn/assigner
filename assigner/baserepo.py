@@ -170,6 +170,25 @@ class Repo(object):
             return True
         return False
 
+    def get_head(self, branch):
+        if self.repo is None:
+            raise RepoError("No repo to get head from")
+
+        for head in self.repo.heads:
+            if head.name == branch:
+                return head
+
+        return self.repo.create_head(b, "origin/{}".format(b))
+
+    def checkout(self, branch):
+        return self.get_head(branch).checkout()
+
+    def pull(self, branch):
+        if self.repo is None:
+            raise RepoError("No repo to pull to")
+
+        self.repo.remote().pull(branch)
+
     def clone_to(self, dir_name, branch=None):
         logging.debug("Cloning {}...".format(self.ssh_url))
         try:
@@ -191,6 +210,14 @@ class Repo(object):
             raise RepoError(e)
 
         return self._repo
+
+    def add_local_copy(self, dir_name):
+        if self.repo is not None:
+            logging.warn("You already have a local copy associated with this repo")
+            return
+
+        logging.debug("Using {} for the local repo...".format(dir_name))
+        self._repo = git.Repo(dir_name)
 
     def delete(self):
         self._gl_delete("/projects/{}".format(self.id))
