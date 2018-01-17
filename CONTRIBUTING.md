@@ -1,13 +1,16 @@
-# Installation
+# Reporting Issues
 
-You'll want to install an *editable* copy of Assigner using `pip`.
-This allows you to make changes to the Assigner source while still having `pip` manage your dependencies.
+If Assigner is misbehaving, please file an issue!
+When you do so, please include the following information:
 
-1. Clone the repository somewhere and `cd` into the cloned repo.
-2. Run `pip install --user -e .`
+1. The version of Assigner you are running and what OS you're running it on
+1. The steps you took that led to the error
+1. What you expected
+1. What Assigner did instead
 
-Alternatively, you can use `virtualenv`.
-`requirements.txt` contains all of the needed packages which you can pass to `pip` once you've activated `virtualenv`.
+If Assigner is reporting errors or exceptions, please also include the output of `assigner --tracebacks --verbosity=DEBUG <command you ran>`.
+For example, if `assigner get the_homework` is giving you trouble, you'd run `assigner --tracebacks --verbosity=DEBUG get the_homework`.
+(You may need to redact parts of the output to protect the privacy of your students.)
 
 # Making changes
 
@@ -19,6 +22,17 @@ Before merging:
 - Make sure `pyflakes assigner` passes with no errors/warnings
 - Check `pylint assigner` and make sure it's not too egregious. (Eventually we'll get the code to a point where there are no messages from `pylint`...)
 
+## Installation for Developing
+
+You'll want to install an *editable* copy of Assigner using `pip`.
+This allows you to make changes to the Assigner source while still having `pip` manage your dependencies.
+
+1. Clone the repository somewhere and `cd` into the cloned repo.
+2. Run `pip install --user -e .`
+
+Alternatively, you can use `virtualenv`.
+`requirements.txt` contains all of the needed packages which you can pass to `pip` once you've activated `virtualenv`.
+
 # Design Philosophy
 
 1. Make as few assumptions about how Assigner will be used as possible. This should be a tool that people can use for a variety of class styles.
@@ -26,7 +40,9 @@ Before merging:
 1. Hold as little metadata as possible. Currently we record nothing about assignments in `_config.yml`;
     someone could theoretically create a bunch of repos by hand and use `assigner` to manage them, provided they were named properly.
 
-# Versioning
+# Distribution
+
+## Versioning
 
 After version 1.0, Assigner's version (x.y.z) is incremented as follows:
 
@@ -34,7 +50,7 @@ After version 1.0, Assigner's version (x.y.z) is incremented as follows:
 - y: Improvement to an existing command
 - z: Bug fix or error handling improvement
 
-# Distribution
+## Cutting a new release
 
 1. Update the version in `setup.py`
 2. Update `CHANGELOG.md`
