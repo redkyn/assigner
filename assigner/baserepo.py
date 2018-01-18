@@ -201,7 +201,7 @@ class Repo(object):
                 logging.debug(self._repo.heads)
             else:
                 self._repo = git.Repo.clone_from(self.ssh_url, dir_name)
-            logging.info("Cloned {}.".format(self.name))
+            logging.debug("Cloned {}.".format(self.name))
         except git.exc.GitCommandError as e:
             # GitPython may delete this directory
             # and the caller may have opinions about that,
@@ -221,7 +221,7 @@ class Repo(object):
 
     def delete(self):
         self._gl_delete("/projects/{}".format(self.id))
-        logging.info("Deleted {}.".format(self.name))
+        logging.debug("Deleted {}.".format(self.name))
 
     # TODO: this should really go elsewhere
     @classmethod
@@ -396,7 +396,7 @@ class BaseRepo(Repo):
         r = git.Remote.add(self.repo, student_repo.name,
                            student_repo.ssh_url)
         r.push(branch)
-        logging.info("Pushed {} to {}.".format(self.name, student_repo.name))
+        logging.debug("Pushed {} to {}.".format(self.name, student_repo.name))
 
 
 class StudentRepo(Repo):
