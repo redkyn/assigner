@@ -1,6 +1,6 @@
 import logging
 
-from assigner import manage_users
+from assigner import manage_repos
 from assigner.baserepo import Access
 
 help="Lock students out of repos"
@@ -12,7 +12,7 @@ def lock(args):
     """Sets each student to Reporter status on their homework repository so
     they cannot push changes, etc.
     """
-    return manage_users(args, Access.reporter)
+    return manage_repos(args, lambda repo, student: repo.edit_member(student["id"], Access.reporter))
 
 
 def setup_parser(parser):

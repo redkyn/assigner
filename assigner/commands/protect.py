@@ -10,7 +10,7 @@ logger = logging.getLogger(__name__)
 def protect(args):
     """Protect a branch in each student's repository so they cannot force push to it."""
     branch = args.branch if args.branch else "master"
-    return manage_repos(args, lambda repo: repo.protect(branch))
+    return manage_repos(args, lambda repo, _: repo.protect(branch))
 
 def setup_parser(parser):
     parser.add_argument("name",

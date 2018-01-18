@@ -1,6 +1,6 @@
 import logging
 
-from assigner import manage_users
+from assigner import manage_repos
 from assigner.baserepo import Access
 
 help="Unlock student's repo"
@@ -11,7 +11,7 @@ logger = logging.getLogger(__name__)
 def unlock(args):
     """Sets each student to Developer status on their homework repository.
     """
-    return manage_users(args, Access.developer)
+    return manage_repos(args, lambda repo, student: repo.edit_member(student["id"], Access.developer))
 
 
 def setup_parser(parser):

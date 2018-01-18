@@ -33,45 +33,6 @@ subcommands = [
     "init",
 ]
 
-@config_context
-def manage_users(conf, args, level):
-    """Creates a folder for the assignment in the CWD (or <path>, if specified)
-    and clones each students' repository into subfolders.
-    """
-    hw_name = args.name
-    dry_run = args.dry_run
-
-    if dry_run:
-        raise NotImplementedError("'--dry-run' is not implemented")
-
-    host = conf.gitlab_host
-    namespace = conf.namespace
-    token = conf.gitlab_token
-    semester = conf.semester
-
-    roster = get_filtered_roster(conf.roster, args.section, args.student)
-
-    count = 0
-    for student in roster:
-        username = student["username"]
-        student_section = student["section"]
-        if "id" not in student:
-            logging.warning(
-                "Student {} does not have a gitlab account.".format(username)
-            )
-            continue
-        full_name = StudentRepo.name(semester, student_section,
-                                     hw_name, username)
-
-        try:
-            repo = StudentRepo(host, namespace, full_name, token)
-            repo.edit_member(student["id"], level)
-            count += 1
-        except HTTPError:
-            raise
-
-    print("Changed {} repositories.".format(count))
-
 
 @config_context
 def manage_repos(conf, args, action):
@@ -102,7 +63,7 @@ def manage_repos(conf, args, action):
         try:
             repo = StudentRepo(host, namespace, full_name, token)
             if not dry_run:
-                action(repo)
+                action(repo, student)
             count += 1
         except HTTPError:
             raise
