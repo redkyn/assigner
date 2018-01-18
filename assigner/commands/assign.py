@@ -5,6 +5,8 @@ import time
 from assigner.roster_util import get_filtered_roster
 from assigner.baserepo import BaseRepo, StudentRepo, RepoError
 from assigner.config import config_context
+from assigner.progress import Progress
+
 from requests.exceptions import HTTPError
 
 help="Assign a base repo to students"
@@ -51,14 +53,15 @@ def assign(conf, args):
 
         if force:
             logging.warning("Repos will be overwritten.")
-        for i, student in enumerate(roster):
+
+        progress = Progress()
+        for i, student in progress.enumerate(roster):
             username = student["username"]
             student_section = student["section"]
             full_name = StudentRepo.name(semester, student_section,
                                          hw_name, username)
             repo = StudentRepo(host, namespace, full_name, token)
 
-            print("{}/{} - {}".format(i+1, student_count, full_name))
             if not repo.already_exists():
                 if not dry_run:
                     repo = StudentRepo.new(base, semester, student_section,
@@ -69,8 +72,7 @@ def assign(conf, args):
                 actual_count += 1
                 logging.debug("Assigned.")
             elif force:
-                logging.info("{}: Already exists.".format(full_name))
-                logging.info("{}: Deleting...".format(full_name))
+                logging.info("{}: Already exists, deleting...".format(full_name))
                 if not dry_run:
                     repo.delete()
 
@@ -109,8 +111,10 @@ def assign(conf, args):
                 actual_count += 1
                 logging.debug("Assigned.")
             else:
-                logging.warning("Skipping...")
+                logging.info("{}: Already exists, skipping...".format(full_name))
             i += 1
+
+    progress.finish()
 
     print("Assigned '{}' to {} student{}.".format(
         hw_name,
