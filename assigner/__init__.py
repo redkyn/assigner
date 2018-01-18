@@ -9,6 +9,7 @@ from requests.exceptions import HTTPError
 from assigner.baserepo import StudentRepo
 from assigner.config import config_context
 from assigner.roster_util import get_filtered_roster
+from assigner.progress import Progress
 
 logger = logging.getLogger(__name__)
 
@@ -49,7 +50,8 @@ def manage_repos(conf, args, action):
     roster = get_filtered_roster(conf.roster, args.section, args.student)
 
     count = 0
-    for student in roster:
+    progress = Progress()
+    for student in progress.iterate(roster):
         username = student["username"]
         student_section = student["section"]
         if "id" not in student:
@@ -67,6 +69,8 @@ def manage_repos(conf, args, action):
             count += 1
         except HTTPError:
             raise
+
+    progress.finish()
 
     print("Changed {} repositories.".format(count))
 

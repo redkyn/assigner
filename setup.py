@@ -77,7 +77,6 @@ setup(
         'jsonschema>=2.5',
         'requests==2.9.1', # TODO can we upgrade?
         'PTable>=0.9',
-        'progressbar2>=3',
         'tqdm>=4',
         ],
 

@@ -3,7 +3,7 @@ from datetime import datetime
 
 from requests.exceptions import HTTPError
 from prettytable import PrettyTable
-from progressbar import ProgressBar
+from assigner.progress import Progress
 
 from assigner.roster_util import get_filtered_roster
 from assigner.config import config_context
@@ -39,10 +39,8 @@ def status(conf, args):
     output.align["Name"] = "l"
     output.align["Last Commit Author"] = "l"
 
-    progress = ProgressBar(max_value=len(roster))
-
-    for i, student in enumerate(roster):
-        progress.update(i)
+    progress = Progress()
+    for i, student in progress.enumerate(roster):
 
         name = student["name"]
         username = student["username"]

@@ -5,6 +5,8 @@ import time
 from assigner.roster_util import get_filtered_roster
 from assigner.baserepo import BaseRepo, StudentRepo, RepoError
 from assigner.config import config_context
+from assigner.progress import Progress
+
 from requests.exceptions import HTTPError
 
 help="Assign a base repo to students"
@@ -51,7 +53,9 @@ def assign(conf, args):
 
         if force:
             logging.warning("Repos will be overwritten.")
-        for i, student in enumerate(roster):
+
+        progress = Progress()
+        for i, student in progress.enumerate(roster):
             username = student["username"]
             student_section = student["section"]
             full_name = StudentRepo.name(semester, student_section,
@@ -111,6 +115,8 @@ def assign(conf, args):
             else:
                 logging.warning("Skipping...")
             i += 1
+
+    progress.finish()
 
     print("Assigned '{}' to {} student{}.".format(
         hw_name,
