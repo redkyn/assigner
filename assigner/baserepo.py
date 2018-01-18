@@ -51,7 +51,7 @@ class Repo(object):
             raise RepoError("{} is missing a domain.".format(url))
 
         if parts.scheme != "https":
-            logging.warning("Using scheme {} instead of https.", parts.scheme)
+            logging.warning("Using scheme %s instead of https.", parts.scheme)
 
         match = cls.PATH_RE.match(parts.path)
         if not match:
