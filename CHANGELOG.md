@@ -1,5 +1,7 @@
 ## Devel
 
+## 1.0.0
+
 - Rename `token` to `gitlab-token` in the configuration file
 - Display push time, rather than commit time, in `status` output
 - Show push time in human-readable format in the current locale's timezone
