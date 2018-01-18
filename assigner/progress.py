@@ -12,6 +12,7 @@ class DummyTqdmFile(object):
 
     def write(self, x):
         # Avoid print() second call (useless \n)
+        # pylint: disable=len-as-condition
         if len(x.rstrip()) > 0:
             tqdm.write(x, file=self.file)
 
