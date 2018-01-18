@@ -22,7 +22,7 @@ setup(
 
     # Versions should comply with PEP 440:
     # https://www.python.org/dev/peps/pep-0440/
-    version='0.1.0',
+    version='1.0.0',
 
     description='Automatically assign programming homework to students on GitLab',
     long_description=long_description,
