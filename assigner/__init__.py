@@ -137,6 +137,18 @@ def configure_logging():
     root_logger.addHandler(console)
 
 
+def make_help_parser(parser, subparsers, help_text):
+    def show_help(args):
+        new_args = list(args.command)
+        new_args.append("--help")
+        parser.parse_args(new_args)
+
+    help_parser = subparsers.add_parser("help", help=help_text)
+    help_parser.add_argument("command", nargs="*",
+                             help="Command to get help with")
+    help_parser.set_defaults(run=show_help)
+
+
 def make_parser():
     """Construct and return a CLI argument parser.
     """
@@ -161,21 +173,7 @@ def make_parser():
         subparser = subparsers.add_parser(name, help=module.help)
         module.setup_parser(subparser)
 
-    # The "help" command shows the assigner help screen
-    # or a subcommand's help screen
-    def show_help(args):
-        if args.command is None:
-            parser.print_help()
-        elif args.command in subparsers.choices:
-            subparsers.choices[args.command].print_help()
-        else:
-            print("Not sure what you need help with!")
-
-    help_parser = subparsers.add_parser("help",
-                                        help="Show help for Assigner or one of its commands")
-    help_parser.add_argument("command", nargs="?",
-                             help="Command to get help with")
-    help_parser.set_defaults(run=show_help)
+    make_help_parser(parser, subparsers, "Show help for Assigner or one of its commands")
 
     return parser
 

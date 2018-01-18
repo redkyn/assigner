@@ -6,6 +6,7 @@ from assigner.config import config_context,DuplicateUserError
 from prettytable import PrettyTable
 
 from assigner.roster_util import add_to_roster
+from assigner import make_help_parser
 
 help = "Get Canvas course information"
 
@@ -81,6 +82,4 @@ def setup_parser(parser):
     import_parser.add_argument("--force", action="store_true", help="Import duplicate students anyway")
     import_parser.set_defaults(run=import_from_canvas)
 
-    help_parser = subparsers.add_parser("help",
-                                        help="Show this help screen and exit")
-    help_parser.set_defaults(run=lambda x: parser.print_help())
+    make_help_parser(parser, subparsers, "Show help for roster or one of its commands")
