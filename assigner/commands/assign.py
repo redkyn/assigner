@@ -143,6 +143,6 @@ def setup_parser(parser):
     parser.add_argument("--dry-run", action="store_true",
                         help="Don't actually do it.")
     parser.add_argument("-f", "--force", action="store_true", dest="force",
-                        help="Delete and recreate already existing " +
+                        help="Delete and recreate already existing "
                         "student repos.")
     parser.set_defaults(run=assign)

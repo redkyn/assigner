@@ -25,10 +25,10 @@ class CanvasAPI:
                 header = self.REQUEST_HEADER
                 connection.request(method, url, (json.dumps(params) if params is not None else None), header)
                 return connection.getresponse()
-            except http.client.HTTPException as ex:
+            except http.client.HTTPException:
                 tries += 1
                 if tries > retries:
-                    raise ex
+                    raise
                 logging.warning("Caught exception in request after %d tries. Will retry %d more times.",
                                 tries, retries - tries, exc_info=True)
                 time.sleep(1)
