@@ -239,7 +239,6 @@ class Repo(object):
         self._gl_delete("/projects/{}".format(self.id))
         logging.debug("Deleted %s.", self.name)
 
-    # TODO: this should really go elsewhere
     @classmethod
     def get_user_id(cls, username, url_base, token):
         data = cls._cls_gl_get(url_base, "/users", token,
@@ -441,7 +440,7 @@ class StudentRepo(Repo):
     def new(cls, base_repo, semester, section, username, token):
         """Create a new repository on GitLab"""
         payload = {
-            "name": cls.name(semester, section, base_repo.name, username),
+            "name": cls.build_name(semester, section, base_repo.name, username),
             "namespace_id": base_repo.namespace_id,
             "issues_enabled": False,
             "merge_requests_enabled": False,

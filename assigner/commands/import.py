@@ -16,7 +16,6 @@ def import_students(conf, args):
     """
     section = args.section
 
-    # TODO: This should probably move to another file
     email_re = re.compile(r"^(?P<user>[^@]+)")
     with open(args.file) as fh:
         reader = csv.reader(fh)
