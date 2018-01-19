@@ -349,12 +349,12 @@ class Repo(object):
             self.url_base, path, self.token, params
         )
 
-    def _gl_post(self, path, payload={}, params={}):
+    def _gl_post(self, path, payload={}, _=None):
         return self.__class__._cls_gl_post(
             self.url_base, path, self.token, payload
         )
 
-    def _gl_put(self, path, payload={}, params={}):
+    def _gl_put(self, path, payload={}, _=None):
         return self.__class__._cls_gl_put(
             self.url_base, path, self.token, payload
         )
