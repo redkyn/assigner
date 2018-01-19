@@ -45,8 +45,8 @@ def status(conf, args):
         name = student["name"]
         username = student["username"]
         student_section = student["section"]
-        full_name = StudentRepo.name(semester, student_section,
-                                     hw_name, username)
+        full_name = StudentRepo.build_name(semester, student_section,
+                                           hw_name, username)
 
         row = [i+1, student_section, username, name, "", "", "", "", ""]
 

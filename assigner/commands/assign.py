@@ -60,8 +60,8 @@ def assign(conf, args):
         for i, student in progress.enumerate(roster):
             username = student["username"]
             student_section = student["section"]
-            full_name = StudentRepo.name(semester, student_section,
-                                         hw_name, username)
+            full_name = StudentRepo.build_name(semester, student_section,
+                                               hw_name, username)
             repo = StudentRepo(host, namespace, full_name, token)
 
             if not repo.already_exists():

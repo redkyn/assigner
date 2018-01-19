@@ -59,8 +59,8 @@ def manage_repos(conf, args, action):
                 "Student %s does not have a gitlab account.", username
             )
             continue
-        full_name = StudentRepo.name(semester, student_section,
-                                     hw_name, username)
+        full_name = StudentRepo.build_name(semester, student_section,
+                                           hw_name, username)
 
         try:
             repo = StudentRepo(host, namespace, full_name, token)

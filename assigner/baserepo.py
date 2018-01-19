@@ -457,7 +457,7 @@ class StudentRepo(Repo):
         return cls.from_url(result["http_url_to_repo"], token)
 
     @classmethod
-    def name(cls, semester, section, assignment, user):
+    def build_name(cls, semester, section, assignment, user):
         fmt = {
             "semester": semester,
             "section": section,
