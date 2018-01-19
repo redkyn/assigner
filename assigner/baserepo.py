@@ -71,11 +71,8 @@ class Repo(object):
         return self
 
     @classmethod
-    def _cls_gl_get(cls, url_base, path, token, params=None):
+    def _cls_gl_get(cls, url_base, path, token, params={}):
         """Make a Gitlab GET request"""
-        if not params:
-            params = {}
-
         params.update({"private_token": token})
         url = urljoin(url_base, "/api/v4" + path)
         r = requests.get(url, params=params)
@@ -83,13 +80,8 @@ class Repo(object):
         return r.json()
 
     @classmethod
-    def _cls_gl_post(cls, url_base, path, token, payload=None, params=None):
+    def _cls_gl_post(cls, url_base, path, token, payload={}, params={}):
         """Make a Gitlab POST request"""
-        if not params:
-            params = {}
-        if not payload:
-            payload = {}
-
         params.update({"private_token": token})
         url = urljoin(url_base, "/api/v4" + path)
         r = requests.post(url, params=params, data=payload)
@@ -97,13 +89,8 @@ class Repo(object):
         return r.json()
 
     @classmethod
-    def _cls_gl_put(cls, url_base, path, token, payload=None, params=None):
+    def _cls_gl_put(cls, url_base, path, token, payload={}, params={}):
         """Make a Gitlab PUT request"""
-        if not params:
-            params = {}
-        if not payload:
-            payload = {}
-
         params.update({"private_token": token})
         url = urljoin(url_base, "/api/v4" + path)
         r = requests.put(url, params=params, data=payload)
@@ -111,11 +98,8 @@ class Repo(object):
         return r.json()
 
     @classmethod
-    def _cls_gl_delete(cls, url_base, path, token, params=None):
+    def _cls_gl_delete(cls, url_base, path, token, params={}):
         """Make a Gitlab DELETE request"""
-        if not params:
-            params = {}
-
         params.update({"private_token": token})
         url = urljoin(url_base, "/api/v4" + path)
         r = requests.delete(url, params=params)
@@ -360,38 +344,22 @@ class Repo(object):
         return self._gl_put("/projects/{}/repository/branches/{}/unprotect"
                             .format(self.id, branch))
 
-    def _gl_get(self, path, params=None):
-        if not params:
-            params = {}
-
+    def _gl_get(self, path, params={}):
         return self.__class__._cls_gl_get(
             self.url_base, path, self.token, params
         )
 
-    def _gl_post(self, path, payload=None, params=None):
-        if not payload:
-            payload = {}
-        if not params:
-            params = {}
-
+    def _gl_post(self, path, payload={}, params={}):
         return self.__class__._cls_gl_post(
             self.url_base, path, self.token, payload
         )
 
-    def _gl_put(self, path, payload=None, params=None):
-        if not payload:
-            payload = {}
-        if not params:
-            params = {}
-
+    def _gl_put(self, path, payload={}, params={}):
         return self.__class__._cls_gl_put(
             self.url_base, path, self.token, payload
         )
 
-    def _gl_delete(self, path, params=None):
-        if not params:
-            params = {}
-
+    def _gl_delete(self, path, params={}):
         return self.__class__._cls_gl_delete(
             self.url_base, path, self.token, params
         )
