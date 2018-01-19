@@ -25,7 +25,7 @@ class CanvasAPI:
                 header = self.REQUEST_HEADER
                 connection.request(method, url, (json.dumps(params) if params is not None else None), header)
                 return connection.getresponse()
-            except Exception as ex:
+            except http.client.HTTPException as ex:
                 tries += 1
                 if tries > retries:
                     raise ex
@@ -59,7 +59,7 @@ class CanvasAPI:
         count = len(result)
         page = 1
         while 'next' in links:
-            logging.debug("Got links:\n" + json.dumps(links, sort_keys=True, indent=2))
+            logging.debug("Got links:\n%s", json.dumps(links, sort_keys=True, indent=2))
             page += 1
             next_url = url.split('?')[0] + '?page=%s&per_page=%s' % (page, count)
             logging.info("Getting next page for " + url + " via " + next_url)
@@ -71,7 +71,7 @@ class CanvasAPI:
 
     def get_instructor_courses(self):
         get = lambda x: self._get_all_pages('/api/v1/courses',
-                                     {'enrollment_type': x, 'state': ['available']})
+                                            {'enrollment_type': x, 'state': ['available']})
         result = get('teacher')
         result.extend(get('ta'))
         result.extend(get('grader'))

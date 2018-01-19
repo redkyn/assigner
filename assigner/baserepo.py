@@ -4,7 +4,6 @@ import logging
 import os
 import re
 import requests
-import tempfile
 
 from enum import Enum
 from requests.exceptions import HTTPError
@@ -67,13 +66,16 @@ class Repo(object):
                    namespace, name, token, url)
 
         logging.debug(json.dumps(self.info))
-        logging.debug("{} is valid.".format(self.name_with_namespace))
+        logging.debug("%s is valid.", self.name_with_namespace)
 
         return self
 
     @classmethod
-    def _cls_gl_get(cls, url_base, path, token, params={}):
+    def _cls_gl_get(cls, url_base, path, token, params=None):
         """Make a Gitlab GET request"""
+        if not params:
+            params = {}
+
         params.update({"private_token": token})
         url = urljoin(url_base, "/api/v4" + path)
         r = requests.get(url, params=params)
@@ -81,8 +83,13 @@ class Repo(object):
         return r.json()
 
     @classmethod
-    def _cls_gl_post(cls, url_base, path, token, payload={}, params={}):
+    def _cls_gl_post(cls, url_base, path, token, payload=None, params=None):
         """Make a Gitlab POST request"""
+        if not params:
+            params = {}
+        if not payload:
+            payload = {}
+
         params.update({"private_token": token})
         url = urljoin(url_base, "/api/v4" + path)
         r = requests.post(url, params=params, data=payload)
@@ -90,8 +97,13 @@ class Repo(object):
         return r.json()
 
     @classmethod
-    def _cls_gl_put(cls, url_base, path, token, payload={}, params={}):
+    def _cls_gl_put(cls, url_base, path, token, payload=None, params=None):
         """Make a Gitlab PUT request"""
+        if not params:
+            params = {}
+        if not payload:
+            payload = {}
+
         params.update({"private_token": token})
         url = urljoin(url_base, "/api/v4" + path)
         r = requests.put(url, params=params, data=payload)
@@ -99,8 +111,11 @@ class Repo(object):
         return r.json()
 
     @classmethod
-    def _cls_gl_delete(cls, url_base, path, token, params={}):
+    def _cls_gl_delete(cls, url_base, path, token, params=None):
         """Make a Gitlab DELETE request"""
+        if not params:
+            params = {}
+
         params.update({"private_token": token})
         url = urljoin(url_base, "/api/v4" + path)
         r = requests.delete(url, params=params)
@@ -145,7 +160,8 @@ class Repo(object):
                 self._info = self._gl_get(url)
             except HTTPError as e:
                 if e.response.status_code == 404:
-                    logging.debug("Could not find repo with url {}/api/v4{}.".format(self.url_base,url))
+                    logging.debug("Could not find repo with url %s/api/v4%s.",
+                                  self.url_base, url)
                     self._info = None
                 else:
                     raise
@@ -178,7 +194,7 @@ class Repo(object):
             if head.name == branch:
                 return head
 
-        return self.repo.create_head(b, "origin/{}".format(b))
+        return self.repo.create_head(branch, "origin/{}".format(branch))
 
     def checkout(self, branch):
         return self.get_head(branch).checkout()
@@ -190,18 +206,18 @@ class Repo(object):
         self.repo.remote().pull(branch)
 
     def clone_to(self, dir_name, branch=None):
-        logging.debug("Cloning {}...".format(self.ssh_url))
+        logging.debug("Cloning %s...", self.ssh_url)
         try:
             if branch:
                 self._repo = git.Repo.clone_from(self.ssh_url, dir_name,
-                                                branch=branch)
+                                                 branch=branch)
                 for b in branch:
                     self._repo.create_head(b, "origin/{}".format(b))
 
                 logging.debug(self._repo.heads)
             else:
                 self._repo = git.Repo.clone_from(self.ssh_url, dir_name)
-            logging.debug("Cloned {}.".format(self.name))
+            logging.debug("Cloned %s.", self.name)
         except git.exc.GitCommandError as e:
             # GitPython may delete this directory
             # and the caller may have opinions about that,
@@ -213,15 +229,15 @@ class Repo(object):
 
     def add_local_copy(self, dir_name):
         if self.repo is not None:
-            logging.warn("You already have a local copy associated with this repo")
+            logging.warning("You already have a local copy associated with this repo")
             return
 
-        logging.debug("Using {} for the local repo...".format(dir_name))
+        logging.debug("Using %s for the local repo...", dir_name)
         self._repo = git.Repo(dir_name)
 
     def delete(self):
         self._gl_delete("/projects/{}".format(self.id))
-        logging.debug("Deleted {}.".format(self.name))
+        logging.debug("Deleted %s.", self.name)
 
     # TODO: this should really go elsewhere
     @classmethod
@@ -229,24 +245,24 @@ class Repo(object):
         data = cls._cls_gl_get(url_base, "/users", token,
                                params={"search": username})
 
-        if len(data) == 0:
-            logging.warn(
-                "Did not find any users matching {}.".format(username)
+        if not data:
+            logging.warning(
+                "Did not find any users matching %s.", username
             )
             raise RepoError("No user {}.".format(username))
 
         for result in data:
             if result["username"] == username:
                 logging.info(
-                    "Got id {} for user {}.".format(data[0]["id"], username)
+                    "Got id %s for user %s.", data[0]["id"], username
                 )
                 return result["id"]
 
         # Fall back to first result if all else fails
-        logging.warn("Got {} users for {}.".format(len(data), username))
-        logging.warn("Failed to find an exact match for {}.".format(username))
+        logging.warning("Got %s users for %s.", len(data), username)
+        logging.warning("Failed to find an exact match for %s.", username)
         logging.info(
-            "Got id {} for user {}.".format(data[0]["id"], data[0]["username"])
+            "Got id %s for user %s.", data[0]["id"], data[0]["username"]
         )
         return data[0]["id"]
 
@@ -332,32 +348,51 @@ class Repo(object):
     def unarchive(self):
         return self._gl_post("/projects/{}/unarchive".format(self.id))
 
-    def protect(self, branch="master", developer_push=True, developer_merge=True): # NOTE: these are not the same defaults that Gitlab uses
+    # NOTE: these are not the same defaults that Gitlab uses
+    def protect(self, branch="master", developer_push=True, developer_merge=True):
         params = {
             "developers_can_push": developer_push,
             "developers_can_merge": developer_merge,
-          }
-        return self._gl_put("/projects/{}/repository/branches/{}/protect".format(self.id, branch), params)
+        }
+        return self._gl_put("/projects/{}/repository/branches/{}/protect"
+                            .format(self.id, branch), params)
 
     def unprotect(self, branch="master"):
-        return self._gl_put("/projects/{}/repository/branches/{}/unprotect".format(self.id, branch))
+        return self._gl_put("/projects/{}/repository/branches/{}/unprotect"
+                            .format(self.id, branch))
 
-    def _gl_get(self, path, params={}):
+    def _gl_get(self, path, params=None):
+        if not params:
+            params = {}
+
         return self.__class__._cls_gl_get(
             self.url_base, path, self.token, params
         )
 
-    def _gl_post(self, path, payload={}, params={}):
+    def _gl_post(self, path, payload=None, params=None):
+        if not payload:
+            payload = {}
+        if not params:
+            params = {}
+
         return self.__class__._cls_gl_post(
             self.url_base, path, self.token, payload
         )
 
-    def _gl_put(self, path, payload={}, params={}):
+    def _gl_put(self, path, payload=None, params=None):
+        if not payload:
+            payload = {}
+        if not params:
+            params = {}
+
         return self.__class__._cls_gl_put(
             self.url_base, path, self.token, payload
         )
 
-    def _gl_delete(self, path, params={}):
+    def _gl_delete(self, path, params=None):
+        if not params:
+            params = {}
+
         return self.__class__._cls_gl_delete(
             self.url_base, path, self.token, params
         )
@@ -370,11 +405,11 @@ class BaseRepo(Repo):
         namespaces = cls._cls_gl_get(url_base, "/namespaces",
                                      token, {"search": namespace})
         logging.debug(
-            "Got {} namespaces matching {}.".format(len(namespaces), namespace)
+            "Got %s namespaces matching %s.", len(namespaces), namespace
         )
         logging.debug(
             "Using namespace " +
-            "{} with ID {}.".format(namespaces[0]["path"], namespaces[0]["id"])
+            "%s with ID %s.", namespaces[0]["path"], namespaces[0]["id"]
         )
 
         payload = {
@@ -396,7 +431,7 @@ class BaseRepo(Repo):
         r = git.Remote.add(self.repo, student_repo.name,
                            student_repo.ssh_url)
         r.push(branch)
-        logging.debug("Pushed {} to {}.".format(self.name, student_repo.name))
+        logging.debug("Pushed %s to %s.", self.name, student_repo.name)
 
 
 class StudentRepo(Repo):
@@ -436,18 +471,3 @@ class StudentRepo(Repo):
     def push(self, base_repo, branch="master"):
         """Push base_repo code to this repo"""
         base_repo.push_to(self, branch)
-
-
-if __name__ == "__main__":
-    # Need to make this module if'n you're going to run this
-    from secret import token
-
-    logging.basicConfig(level=logging.INFO)
-
-    b = BaseRepo("https://git.mst.edu/2016-Spring-CS-2001/hw01.git", token)
-    print(json.dumps(b.info, indent=8))
-    with tempfile.TemporaryDirectory() as tmpdirname:
-        b.clone_to(tmpdirname)
-        print(os.listdir(tmpdirname))
-
-    StudentRepo.new(b, "2016SP", "A", "mwwcp2", token)

@@ -2,6 +2,7 @@ import contextlib
 import sys
 from tqdm import tqdm
 
+
 # Some of the following is borrowed straight from
 # https://github.com/tqdm/tqdm/blob/master/examples/redirect_print.py
 class DummyTqdmFile(object):

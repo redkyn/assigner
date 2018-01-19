@@ -56,7 +56,7 @@ def manage_repos(conf, args, action):
         student_section = student["section"]
         if "id" not in student:
             logging.warning(
-                "Student {} does not have a gitlab account.".format(username)
+                "Student %s does not have a gitlab account.", username
             )
             continue
         full_name = StudentRepo.name(semester, student_section,
@@ -164,7 +164,7 @@ def main():
         if args.tracebacks:
             raise e
         if isinstance(e, KeyError):
-            logger.error(str(e) + " is missing")
+            logger.error("%s is missing", e)
         else:
             logger.error(str(e))
         raise SystemExit(1) from e

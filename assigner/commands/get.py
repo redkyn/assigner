@@ -70,17 +70,23 @@ def get(conf, args):
                         result.note
                     )
 
-                    # see http://gitpython.readthedocs.io/en/stable/reference.html#git.remote.FetchInfo
+                    # see:
+                    # http://gitpython.readthedocs.io/en/stable/reference.html#git.remote.FetchInfo
                     if result.flags & result.NEW_HEAD:
-                        output.add_row([row, sec, sid, name, "{}: new branch at {}".format(
-                            result.ref.name, str(result.ref.commit)[:8]
-                        )])
+                        output.add_row([
+                            row, sec, sid, name, "{}: new branch at {}".format(
+                                result.ref.name, str(result.ref.commit)[:8]
+                            )
+                        ])
                         row = sec = sid = name = "" # don't print user info more than once
 
                     elif result.old_commit is not None:
-                        output.add_row([row, sec, sid, name, "{}: {} -> {}".format(
-                            result.ref.name, str(result.old_commit)[:8], str(result.ref.commit)[:8]
-                        )])
+                        output.add_row([
+                            row, sec, sid, name, "{}: {} -> {}".format(
+                                result.ref.name, str(result.old_commit)[:8],
+                                str(result.ref.commit)[:8]
+                            )
+                        ])
                         row = sec = sid = name = ""
 
                 logging.debug("Pulling specified branches...")
@@ -90,7 +96,8 @@ def get(conf, args):
                         repo.pull(b)
                     except GitCommandError as e:
                         logging.debug(e)
-                        logging.warning("Local changes to %s/%s would be overwritten by pull", username, b)
+                        logging.warning("Local changes to %s/%s would be overwritten by pull",
+                                        username, b)
                         logging.warning("  (use --force to overwrite)")
 
                 # Check out first branch specified; this is probably what people expect

@@ -16,3 +16,4 @@ progressbar2==3.10.1
 pylint==1.8.1
 wrapt==1.10.11
 python-utils==2.2.0
+tqdm==4.19.5

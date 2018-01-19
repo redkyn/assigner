@@ -5,7 +5,7 @@ import re
 from assigner.config import config_context, DuplicateUserError
 from assigner.roster_util import add_to_roster
 
-help="Import users from a csv"
+help = "Import users from a csv"
 
 logger = logging.getLogger(__name__)
 
@@ -35,9 +35,10 @@ def import_students(conf, args):
             try:
                 add_to_roster(conf, conf.roster, row[3], match.group("user"), section, args.force)
             except DuplicateUserError:
-                logger.warning("User {} is already in the roster, skipping".format(match.group("user")))
+                logger.warning("User %s is already in the roster, skipping", match.group("user"))
 
     print("Imported {} students.".format(count))
+
 
 def setup_parser(parser):
     parser.add_argument("file", help="CSV file to import from")

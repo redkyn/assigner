@@ -23,21 +23,22 @@ def new(conf, args):
 
     if dry_run:
         url = Repo.build_url(host, namespace, hw_name)
-        print("Created repo for {}:\n\t{}\n\t{}".format(hw_name, url, "(ssh url not available)"))
+        print(
+            "Created repo for {}:\n\t{}\n\t{}".format(hw_name, url, "(ssh url not available)"))
     else:
         try:
             repo = BaseRepo.new(hw_name, namespace, host, token)
             print("Created repo for {}:\n\t{}\n\t{}".format(hw_name, repo.url, repo.ssh_url))
         except HTTPError as e:
             if e.response.status_code == 400:
-                logger.warning("Repository {} already exists!".format(hw_name))
+                logger.warning("Repository %s already exists!", hw_name)
             else:
                 raise
 
 
 def setup_parser(parser):
     parser.add_argument("name",
-                           help="Name of the assignment.")
+                        help="Name of the assignment.")
     parser.add_argument("--dry-run", action="store_true",
-                           help="Don't actually do it.")
+                        help="Don't actually do it.")
     parser.set_defaults(run=new)

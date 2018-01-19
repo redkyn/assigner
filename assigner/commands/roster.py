@@ -1,23 +1,27 @@
 import logging
 
-from assigner.config import config_context, DuplicateUserError
 from prettytable import PrettyTable
-from assigner.roster_util import get_filtered_roster, add_to_roster
+
 from assigner import make_help_parser
+from assigner.config import config_context, DuplicateUserError
+from assigner.roster_util import get_filtered_roster, add_to_roster
+
 
 help = "Manage class roster"
 
 logger = logging.getLogger(__name__)
+
 
 @config_context
 def list_students(conf, args):
     """List students in the roster
     """
     output = PrettyTable(["#", "Name", "Username", "Section"])
-    for idx,student in enumerate(get_filtered_roster(conf.roster, args.section, None)):
+    for idx, student in enumerate(get_filtered_roster(conf.roster, args.section, None)):
         output.add_row((idx+1, student["name"], student["username"], student["section"]))
 
     print(output)
+
 
 @config_context
 def add_student(conf, args):
@@ -27,6 +31,7 @@ def add_student(conf, args):
         add_to_roster(conf, conf.roster, args.name, args.username, args.section, args.force)
     except DuplicateUserError:
         logger.error("Student already exists in roster!")
+
 
 @config_context
 def remove_student(conf, args):
@@ -44,7 +49,8 @@ def remove_student(conf, args):
         del conf.roster[idx - offset]
         offset += 1
 
-    logger.info("Removed {} entries from the roster".format(previous_len - len(conf.roster)))
+    logger.info("Removed %d entries from the roster", previous_len - len(conf.roster))
+
 
 def setup_parser(parser):
     subparsers = parser.add_subparsers(title='Roster commands')
