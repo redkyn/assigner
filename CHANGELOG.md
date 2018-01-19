@@ -1,5 +1,7 @@
 ## Devel
 
+- Removed lint and added travis config.
+
 ## 1.0.0
 
 - Rename `token` to `gitlab-token` in the configuration file
