@@ -21,6 +21,7 @@ Before merging:
 - Describe the change in `CHANGELOG.md`
 - Make sure `pyflakes assigner` passes with no errors/warnings
 - Check `pylint assigner` and make sure it's not too egregious. (Eventually we'll get the code to a point where there are no messages from `pylint`...)
+- Update requirements.txt with any new depedencies.
 
 ## Installation for Developing
 
