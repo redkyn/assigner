@@ -1,6 +1,6 @@
 ## Devel
 
-- Removed lint and added travis config.
+- Removed lint, removed old baserepo standalone code, and added travis config.
 
 ## 1.0.0
 
