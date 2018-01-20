@@ -6,7 +6,8 @@ class AssignerTestCase(TestCase):
     @classmethod
     def tearDownClass(cls):
         if hasattr(cls, "_CLASS_CLEANUP"):
-            [x() for x in cls._CLASS_CLEANUP]
+            for x in cls._CLASS_CLEANUP:
+                x()
 
     @classmethod
     def _create_class_patch(cls, target, **kwargs):

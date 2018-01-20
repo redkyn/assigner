@@ -21,4 +21,3 @@ class HelpIntegrationTestCase(AssignerIntegrationTestCase):
          .format(command))
         with self.assertRaisesRegex(SystemExit, r"^0$"):
             main([command, "--help"])
-
