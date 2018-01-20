@@ -143,7 +143,6 @@ disable=print-statement,
         too-many-statements,
         attribute-defined-outside-init,
         redefined-builtin,
-        dangerous-default-value,
 
 
 
