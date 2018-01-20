@@ -1,5 +1,5 @@
 from unittest import TestCase
-from unittest.mock import patch
+from unittest.mock import patch, MagicMock
 
 
 class AssignerTestCase(TestCase):
@@ -38,12 +38,11 @@ class AssignerTestCase(TestCase):
 
 class AssignerIntegrationTestCase(AssignerTestCase):
     def setUp(self):
-        # self.mock_argparse = self._create_patch(
-            # "assigner.argparse", autospec=True
-        # )
-        # self.mock_parser = self.mock_argparse.ArgumentParser.return_value
-        # self.mock_args = self.mock_parser.parse_args.return_value
-
         self.mock_logging = self._create_patch(
             "assigner.logging", autospec=True
         )
+        self.mock_config_class = self._create_patch(
+            "assigner.config.Config", autospec=True
+        )
+
+        self.mock_config = self.mock_config_class.return_value.__enter__.return_value

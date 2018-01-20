@@ -110,7 +110,7 @@ class MainTestCase(AssignerTestCase):
         self.mock_args.run.side_effect = ExampleError
         try:
             main([])
-        except SystemError:
+        except SystemExit:
             pass
 
         mock_logger.error.assert_called_once_with(str(ExampleError()))
@@ -124,7 +124,7 @@ class MainTestCase(AssignerTestCase):
         self.mock_args.run.side_effect = KeyError
         try:
             main([])
-        except SystemError:
+        except SystemExit:
             pass
 
         mock_logger.error.assert_called_once_with(
