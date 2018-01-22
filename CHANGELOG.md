@@ -1,5 +1,7 @@
 ## Devel
 
+- Warn when an assignment is already open for a student when running `open`
+
 ## 1.0.0
 
 - Rename `token` to `gitlab-token` in the configuration file

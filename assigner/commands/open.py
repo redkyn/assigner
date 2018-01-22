@@ -42,8 +42,11 @@ def open_assignment(conf, args):
             count += 1
         except RepoError:
             logging.warn("Could not add {} to {}.".format(username, full_name))
-        except HTTPError:
-            raise
+        except HTTPError as e:
+            if e.response.status_code == 409:
+                logging.warning("%s is already a member of %s.", username, full_name)
+            else:
+                raise
 
     progress.finish()
 
