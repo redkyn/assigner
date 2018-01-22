@@ -3,6 +3,7 @@
 - Removed remaining lint as specified by pylint.
 - Removed old baserepo standalone code.
 - Added Travis CI config for pylint and pyflakes.
+- Warn when an assignment is already open for a student when running `open`
 
 ## 1.0.0
 
