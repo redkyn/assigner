@@ -69,7 +69,7 @@ class MainTestCase(AssignerTestCase):
         """
         main calls parse_args on make_parser's returned parser.
         """
-        main()
+        main([])
 
         self.assertTrue(self.mock_parser.parse_args.called)
 
@@ -77,7 +77,7 @@ class MainTestCase(AssignerTestCase):
         """
         main calls args.run with args.
         """
-        main()
+        main([])
 
         self.mock_args.run.assert_called_once_with(self.mock_args)
 
@@ -89,7 +89,7 @@ class MainTestCase(AssignerTestCase):
         self.mock_args.run.side_effect = Exception
 
         with self.assertRaises(SystemExit):
-            main()
+            main([])
 
     def test_main_raises_exceptions_with_traceback(self):
         """
@@ -99,7 +99,7 @@ class MainTestCase(AssignerTestCase):
         self.mock_args.run.side_effect = ExampleError
 
         with self.assertRaises(ExampleError):
-            main()
+            main([])
 
     @patch("assigner.logger", autospec=True)
     def test_main_logs_exceptions(self, mock_logger):
@@ -109,7 +109,7 @@ class MainTestCase(AssignerTestCase):
         self.mock_args.tracebacks = False
         self.mock_args.run.side_effect = ExampleError
         try:
-            main()
+            main([])
         except:
             pass
 
@@ -123,7 +123,7 @@ class MainTestCase(AssignerTestCase):
         self.mock_args.tracebacks = False
         self.mock_args.run.side_effect = KeyError
         try:
-            main()
+            main([])
         except:
             pass
 
@@ -135,7 +135,7 @@ class MainTestCase(AssignerTestCase):
         """
         main should set verosity and level from args.
         """
-        main()
+        main([])
 
         mock_logger = self.mock_logging.getLogger.return_value
         mock_logger.setLevel.assert_any_call(

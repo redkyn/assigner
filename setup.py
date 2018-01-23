@@ -78,7 +78,12 @@ setup(
         'requests==2.9.1', # TODO can we upgrade?
         'PTable>=0.9',
         'tqdm>=4',
-        ],
+    ],
+
+    tests_require=[
+        'nose',
+        'nose-parameterized',
+    ],
 
     python_requires='>=3',
 
@@ -94,6 +99,8 @@ setup(
     #    'dev': ['check-manifest'],
     #    'test': ['coverage'],
     #},
+
+    test_suite='nose.collector',
 
     data_files=[
         ('share/assigner', ['TUTORIAL.md', '_config.example.yml'])

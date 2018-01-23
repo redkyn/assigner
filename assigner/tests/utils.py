@@ -33,3 +33,16 @@ class AssignerTestCase(TestCase):
         self.addCleanup(target_patch.stop)
 
         return target_mock
+
+
+class AssignerIntegrationTestCase(AssignerTestCase):
+    def setUp(self):
+        # self.mock_argparse = self._create_patch(
+            # "assigner.argparse", autospec=True
+        # )
+        # self.mock_parser = self.mock_argparse.ArgumentParser.return_value
+        # self.mock_args = self.mock_parser.parse_args.return_value
+
+        self.mock_logging = self._create_patch(
+            "assigner.logging", autospec=True
+        )
