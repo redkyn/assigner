@@ -121,14 +121,14 @@ class MainTestCase(AssignerTestCase):
         main should log a KeyError with "is missing" when raised.
         """
         self.mock_args.tracebacks = False
-        self.mock_args.run.side_effect = KeyError
+        self.mock_args.run.side_effect = KeyError()
         try:
             main([])
         except SystemExit:
             pass
 
         mock_logger.error.assert_called_once_with(
-            "{} is missing".format(str(KeyError()))
+            "%s is missing", self.mock_args.run.side_effect
         )
 
     def test_main_sets_verbosity(self):

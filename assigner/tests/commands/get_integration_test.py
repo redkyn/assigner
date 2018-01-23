@@ -55,7 +55,7 @@ class GetIntegrationTestCase(AssignerIntegrationTestCase):
         get(self.mock_args)
 
         for student in self.mock_roster.return_value:
-            studentrepo_name = self.mock_studentrepo.name(
+            studentrepo_name = self.mock_studentrepo.build_name(
                 self.mock_config.semester, student["section"],
                 self.mock_args.name, student["username"]
             )
