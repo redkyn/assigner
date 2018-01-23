@@ -1,5 +1,7 @@
 ## Devel
 
+## 1.1.0
+
 - Warn when an assignment is already open for a student when running `open`
 - Calling `assign` with the `--open` flag assigns and opens an assignment in one step
 - Removed remaining lint as specified by pylint.
