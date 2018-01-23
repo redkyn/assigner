@@ -37,7 +37,7 @@ class GetIntegrationTestCase(AssignerIntegrationTestCase):
         Test getting no student repositories.
         """
         self.mock_roster.return_value = []
-        get(self.mock_args)
+        get(self.mock_args)  # noqa
 
         self.mock_os.path.join.assert_called_once_with(
             self.mock_args.path, self.mock_args.name
@@ -52,7 +52,7 @@ class GetIntegrationTestCase(AssignerIntegrationTestCase):
         Test getting some student repositories.
         """
         self.mock_roster.return_value = [MagicMock(), MagicMock()]
-        get(self.mock_args)
+        get(self.mock_args)  # noqa
 
         for student in self.mock_roster.return_value:
             studentrepo_name = self.mock_studentrepo.build_name(
@@ -67,8 +67,7 @@ class GetIntegrationTestCase(AssignerIntegrationTestCase):
             # Should use their username to build a directory.
             student_dir = self.mock_os.path.join(self.mock_os.path.join(
                 self.mock_args.path, self.mock_args.name
-                ), student.username
-            )
+            ), student.username)
             # All of this should be used to make a student repo directory.
             studentrepo.add_local_copy.assert_called_with(student_dir)
 
