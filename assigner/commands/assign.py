@@ -4,6 +4,7 @@ import time
 
 from assigner.roster_util import get_filtered_roster
 from assigner.baserepo import BaseRepo, StudentRepo, RepoError
+from assigner.commands.open import open_assignment
 from assigner.config import config_context
 from assigner.progress import Progress
 
@@ -118,6 +119,9 @@ def assign(conf, args):
                 logging.info("%s: Already exists, skipping...", full_name)
             i += 1
 
+            if args.open:
+                open_assignment(repo, student)
+
     progress.finish()
 
     print("Assigned '{}' to {} student{}.".format(
@@ -145,4 +149,6 @@ def setup_parser(parser):
     parser.add_argument("-f", "--force", action="store_true", dest="force",
                         help="Delete and recreate already existing "
                         "student repos.")
+    parser.add_argument("-o", "--open", action="store_true", dest="open",
+                        help="Open assignment after assigning")
     parser.set_defaults(run=assign)
