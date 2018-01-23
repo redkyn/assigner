@@ -19,10 +19,11 @@ Pull requests are welcome! If you have questions, feel free to [contact the auth
 Before merging:
 
 - Describe the change in `CHANGELOG.md`
+- Create supporting unit tests.
+- Verify new and existing unit tests pass with `python setup.py test`.
 - Make sure `pyflakes assigner` passes with no errors/warnings
 - Check `pylint assigner` and make sure there are no new errors/warnings.
 - Update requirements.txt with any new dependencies.
-- Verify your new tests and all existing pass without errors with `python setup.py test`
 
 ## Installation for Developing
 

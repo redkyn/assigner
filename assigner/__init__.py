@@ -134,7 +134,7 @@ def make_parser():
     subparsers = parser.add_subparsers(title="commands")
 
     for name in subcommands:
-        module = importlib.import_module("assigner.commands.{}".format(name))
+        module = importlib.import_module("assigner.commands." + name)
         subparser = subparsers.add_parser(name, help=module.help)
         module.setup_parser(subparser)
 

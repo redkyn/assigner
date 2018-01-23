@@ -1,4 +1,5 @@
 import itertools
+from unittest.mock import patch
 
 from assigner import main, make_parser, subcommands
 from assigner.tests.utils import AssignerTestCase
@@ -46,6 +47,10 @@ class MakeParserTestCase(AssignerTestCase):
         self.assertTrue(self.mock_parser.print_usage.called)
 
 
+class ExampleError(Exception):
+    pass
+
+
 class MainTestCase(AssignerTestCase):
     def setUp(self):
         self.mock_configure = self._create_patch(
@@ -91,7 +96,48 @@ class MainTestCase(AssignerTestCase):
         main should raise exceptions if traceback is True.
         """
         self.mock_args.tracebacks = True
-        self.mock_args.run.side_effect = Exception
+        self.mock_args.run.side_effect = ExampleError
 
-        with self.assertRaises(Exception):
+        with self.assertRaises(ExampleError):
             main()
+
+    @patch("assigner.logger", autospec=True)
+    def test_main_logs_exceptions(self, mock_logger):
+        """
+        main should log exceptions when raised.
+        """
+        self.mock_args.tracebacks = False
+        self.mock_args.run.side_effect = ExampleError
+        try:
+            main()
+        except:
+            pass
+
+        mock_logger.error.assert_called_once_with(str(ExampleError()))
+
+    @patch("assigner.logger", autospec=True)
+    def test_main_logs_keyerror_with_catch(self, mock_logger):
+        """
+        main should log a KeyError with "is missing" when raised.
+        """
+        self.mock_args.tracebacks = False
+        self.mock_args.run.side_effect = KeyError
+        try:
+            main()
+        except:
+            pass
+
+        mock_logger.error.assert_called_once_with(
+            "{} is missing".format(str(KeyError()))
+        )
+
+    def test_main_sets_verbosity(self):
+        """
+        main should set verosity and level from args.
+        """
+        main()
+
+        mock_logger = self.mock_logging.getLogger.return_value
+        mock_logger.setLevel.assert_any_call(
+            self.mock_args.verbosity
+        )
