@@ -22,6 +22,7 @@ Before merging:
 - Make sure `pyflakes assigner` passes with no errors/warnings
 - Check `pylint assigner` and make sure there are no new errors/warnings.
 - Update requirements.txt with any new dependencies.
+- Verify your new tests and all existing pass without errors with `python setup.py test`
 
 ## Installation for Developing
 
