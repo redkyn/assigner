@@ -37,7 +37,7 @@ class GetIntegrationTestCase(AssignerIntegrationTestCase):
         Test getting no student repositories.
         """
         self.mock_roster.return_value = []
-        get(self.mock_args)  # noqa
+        get(self.mock_args)  # pylint: disable=no-value-for-parameter
 
         self.mock_os.path.join.assert_called_once_with(
             self.mock_args.path, self.mock_args.name
@@ -52,7 +52,7 @@ class GetIntegrationTestCase(AssignerIntegrationTestCase):
         Test getting some student repositories.
         """
         self.mock_roster.return_value = [MagicMock(), MagicMock()]
-        get(self.mock_args)  # noqa
+        get(self.mock_args)  # pylint: disable=no-value-for-parameter
 
         for student in self.mock_roster.return_value:
             studentrepo_name = self.mock_studentrepo.build_name(
