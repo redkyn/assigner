@@ -2,7 +2,9 @@ from assigner.config import DuplicateUserError
 from assigner.baserepo import Repo, RepoError
 
 import logging
+
 logger = logging.getLogger(__name__)
+
 
 def get_filtered_roster(roster, section, target):
     if target:
@@ -13,6 +15,7 @@ def get_filtered_roster(roster, section, target):
         raise ValueError("No matching students found in roster.")
     return roster
 
+
 def add_to_roster(conf, roster, name, username, section, force=False):
     student = {
         "name": name,
@@ -20,10 +23,10 @@ def add_to_roster(conf, roster, name, username, section, force=False):
         "section": section
     }
 
-    logger.debug("{}".format(roster))
+    logger.debug("%s", roster)
 
-    if not force and any([s['username'] == username for s in roster]):
-      raise DuplicateUserError("Student already exists in roster!")
+    if not force and any(filter(lambda s: s['username'] == username, roster)):
+        raise DuplicateUserError("Student already exists in roster!")
 
     try:
         student["id"] = Repo.get_user_id(
@@ -31,8 +34,7 @@ def add_to_roster(conf, roster, name, username, section, force=False):
         )
     except RepoError:
         logger.warning(
-            "Student {} does not have a Gitlab account.".format(name)
+            "Student %s does not have a Gitlab account.", name
         )
 
     roster.append(student)
-

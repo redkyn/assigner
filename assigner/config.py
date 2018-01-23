@@ -118,7 +118,7 @@ class Config(UserDict):
         except FileNotFoundError:
             pass  # Just make an empty config; create on __exit__()
         except jsonschema.ValidationError as e:
-            logging.warning("Your configuration is not valid: " + e.message)
+            logging.warning("Your configuration is not valid: %s", e.message)
 
     def __enter__(self):
         return self

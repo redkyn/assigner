@@ -7,7 +7,7 @@ from assigner.baserepo import Access, Repo, RepoError, StudentRepo
 from assigner.config import config_context
 from assigner.progress import Progress
 
-help="Grants students access to their repos"
+help = "Grants students access to their repos"
 
 logger = logging.getLogger(__name__)
 
@@ -30,8 +30,8 @@ def open_assignment(conf, args):
     for student in progress.iterate(roster):
         username = student["username"]
         student_section = student["section"]
-        full_name = StudentRepo.name(semester, student_section,
-                                     hw_name, username)
+        full_name = StudentRepo.build_name(semester, student_section,
+                                           hw_name, username)
 
         try:
             repo = StudentRepo(host, namespace, full_name, token)
@@ -41,7 +41,7 @@ def open_assignment(conf, args):
             repo.add_member(student["id"], Access.developer)
             count += 1
         except RepoError:
-            logging.warn("Could not add {} to {}.".format(username, full_name))
+            logging.warning("Could not add %s to %s.", username, full_name)
         except HTTPError:
             raise
 
@@ -51,10 +51,10 @@ def open_assignment(conf, args):
 
 
 def setup_parser(parser):
-    parser.add_argument("name", help="Name of the assignment to grant " +
-                                        "access to")
+    parser.add_argument("name",
+                        help="Name of the assignment to grant access to")
     parser.add_argument("--section", nargs="?",
-                           help="Section to grant access to")
+                        help="Section to grant access to")
     parser.add_argument("--student", metavar="id",
-                           help="ID of the student to assign to.")
+                        help="ID of the student to assign to.")
     parser.set_defaults(run=open_assignment)

@@ -9,7 +9,7 @@ from assigner.progress import Progress
 
 from requests.exceptions import HTTPError
 
-help="Assign a base repo to students"
+help = "Assign a base repo to students"
 
 logger = logging.getLogger(__name__)
 
@@ -40,14 +40,16 @@ def assign(conf, args):
         print("Assigning '{}' to {} student{} in {}.".format(
             hw_name, student_count,
             "s" if student_count != 1 else "",
-            "section " + args.section if args.section else "all sections")
-        )
+            "section " + args.section if args.section else "all sections"
+        ))
         base = BaseRepo(host, namespace, hw_name, token)
         if not dry_run:
             try:
                 base.clone_to(tmpdirname, branch)
             except RepoError as e:
-                logging.error("Could not clone base repo (have you pushed at least one commit to it?)")
+                logging.error(
+                    "Could not clone base repo (have you pushed at least one commit to it?)"
+                )
                 logging.debug(e)
                 return
 
@@ -58,8 +60,8 @@ def assign(conf, args):
         for i, student in progress.enumerate(roster):
             username = student["username"]
             student_section = student["section"]
-            full_name = StudentRepo.name(semester, student_section,
-                                         hw_name, username)
+            full_name = StudentRepo.build_name(semester, student_section,
+                                               hw_name, username)
             repo = StudentRepo(host, namespace, full_name, token)
 
             if not repo.already_exists():
@@ -72,18 +74,20 @@ def assign(conf, args):
                 actual_count += 1
                 logging.debug("Assigned.")
             elif force:
-                logging.info("{}: Already exists, deleting...".format(full_name))
+                logging.info("%s: Already exists, deleting...", full_name)
                 if not dry_run:
                     repo.delete()
 
-                    # Gitlab will throw a 400 if you delete and immediately recreate a repo.
-                    # We retry w/ exponential backoff up to 5 times
+                    # Gitlab will throw a 400 if you delete and immediately
+                    # recreate a repo. We retry w/ exponential backoff up
+                    # to 5 times
                     wait = 0.1
                     retries = 0
                     while True:
                         try:
-                            repo = StudentRepo.new(base, semester, student_section,
-                                                   username, token)
+                            repo = StudentRepo.new(
+                                base, semester, student_section, username, token
+                            )
                             logger.debug("Success!")
                             break
                         except HTTPError as e:
@@ -102,7 +106,7 @@ def assign(conf, args):
                 actual_count += 1
                 logging.debug("Assigned.")
             elif args.branch:
-                logging.info("{}: Already exists.".format(full_name))
+                logging.info("%s: Already exists.", full_name)
                 # If we have an explicit branch, push anyways
                 if not dry_run:
                     repo.push(base, branch)
@@ -111,7 +115,7 @@ def assign(conf, args):
                 actual_count += 1
                 logging.debug("Assigned.")
             else:
-                logging.info("{}: Already exists, skipping...".format(full_name))
+                logging.info("%s: Already exists, skipping...", full_name)
             i += 1
 
     progress.finish()
@@ -129,16 +133,16 @@ def assign(conf, args):
 
 def setup_parser(parser):
     parser.add_argument("name",
-                           help="Name of the assignment to assign.")
+                        help="Name of the assignment to assign.")
     parser.add_argument("--branch", "--branches", nargs="+",
-                           help="Branch or branches to push")
+                        help="Branch or branches to push")
     parser.add_argument("--section", nargs="?",
-                           help="Section to assign homework to")
+                        help="Section to assign homework to")
     parser.add_argument("--student", metavar="id",
-                           help="ID of the student to assign to.")
+                        help="ID of the student to assign to.")
     parser.add_argument("--dry-run", action="store_true",
-                           help="Don't actually do it.")
+                        help="Don't actually do it.")
     parser.add_argument("-f", "--force", action="store_true", dest="force",
-                           help="Delete and recreate already existing " +
-                                "student repos.")
+                        help="Delete and recreate already existing "
+                        "student repos.")
     parser.set_defaults(run=assign)

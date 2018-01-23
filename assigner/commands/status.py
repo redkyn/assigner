@@ -9,7 +9,7 @@ from assigner.roster_util import get_filtered_roster
 from assigner.config import config_context
 from assigner.baserepo import Access, Repo, StudentRepo, RepoError
 
-help="Retrieve status of repos"
+help = "Retrieve status of repos"
 
 logger = logging.getLogger(__name__)
 
@@ -45,8 +45,8 @@ def status(conf, args):
         name = student["name"]
         username = student["username"]
         student_section = student["section"]
-        full_name = StudentRepo.name(semester, student_section,
-                                     hw_name, username)
+        full_name = StudentRepo.build_name(semester, student_section,
+                                           hw_name, username)
 
         row = [i+1, student_section, username, name, "", "", "", "", ""]
 
@@ -106,12 +106,12 @@ def status(conf, args):
 
 def setup_parser(parser):
     parser.add_argument("--section", nargs="?",
-                           help="Section to get status of")
+                        help="Section to get status of")
     parser.add_argument("--student", metavar="id",
-                           help="ID of student.")
+                        help="ID of student.")
     parser.add_argument("--sort", nargs="?", default="name",
-                           choices=["name", "username"],
-                           help="Key to sort users by.")
+                        choices=["name", "username"],
+                        help="Key to sort users by.")
     parser.add_argument("name", nargs="?",
-                           help="Name of the assignment to look up.")
+                        help="Name of the assignment to look up.")
     parser.set_defaults(run=status)
