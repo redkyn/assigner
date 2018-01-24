@@ -101,14 +101,14 @@ Lastly, you can remove students by running `assigner roster remove <student GitL
 
 Once you have set Assigner up for your class, you can use it to make and assign homeworks and to fetch submissions from your students.
 
-Each assignment has a **base repository** that you add assignment materials to.
-The base repository is then copied to **student repositories**, one per student.
+Each assignment has a **template repository** that you add assignment materials to.
+The template repository is then copied to **student repositories**, one per student.
 
 This section will walk you through making a new assignment named 'hw1' and performing various actions on it.
 
-### Creating a new base repository
+### Creating a new template repository
 
-To create the base repository for the new assignment, run `assigner new hw1`.
+To create the template repository for the new assignment, run `assigner new hw1`.
 Assigner will create a new repository named 'hw1' in the GitLab group specified in `_config.yml`.
 It then will print out both an HTTPS and an SSH URL that you can use to view this repo in the GitLab UI or to clone a local copy.
 
@@ -118,15 +118,15 @@ Commit your changes and push them to GitLab.
 
 ### Creating student repositories
 
-Once you have created a base repo, you can make student repos from it by running `assigner assign hw1`.
+Once you have created a template repo, you can make student repos from it by running `assigner assign hw1`.
 This step *only* creates the repositories; it does not add the students to them.
 You should open GitLab and verify that the students' repo contents look correct.
 Each repository should be named something along the lines of `2017-FS-A-hw1-bob123`.
 
-By default, `assigner assign` copies only the `master` branch from the base repo.
+By default, `assigner assign` copies only the `master` branch from the template repo.
 Typically, this is what you want.
 If you wish to upload different branches, you can pass the `--branch` flag and list the branches you want to push.
-For example, let's say that in addition to the `master` branch, you want to provide your students with a copy of the `devel` branch from the base repo.
+For example, let's say that in addition to the `master` branch, you want to provide your students with a copy of the `devel` branch from the template repo.
 To do so, you'd run `assigner assign hw1 --branch master devel`.
 
 ### Opening the assignment to students

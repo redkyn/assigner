@@ -458,7 +458,6 @@ class GitlabStudentRepo(GitlabRepo, StudentRepoBase):
         base_repo.push_to(self, branch)
 
 
-#pylint: disable=too-few-public-methods
 class GitlabBackend(BackendBase):
     """
     Common abstract base backend for all assigner backends (gitlab or mock).

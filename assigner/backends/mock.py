@@ -1,8 +1,10 @@
 #pylint: disable=dangerous-default-value
-from unittest.mock import MagicMock
+import git
 import logging
 import os
+import random
 import re
+from unittest.mock import MagicMock
 
 from enum import Enum
 from requests.exceptions import HTTPError
@@ -32,6 +34,9 @@ class Access(Enum):
     owner = 50
 
 
+MockGitRepo = MagicMock(spec=git.Repo)
+
+
 class MockRepo(RepoBase):
     """Mock repo; manages API requests and various metadata"""
 
@@ -55,7 +60,7 @@ class MockRepo(RepoBase):
         if parts.scheme != "https":
             logging.warning("Using scheme %s instead of https.", parts.scheme)
 
-        return cls("https://basemock.com/api4/", "namespace", "name", "token")
+        return cls("https://basemock.com/api4/", "namespace", "HW1", "token")
 
     def __init__(self, url_base, namespace, name, token, url=None):
         self.url_base = url_base
@@ -141,14 +146,14 @@ class MockRepo(RepoBase):
     def clone_to(self, dir_name, branch=None):
         logging.debug("Cloning %s...", self.ssh_url)
         if branch:
-            self._repo = MagicMock().Repo.clone_from(self.ssh_url, dir_name,
-                                                        branch=branch)
+            self._repo = MockGitRepo.clone_from(self.ssh_url, dir_name,
+                                                branch=branch)
             for b in branch:
                 self._repo.create_head(b, "origin/{}".format(b))
 
             logging.debug(self._repo.heads)
         else:
-            self._repo = MagicMock().Repo.clone_from(self.ssh_url, dir_name)
+            self._repo = MockGitRepo.clone_from(self.ssh_url, dir_name)
 
         logging.debug("Cloned %s.", self.name)
         return self._repo
@@ -159,35 +164,19 @@ class MockRepo(RepoBase):
             return
 
         logging.debug("Using %s for the local repo...", dir_name)
-        self._repo = MagicMock().Repo(dir_name)
+        self._repo = MockGitRepo(dir_name=dir_name)
 
     def delete(self):
         logging.debug("Deleted %s.", self.name)
 
     @classmethod
     def get_user_id(cls, username, url_base, token):
-        data = MagicMock()
+        id = sum(map(ord, username))
 
-        if not data:
-            logging.warning(
-                "Did not find any users matching %s.", username
-            )
-            raise RepoError("No user {}.".format(username))
-
-        for result in data:
-            if result["username"] == username:
-                logging.info(
-                    "Got id %s for user %s.", data[0]["id"], username
-                )
-                return result["id"]
-
-        # Fall back to first result if all else fails
-        logging.warning("Got %s users for %s.", len(data), username)
-        logging.warning("Failed to find an exact match for %s.", username)
         logging.info(
-            "Got id %s for user %s.", data[0]["id"], data[0]["username"]
+            "Got id %i for user %s.", id
         )
-        return data[0]["id"]
+        return id
 
     def list_members(self):
         return [MagicMock(), MagicMock(), MagicMock()]
@@ -268,7 +257,6 @@ class MockStudentRepo(MockRepo, StudentRepoBase):
         base_repo.push_to(self, branch)
 
 
-#pylint: disable=too-few-public-methods
 class MockBackend(BackendBase):
     """
     Common abstract base backend for all assigner backends (gitlab or mock).

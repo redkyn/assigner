@@ -4,7 +4,7 @@ from requests.exceptions import HTTPError
 
 from assigner.backends.decorators import require_backend
 
-help = "Create a new base repo"
+help = "Create a new template repo"
 
 logger = logging.getLogger(__name__)
 
@@ -12,7 +12,7 @@ logger = logging.getLogger(__name__)
 @require_backend
 def new(conf, backend, args):
     """
-    Creates a new base repository for an assignment so that you can add the
+    Creates a new template repository for an assignment so that you can add the
     instructions, sample code, etc.
     """
     hw_name = args.name

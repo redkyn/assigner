@@ -1,4 +1,4 @@
-from assigner.backends import GitlabBackend
+from assigner.backends import GitlabBackend, MockBackend
 from assigner.config import config_context
 
 
@@ -8,6 +8,8 @@ def require_backend(func):
     def wrapper(config, cmdargs, *args, **kwargs):
         if config.backend == "gitlab":
             return func(config, GitlabBackend, cmdargs, *args, **kwargs)
+        if config.backend == "mock":
+            return func(config, MockBackend, cmdargs, *args, **kwargs)
 
         return func(config, GitlabBackend, cmdargs, *args, **kwargs)
     return wrapper

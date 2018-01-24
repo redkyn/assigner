@@ -10,7 +10,7 @@ from assigner.roster_util import get_filtered_roster
 
 from requests.exceptions import HTTPError
 
-help = "Assign a base repo to students"
+help = "Assign a template repo to students"
 
 logger = logging.getLogger(__name__)
 
@@ -42,13 +42,13 @@ def assign(conf, backend, args):
             "s" if student_count != 1 else "",
             "section " + args.section if args.section else "all sections"
         ))
-        base = backend.template_repo(backend_conf, namespace, hw_name)
+        template = backend.template_repo(backend_conf, namespace, hw_name)
         if not dry_run:
             try:
-                base.clone_to(tmpdirname, branch)
+                template.clone_to(tmpdirname, branch)
             except RepoError as e:
                 logging.error(
-                    "Could not clone base repo (have you pushed at least one commit to it?)"
+                    "Could not clone template repo (have you pushed at least one commit to it?)"
                 )
                 logging.debug(e)
                 return
@@ -65,9 +65,9 @@ def assign(conf, backend, args):
 
             if not repo.already_exists():
                 if not dry_run:
-                    repo = backend.student_repo.new(base, semester, student_section,
+                    repo = backend.student_repo.new(template, semester, student_section,
                                                     username)
-                    repo.push(base, branch)
+                    repo.push(template, branch)
                     for b in branch:
                         repo.protect(b)
                 actual_count += 1
@@ -85,7 +85,7 @@ def assign(conf, backend, args):
                     while True:
                         try:
                             repo = backend.student_repo.new(
-                                base, semester, student_section, username
+                                template, semester, student_section, username
                             )
                             logger.debug("Success!")
                             break
@@ -99,7 +99,7 @@ def assign(conf, backend, args):
                         time.sleep(wait * 2**retries)
                         retries += 1
 
-                    repo.push(base, branch)
+                    repo.push(template, branch)
                     for b in branch:
                         repo.protect(b)
                 actual_count += 1
@@ -108,7 +108,7 @@ def assign(conf, backend, args):
                 logging.info("%s: Already exists.", full_name)
                 # If we have an explicit branch, push anyways
                 if not dry_run:
-                    repo.push(base, branch)
+                    repo.push(template, branch)
                     for b in branch:
                         repo.protect(b)
                 actual_count += 1
