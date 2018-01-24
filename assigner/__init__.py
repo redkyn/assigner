@@ -144,7 +144,8 @@ def make_parser():
     return parser
 
 
-def main(args):
+#pylint: disable=dangerous-default-value
+def main(args=sys.argv[1:]):
     """Entry point
     """
     # Configure logging
@@ -172,4 +173,4 @@ def main(args):
 
 
 if __name__ == "__main__":
-    main(sys.argv[1:])
+    main()
