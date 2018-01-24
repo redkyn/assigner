@@ -5,6 +5,8 @@
 - Removed remaining lint as specified by pylint.
 - Removed old baserepo standalone code.
 - Added Travis CI config for pylint and pyflakes.
+- Added unittest scaffolding with nose
+- Added `AssignerTestCase`, tests for `assigner`, `assigner get`, and all `--help` uses.
 
 ## 1.0.0
 

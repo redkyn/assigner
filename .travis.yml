@@ -6,3 +6,4 @@ install:
 script:
   - pyflakes assigner
   - pylint assigner
+  - python setup.py nosetests

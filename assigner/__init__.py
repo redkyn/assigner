@@ -2,6 +2,7 @@
 import argparse
 import importlib
 import logging
+import sys
 
 from colorlog import ColoredFormatter
 from requests.exceptions import HTTPError
@@ -143,7 +144,7 @@ def make_parser():
     return parser
 
 
-def main():
+def main(args):
     """Entry point
     """
     # Configure logging
@@ -151,7 +152,7 @@ def main():
 
     # Parse CLI args
     parser = make_parser()
-    args = parser.parse_args()
+    args = parser.parse_args(args)
 
     # Set logging verbosity
     logging.getLogger().setLevel(args.verbosity)
@@ -171,4 +172,4 @@ def main():
 
 
 if __name__ == "__main__":
-    main()
+    main(sys.argv[1:])
