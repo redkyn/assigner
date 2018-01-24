@@ -150,6 +150,9 @@ Once the submission deadline for an assignment has passed, you can clone each st
 Assigner will create a directory named 'hw1' in the current directory, then clone each student repo into a subdirectory of that directory.
 You can then inspect and grade the assignments however you like.
 
+If you want to collect late submissions, you can re-run `assigner get hw1`.
+It will fetch changes for each existing repository and clone any nonexisting repositores.
+
 (Assigner doesn't have plans for any grading features;
 however, if you are interested in automated grading, check out its sister project, [grader](https://github.com/redkyn/grader).)
 

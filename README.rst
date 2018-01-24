@@ -28,7 +28,7 @@ Check out the `tutorial <https://github.com/redkyn/assigner/blob/master/TUTORIAL
 - ``new <assignment>`` Creates a new base repository for an assignment so that you can add the instructions, sample code, etc.
 - ``assign <assignment>`` Creates homework repositories for an assignment for each student in the roster.
 - ``open <assignment>`` Adds each student in the roster to their respective homework repositories as Developers so they can pull/commit/push their work.
-- ``get <assignment> [<path>]`` Creates a folder for the assignment in the CWD (or ``<path>``, if specified) and clones each students' repository into subfolders.
+- ``get <assignment> [<path>]`` Creates a folder for the assignment in the CWD (or ``<path>``, if specified) and clones each students' repository into subfolders or fetches their changes if their repository is already cloned.
 - ``lock <assignment>`` Sets each student to Reporter status on their homework repository so they cannot push changes, etc.
 - ``unlock <assignment>`` Sets each student to Developer status on their homework repository.
 - ``archive <assignment>`` Archives student repositories, disallowing pushes and hiding the repository from the project listing on GitLab.
