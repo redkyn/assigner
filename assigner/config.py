@@ -27,6 +27,7 @@ class Config(UserDict):
             # Backend type (gitlab / mock)
             "backend": {
                 "type": "string",
+                "pattern": "^(mock|gitlab)?$"
             },
 
             # GitLab private token

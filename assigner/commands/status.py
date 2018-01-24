@@ -7,7 +7,6 @@ from assigner import progress
 from assigner.backends.base import RepoError
 from assigner.backends.decorators import require_backend
 from assigner.backends.gitlab import Access
-from assigner.config import config_context
 from assigner.roster_util import get_filtered_roster
 
 help = "Retrieve status of repos"
@@ -16,7 +15,6 @@ logger = logging.getLogger(__name__)
 
 
 @require_backend
-@config_context
 def status(conf, backend, args):
     """Retrieves and prints the status of repos"""
     hw_name = args.name

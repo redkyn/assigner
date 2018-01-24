@@ -6,7 +6,6 @@ from git import NoSuchPathError, GitCommandError
 
 from assigner.backends import RepoError
 from assigner.backends.decorators import require_backend
-from assigner.config import config_context
 from assigner import progress
 from assigner.roster_util import get_filtered_roster
 
@@ -18,7 +17,6 @@ logger = logging.getLogger(__name__)
 
 
 @require_backend
-@config_context
 def get(conf, backend, args):
     """
     Creates a folder for the assignment in the CWD (or <path>, if specified)

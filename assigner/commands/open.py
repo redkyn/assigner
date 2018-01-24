@@ -6,7 +6,6 @@ from assigner.backends.base import RepoError
 from assigner.backends.decorators import require_backend
 from assigner.backends.gitlab import Access
 from assigner.roster_util import get_filtered_roster
-from assigner.config import config_context
 from assigner import progress
 
 help = "Grants students access to their repos"
@@ -27,7 +26,6 @@ def open_assignment(repo, student):
 
 
 @require_backend
-@config_context
 def open_all_assignments(conf, backend, args):
     """Adds each student in the roster to their respective homework
     repositories as Developers so they can pull/commit/push their work.

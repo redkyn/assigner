@@ -57,7 +57,6 @@ subcommands = [
 
 
 @require_backend
-@config_context
 def manage_repos(conf, backend, args, action):
     """Performs an action (lambda) on all student repos
     """

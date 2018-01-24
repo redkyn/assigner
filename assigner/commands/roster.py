@@ -3,6 +3,7 @@ import logging
 from prettytable import PrettyTable
 
 from assigner import make_help_parser
+from assigner.backends.decorators import require_backend
 from assigner.config import config_context, DuplicateUserError
 from assigner.roster_util import get_filtered_roster, add_to_roster
 
@@ -23,12 +24,14 @@ def list_students(conf, args):
     print(output)
 
 
-@config_context
-def add_student(conf, args):
+@require_backend
+def add_student(conf, backend, args):
     """Add a student to the roster
     """
     try:
-        add_to_roster(conf, conf.roster, args.name, args.username, args.section, args.force)
+        add_to_roster(
+            conf, backend, conf.roster, args.name, args.username, args.section, args.force
+        )
     except DuplicateUserError:
         logger.error("Student already exists in roster!")
 

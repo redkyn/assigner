@@ -17,8 +17,7 @@ def get_filtered_roster(roster, section, target):
     return roster
 
 
-@require_backend
-def add_to_roster(backend, conf, roster, name, username, section, force=False):
+def add_to_roster(conf, backend, roster, name, username, section, force=False):
     student = {
         "name": name,
         "username": username,

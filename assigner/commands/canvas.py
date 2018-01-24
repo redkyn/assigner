@@ -3,6 +3,7 @@ import logging
 from prettytable import PrettyTable
 
 from assigner import make_help_parser
+from assigner.backends.decorators import require_backend
 from assigner.canvas import CanvasAPI
 from assigner.config import config_context, DuplicateUserError
 from assigner.roster_util import add_to_roster
@@ -12,8 +13,8 @@ help = "Get Canvas course information"
 logger = logging.getLogger(__name__)
 
 
-@config_context
-def import_from_canvas(conf, args):
+@require_backend
+def import_from_canvas(conf, backend, args):
     """Imports students from a Canvas course to the roster.
     """
     if 'canvas-token' not in conf:
@@ -37,7 +38,9 @@ def import_from_canvas(conf, args):
             logger.error("Could not get username for %s", s['sortable_name'])
 
         try:
-            add_to_roster(conf, conf.roster, s['sortable_name'], s['sis_user_id'], section, force)
+            add_to_roster(
+                conf, backend, conf.roster, s['sortable_name'], s['sis_user_id'], section, force
+            )
         except DuplicateUserError:
             logger.warning("User %s is already in the roster, skipping", s['sis_user_id'])
 

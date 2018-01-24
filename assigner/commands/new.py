@@ -3,7 +3,6 @@ import logging
 from requests.exceptions import HTTPError
 
 from assigner.backends.decorators import require_backend
-from assigner.config import config_context
 
 help = "Create a new base repo"
 
@@ -11,7 +10,6 @@ logger = logging.getLogger(__name__)
 
 
 @require_backend
-@config_context
 def new(conf, backend, args):
     """
     Creates a new base repository for an assignment so that you can add the

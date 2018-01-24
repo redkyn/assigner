@@ -5,7 +5,6 @@ import time
 from assigner.backends.base import RepoError
 from assigner.backends.decorators import require_backend
 from assigner.commands.open import open_assignment
-from assigner.config import config_context
 from assigner import progress
 from assigner.roster_util import get_filtered_roster
 
@@ -17,7 +16,6 @@ logger = logging.getLogger(__name__)
 
 
 @require_backend
-@config_context
 def assign(conf, backend, args):
     """Creates homework repositories for an assignment for each student
     in the roster.

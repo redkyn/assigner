@@ -2,12 +2,12 @@ from assigner.backends import GitlabBackend
 from assigner.config import config_context
 
 
-@config_context
-def require_backend(config, func):
+def require_backend(func):
     """Provides a backend depending on configuration."""
-    def wrapper(*args, **kwargs):
+    @config_context
+    def wrapper(config, cmdargs, *args, **kwargs):
         if config.backend == "gitlab":
-            func(GitlabBackend, *args, **kwargs)
+            return func(config, GitlabBackend, cmdargs, *args, **kwargs)
 
-        func(GitlabBackend, *args, **kwargs)
+        return func(config, GitlabBackend, cmdargs, *args, **kwargs)
     return wrapper

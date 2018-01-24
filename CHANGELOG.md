@@ -4,6 +4,12 @@
 - Make GitLab backend configuration generic
 - Tidy up progress bars with logging output
 - Test all supported python versions (3.4-3.7) automatically
+- Added `BackendBase`, `RepoBase`, `StudentRepoBase`, and `TemplateRepoBase`.
+- Base Repos are now called Template Repos.
+- Separated Gitlab backend from most of the code. Added Base implementations for Gitlab.
+- Added `requires_backend_and_config` decorator with backend config option to load the desired backend.
+- Renamed `config_context` decorator to `requires_config`.
+- pyflakes 1.6.0 upgrade for type annotations fixes.
 
 ## 1.2.0
 
@@ -26,6 +32,10 @@
 - Added Travis CI config for pylint and pyflakes.
 - Added unittest scaffolding with nose
 - Added `AssignerTestCase`, tests for `assigner`, `assigner get`, and all `--help` uses.
+- Added BackendBase, RepoBase, StudentRepoBase, and TemplateRepoBase.
+- Separated Gitlab backend from most of the code. Added Base implementations for Gitlab.
+- Added require_backend decorator with backend config option to load the desired backend.
+- pyflakes 1.6.0 upgrade for type annotations fixes.
 
 ## 1.0.0
 
