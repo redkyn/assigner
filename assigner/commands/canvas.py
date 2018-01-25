@@ -3,9 +3,9 @@ import logging
 from prettytable import PrettyTable
 
 from assigner import make_help_parser
-from assigner.backends.decorators import require_backend
+from assigner.backends.decorators import requires_backend_and_config
 from assigner.canvas import CanvasAPI
-from assigner.config import config_context, DuplicateUserError
+from assigner.config import requires_config, DuplicateUserError
 from assigner.roster_util import add_to_roster
 
 help = "Get Canvas course information"
@@ -13,7 +13,7 @@ help = "Get Canvas course information"
 logger = logging.getLogger(__name__)
 
 
-@require_backend
+@requires_backend_and_config
 def import_from_canvas(conf, backend, args):
     """Imports students from a Canvas course to the roster.
     """
@@ -47,7 +47,7 @@ def import_from_canvas(conf, backend, args):
     print("Imported {} students.".format(len(students)))
 
 
-@config_context
+@requires_config
 def print_canvas_courses(conf, _):
     """Show a list of current teacher's courses from Canvas via the API.
     """

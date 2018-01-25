@@ -1,4 +1,3 @@
-from assigner.backends.decorators import require_backend
 from assigner.backends.base import RepoError
 from assigner.config import DuplicateUserError
 

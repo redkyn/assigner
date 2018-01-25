@@ -215,7 +215,8 @@ class GitlabRepo(RepoBase):
             else:
                 self._repo = git.Repo.clone_from(self.ssh_url, dir_name)
             logging.debug("Cloned %s.", self.name)
-        except git.GitCommandError as e:
+        #pylint: disable=no-member
+        except git.exc.GitCommandError as e:
             # GitPython may delete this directory
             # and the caller may have opinions about that,
             # so go ahead and re-create it just to be safe.
@@ -356,6 +357,12 @@ class GitlabRepo(RepoBase):
         return self._gl_put("/projects/{}/repository/branches/{}/unprotect"
                             .format(self.id, branch))
 
+    def unlock(self, student_id: str) -> None:
+        self.edit_member(student_id, Access.developer)
+
+    def lock(self, student_id: str) -> None:
+        self.edit_member(student_id, Access.reporter)
+
     def _gl_get(self, path, params={}):
         return self.__class__._cls_gl_get(
             self.config, path, params
@@ -465,3 +472,4 @@ class GitlabBackend(BackendBase):
     repo: RepoBase = GitlabRepo
     template_repo: TemplateRepoBase = GitlabTemplateRepo
     student_repo: StudentRepoBase = GitlabStudentRepo
+    access = Access

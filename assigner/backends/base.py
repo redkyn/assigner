@@ -117,6 +117,12 @@ class RepoBase:
     def unprotect(self, branch: str = "master") -> str:
         raise NotImplementedError
 
+    def unlock(self, student_id: str) -> None:
+        raise NotImplementedError
+
+    def lock(self, student_id: str) -> None:
+        raise NotImplementedError
+
 
 class StudentRepoBase(RepoBase):
     """Repository for a student's solution to a homework assignment"""
@@ -151,3 +157,4 @@ class BackendBase:
     repo: RepoBase = RepoBase
     template_repo: TemplateRepoBase = TemplateRepoBase
     student_repo: StudentRepoBase = StudentRepoBase
+    access = None

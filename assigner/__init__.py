@@ -18,8 +18,7 @@ import sys
 from colorlog import ColoredFormatter
 from git.cmd import GitCommandNotFound
 
-from assigner.backends.decorators import require_backend
-from assigner.config import config_context
+from assigner.backends.decorators import requires_backend_and_config
 from assigner.roster_util import get_filtered_roster
 from assigner import progress
 
@@ -56,7 +55,7 @@ subcommands = [
 ]
 
 
-@require_backend
+@requires_backend_and_config
 def manage_repos(conf, backend, args, action):
     """Performs an action (lambda) on all student repos
     """

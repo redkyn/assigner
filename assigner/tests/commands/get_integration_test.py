@@ -13,8 +13,8 @@ class GetIntegrationTestCase(AssignerIntegrationTestCase):
         self.mock_roster = self._create_patch(
             "assigner.commands.get.get_filtered_roster", autospec=True
         )
-        self.mock_studentrepo = self._create_patch(
-            "assigner.commands.get.StudentRepo", autospec=True
+        self.mock_backend = self._create_patch(
+            "assigner.backends.decorators.GitlabBackend", autospec=True
         )
         self.mock_os = self._create_patch(
             "assigner.commands.get.os", autospec=True
@@ -45,7 +45,7 @@ class GetIntegrationTestCase(AssignerIntegrationTestCase):
         self.mock_os.makedirs.assert_called_once_with(
             self.mock_os.path.join.return_value, mode=0o700, exist_ok=True
         )
-        self.assertFalse(self.mock_studentrepo.called)
+        self.assertFalse(self.mock_backend.student_repo.called)
 
     def test_get_students(self):
         """
@@ -55,12 +55,12 @@ class GetIntegrationTestCase(AssignerIntegrationTestCase):
         get(self.mock_args)  # pylint: disable=no-value-for-parameter
 
         for student in self.mock_roster.return_value:
-            studentrepo_name = self.mock_studentrepo.build_name(
+            studentrepo_name = self.mock_backend.student_repo.build_name(
                 self.mock_config.semester, student["section"],
                 self.mock_args.name, student["username"]
             )
             # Should build a student name and create a StudentRepo object
-            studentrepo = self.mock_studentrepo(
+            studentrepo = self.mock_backend.student_repo(
                 self.mock_config.backend, self.mock_config.namespace,
                 studentrepo_name
             )

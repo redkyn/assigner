@@ -9,7 +9,7 @@ class DuplicateUserError(Exception):
     pass
 
 
-def config_context(func):
+def requires_config(func):
     def wrapper(cmdargs, *args):
         with Config(cmdargs.config) as conf:
             return func(conf, cmdargs, *args)

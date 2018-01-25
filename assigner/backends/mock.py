@@ -1,14 +1,12 @@
 #pylint: disable=dangerous-default-value
 import git
 import logging
-import os
-import random
 import re
 from unittest.mock import MagicMock
 
 from enum import Enum
 from requests.exceptions import HTTPError
-from urllib.parse import urlsplit, urlunsplit, urljoin, quote
+from urllib.parse import urlsplit, quote
 
 from assigner.backends.base import (
     BackendBase,
@@ -62,6 +60,7 @@ class MockRepo(RepoBase):
 
         return cls("https://basemock.com/api4/", "namespace", "HW1", "token")
 
+    #pylint: disable=super-init-not-called
     def __init__(self, url_base, namespace, name, token, url=None):
         self.url_base = url_base
         self.namespace = namespace
@@ -174,7 +173,7 @@ class MockRepo(RepoBase):
         id = sum(map(ord, username))
 
         logging.info(
-            "Got id %i for user %s.", id
+            "Got id %i for user %s.", id, username
         )
         return id
 
@@ -214,6 +213,12 @@ class MockRepo(RepoBase):
     def unarchive(self):
         return MagicMock()
 
+    def unlock(self, student_id: str) -> None:
+        self.edit_member(student_id, Access.developer)
+
+    def lock(self, student_id: str) -> None:
+        self.edit_member(student_id, Access.reporter)
+
     # NOTE: these are not the same defaults that Mock uses
     def protect(self, branch="master", developer_push=True, developer_merge=True):
         return MagicMock()
@@ -226,7 +231,7 @@ class MockTemplateRepo(MockRepo, TemplateRepoBase):
 
     @classmethod
     def new(cls, name, namespace, url_base, token):
-        return MockRepo()
+        return MockRepo(name, namespace, url_base, token)
 
     def push_to(self, student_repo, branch="master"):
         logging.debug("Pushed %s to %s.", self.name, student_repo.name)
