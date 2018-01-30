@@ -371,9 +371,16 @@ class BaseRepo(Repo):
     def new(cls, name, namespace, url_base, token):
         namespaces = cls._cls_gl_get(url_base, "/namespaces",
                                      token, {"search": namespace})
-        logging.debug(
-            "Got %s namespaces matching %s.", len(namespaces), namespace
-        )
+        if len(namespaces) > 1:
+            logging.warning(
+                "%s namespaces match %s; defaulting to namespace %s.",
+                len(namespaces), namespace, namespaces[0]["path"]
+            )
+            logging.warning(
+                "(please update the configuration in your namespace to " +
+                "exactly match the namespace you want Assigner to use.)"
+            )
+
         logging.debug(
             "Using namespace " +
             "%s with ID %s.", namespaces[0]["path"], namespaces[0]["id"]
