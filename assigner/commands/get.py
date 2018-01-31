@@ -6,7 +6,7 @@ from git import NoSuchPathError, GitCommandError
 
 from assigner.backends import RepoError
 from assigner import progress
-from assigner.backends.decorators import requires_backend_and_config
+from assigner.backends.decorators import requires_config_and_backend
 from assigner.roster_util import get_filtered_roster
 
 from prettytable import PrettyTable
@@ -16,7 +16,7 @@ help = "Clone or fetch student repos"
 logger = logging.getLogger(__name__)
 
 
-@requires_backend_and_config
+@requires_config_and_backend
 def get(conf, backend, args):
     """
     Creates a folder for the assignment in the CWD (or <path>, if specified)

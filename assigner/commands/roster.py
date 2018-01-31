@@ -3,7 +3,7 @@ import logging
 from prettytable import PrettyTable
 
 from assigner import make_help_parser
-from assigner.backends.decorators import requires_backend_and_config
+from assigner.backends.decorators import requires_config_and_backend
 from assigner.config import requires_config, DuplicateUserError
 from assigner.roster_util import get_filtered_roster, add_to_roster
 
@@ -24,7 +24,7 @@ def list_students(conf, args):
     print(output)
 
 
-@requires_backend_and_config
+@requires_config_and_backend
 def add_student(conf, backend, args):
     """Add a student to the roster
     """

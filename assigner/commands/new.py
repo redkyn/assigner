@@ -2,14 +2,14 @@ import logging
 
 from requests.exceptions import HTTPError
 
-from assigner.backends.decorators import requires_backend_and_config
+from assigner.backends.decorators import requires_config_and_backend
 
 help = "Create a new template repo"
 
 logger = logging.getLogger(__name__)
 
 
-@requires_backend_and_config
+@requires_config_and_backend
 def new(conf, backend, args):
     """
     Creates a new template repository for an assignment so that you can add the

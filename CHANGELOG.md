@@ -32,13 +32,6 @@
 - Added Travis CI config for pylint and pyflakes.
 - Added unittest scaffolding with nose
 - Added `AssignerTestCase`, tests for `assigner`, `assigner get`, and all `--help` uses.
-- Added `BackendBase`, `RepoBase`, `StudentRepoBase`, and `TemplateRepoBase`.
-- Base Repos are now called Template Repos.
-- Separated Gitlab backend from most of the code. Added Base implementations for Gitlab.
-- Added requires_backend_and_config decorator with backend config option to load the desired backend.
-- Renamed config_context decorator to requires_config.
-- pyflakes 1.6.0 upgrade for type annotations fixes.
-- Added 'backend' config field which can be either 'gitlab' or 'mock'.
 
 ## 1.0.0
 

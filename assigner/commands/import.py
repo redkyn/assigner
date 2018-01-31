@@ -2,7 +2,7 @@ import csv
 import logging
 import re
 
-from assigner.backends.decorators import requires_backend_and_config
+from assigner.backends.decorators import requires_config_and_backend
 from assigner.config import DuplicateUserError
 from assigner.roster_util import add_to_roster
 
@@ -11,7 +11,7 @@ help = "Import users from a csv"
 logger = logging.getLogger(__name__)
 
 
-@requires_backend_and_config
+@requires_config_and_backend
 def import_students(conf, backend, args):
     """Imports students from a CSV file to the roster.
     """

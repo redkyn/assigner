@@ -3,7 +3,7 @@ import tempfile
 import time
 
 from assigner.backends.base import RepoError
-from assigner.backends.decorators import requires_backend_and_config
+from assigner.backends.decorators import requires_config_and_backend
 from assigner.commands.open import open_assignment
 from assigner import progress
 from assigner.roster_util import get_filtered_roster
@@ -15,7 +15,7 @@ help = "Assign a template repo to students"
 logger = logging.getLogger(__name__)
 
 
-@requires_backend_and_config
+@requires_config_and_backend
 def assign(conf, backend, args):
     """Creates homework repositories for an assignment for each student
     in the roster.

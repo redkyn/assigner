@@ -5,7 +5,7 @@ from prettytable import PrettyTable
 
 from assigner import progress
 from assigner.backends.base import RepoError
-from assigner.backends.decorators import requires_backend_and_config
+from assigner.backends.decorators import requires_config_and_backend
 from assigner.roster_util import get_filtered_roster
 
 help = "Retrieve status of repos"
@@ -13,7 +13,7 @@ help = "Retrieve status of repos"
 logger = logging.getLogger(__name__)
 
 
-@requires_backend_and_config
+@requires_config_and_backend
 def status(conf, backend, args):
     """Retrieves and prints the status of repos"""
     hw_name = args.name

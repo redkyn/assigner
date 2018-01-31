@@ -3,7 +3,7 @@ import logging
 from requests.exceptions import HTTPError
 
 from assigner.backends.base import RepoError
-from assigner.backends.decorators import requires_backend_and_config
+from assigner.backends.decorators import requires_config_and_backend
 from assigner.roster_util import get_filtered_roster
 from assigner import progress
 
@@ -23,7 +23,7 @@ def open_assignment(repo, student, access):
             raise
 
 
-@requires_backend_and_config
+@requires_config_and_backend
 def open_all_assignments(conf, backend, args):
     """Adds each student in the roster to their respective homework
     repositories as Developers so they can pull/commit/push their work.
