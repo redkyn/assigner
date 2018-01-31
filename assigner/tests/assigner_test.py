@@ -42,8 +42,11 @@ class MakeParserTestCase(AssignerTestCase):
         self.assertTrue(self.mock_parser.set_defaults.called)
         self.assertFalse(self.mock_parser.print_usage.called)
 
+        mock_args = self.mock_parser.parse_args.return_value
+        mock_args.version = False
+
         _, kwargs = self.mock_parser.set_defaults.call_args
-        kwargs['run'](None)
+        kwargs['run'](mock_args)
         self.assertTrue(self.mock_parser.print_usage.called)
 
 

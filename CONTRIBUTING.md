@@ -55,10 +55,9 @@ After version 1.0, Assigner's version (x.y.z) is incremented as follows:
 
 ## Cutting a new release
 
-1. Update the version in `setup.py`
-2. Update `CHANGELOG.md`
-3. Commit
-4. `git tag` the release commit
-5. Create a source distribution: `python setup.py sdist`
-6. Create a binary distribution: `python setup.py bdist_wheel`
-7. Upload distributions to pypi
+1. Update `CHANGELOG.md`
+1. Commit
+1. `git tag` the release commit
+1. Create a source distribution: `python setup.py sdist`
+1. Create a binary distribution: `python setup.py bdist_wheel`
+1. Upload distributions to pypi: `twine upload dist/*`

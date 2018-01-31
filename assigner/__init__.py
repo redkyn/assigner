@@ -12,6 +12,15 @@ from assigner.config import config_context
 from assigner.roster_util import get_filtered_roster
 from assigner.progress import Progress
 
+from pkg_resources import get_distribution, DistributionNotFound
+
+
+try:
+    __version__ = get_distribution(__name__).version
+except DistributionNotFound:
+    # package is not installed
+    __version__ = "Not installed"
+
 logger = logging.getLogger(__name__)
 
 description = "An automated tool for assigning programming homework."
@@ -127,9 +136,17 @@ def make_parser():
     parser.add_argument("--verbosity", default="INFO",
                         choices=["DEBUG", "INFO", "WARNING", "ERROR"],
                         help="Desired log level")
+    parser.add_argument("--version", action="store_true",
+                        help="Show version and exit")
+
+    def default_run(args):
+        if args.version:
+            print("Assigner version {}".format(__version__))
+        else:
+            parser.print_usage()
 
     # If no arguments are provided, show the usage screen
-    parser.set_defaults(run=lambda x: parser.print_usage())
+    parser.set_defaults(run=default_run)
 
     # Set up subcommands for each package
     subparsers = parser.add_subparsers(title="commands")
@@ -158,6 +175,8 @@ def main(args=sys.argv[1:]):
     # Set logging verbosity
     logging.getLogger().setLevel(args.verbosity)
     logging.getLogger("requests").setLevel(logging.WARNING)
+
+    logging.debug("This is Assigner version %s", __version__)
 
     # Do it
     try:
