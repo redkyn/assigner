@@ -5,8 +5,10 @@ from collections import UserDict
 
 from assigner.config.versions import upgrade, validate, ValidationError
 
+
 class DuplicateUserError(Exception):
     pass
+
 
 def config_context(func):
     def wrapper(cmdargs, *args):
