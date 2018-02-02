@@ -22,9 +22,11 @@ CONFIGS = [
     },
     { # Version 2
         "version": 2,
-        "backend": "gitlab",
-        "gitlab-token": "xxx gitlab token xxx",
-        "gitlab-host": "https://git.gitlab.com",
+        "backend": {
+            "name": "gitlab",
+            "token": "xxx gitlab token xxx",
+            "host": "https://git.gitlab.com",
+        },
         "namespace": "assigner-testing",
         "semester": "2016-SP",
         "roster": [],
@@ -37,7 +39,9 @@ EMPTY_CONFIGS = [
     {},
     {
         "version": 2,
-        "backend": "gitlab",
+        "backend": {
+            "name": "gitlab",
+        },
     },
 ]
 

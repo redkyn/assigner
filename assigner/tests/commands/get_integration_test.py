@@ -61,8 +61,8 @@ class GetIntegrationTestCase(AssignerIntegrationTestCase):
             )
             # Should build a student name and create a StudentRepo object
             studentrepo = self.mock_studentrepo(
-                self.mock_config.gitlab_host, self.mock_config.namespace,
-                studentrepo_name, self.mock_config.gitlab_token
+                self.mock_config.backend, self.mock_config.namespace,
+                studentrepo_name
             )
             # Should use their username to build a directory.
             student_dir = self.mock_os.path.join(self.mock_os.path.join(

@@ -6,8 +6,19 @@ def _0_to_1(config):
 
 
 def _1_to_2(config):
-    config["backend"] = "gitlab"
     config["version"] = 2
+    config["backend"] = {
+        "name": "gitlab",
+    }
+
+    if "gitlab-token" in config:
+        config["backend"]["token"] = config["gitlab-token"]
+        del config["gitlab-token"]
+
+    if "gitlab-host" in config:
+        config["backend"]["host"] = config["gitlab-host"]
+        del config["gitlab-host"]
+
     return config
 
 

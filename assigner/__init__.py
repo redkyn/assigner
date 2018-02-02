@@ -64,10 +64,9 @@ def manage_repos(conf, args, action):
     hw_name = args.name
     dry_run = args.dry_run
 
-    host = conf.gitlab_host
     namespace = conf.namespace
-    token = conf.gitlab_token
     semester = conf.semester
+    backend_conf = conf.backend
 
     roster = get_filtered_roster(conf.roster, args.section, args.student)
 
@@ -85,7 +84,7 @@ def manage_repos(conf, args, action):
                                            hw_name, username)
 
         try:
-            repo = StudentRepo(host, namespace, full_name, token)
+            repo = StudentRepo(backend_conf, namespace, full_name)
             if not dry_run:
                 action(repo, student)
             count += 1

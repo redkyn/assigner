@@ -27,10 +27,9 @@ def open_all_assignments(conf, args):
     repositories as Developers so they can pull/commit/push their work.
     """
     hw_name = args.name
-    host = conf.gitlab_host
     namespace = conf.namespace
-    token = conf.gitlab_token
     semester = conf.semester
+    backend_conf = conf.backend
 
     roster = get_filtered_roster(conf.roster, args.section, args.student)
 
@@ -43,9 +42,9 @@ def open_all_assignments(conf, args):
                                            hw_name, username)
 
         try:
-            repo = StudentRepo(host, namespace, full_name, token)
+            repo = StudentRepo(backend_conf, namespace, full_name)
             if "id" not in student:
-                student["id"] = Repo.get_user_id(username, host, token)
+                student["id"] = Repo.get_user_id(username, backend_conf)
 
             open_assignment(repo, student)
             count += 1

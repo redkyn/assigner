@@ -29,9 +29,7 @@ def add_to_roster(conf, roster, name, username, section, force=False):
         raise DuplicateUserError("Student already exists in roster!")
 
     try:
-        student["id"] = Repo.get_user_id(
-            username, conf.gitlab_host, conf.gitlab_token
-        )
+        student["id"] = Repo.get_user_id(username, conf.backend)
     except RepoError:
         logger.warning(
             "Student %s does not have a Gitlab account.", name

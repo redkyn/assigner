@@ -178,18 +178,37 @@ SCHEMAS = [
 
             # Backend type (gitlab / mock)
             "backend": {
-                "type": "string",
-                "pattern": "^(mock|gitlab)?$"
-            },
-
-            # GitLab private token
-            "gitlab-token": {
-                "type": "string",
-            },
-
-            # GitLab domain (https://git.gitlab.com)
-            "gitlab-host": {
-                "type": "string",
+                "type": "object",
+                "oneOf" : [
+                    {
+                        "properties" : {
+                            "name": {
+                                "type": "string",
+                                "enum" : ["gitlab"],
+                            },
+                            # GitLab private token
+                            "token": {
+                                "type": "string",
+                            },
+                            # GitLab domain (https://git.gitlab.com)
+                            "host": {
+                                "type": "string",
+                            },
+                        },
+                        "required" : ["name", "token", "host"],
+                        "additionalProperties": False,
+                    },
+                    {
+                        "properties" : {
+                            "name": {
+                                "type": "string",
+                                "enum" : ["mock"],
+                            },
+                        },
+                        "required" : ["name"],
+                        "additionalProperties": False,
+                    }
+                ]
             },
 
             # GitLab Namespace name
@@ -257,7 +276,7 @@ SCHEMAS = [
                 "type": "string",
             }
         },
-        "required": ["version", "backend", "gitlab-host", "namespace", "gitlab-token", "semester"],
+        "required": ["version", "backend", "namespace", "semester"],
         "additionalProperties": False,
     },
 ]

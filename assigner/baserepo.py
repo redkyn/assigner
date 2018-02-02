@@ -42,9 +42,9 @@ class Repo(object):
     )
 
     @classmethod
-    def build_url(cls, url_base, namespace, name):
+    def build_url(cls, config, namespace, name):
         """ Build a url for a repository """
-        return url_base + "/" + namespace + "/" + name + ".git"
+        return config["host"] + "/" + namespace + "/" + name + ".git"
 
     @classmethod
     def from_url(cls, url, token):
@@ -67,8 +67,13 @@ class Repo(object):
         namespace = match.group("namespace")
         name = match.group("name")
 
-        self = cls(urlunsplit((parts.scheme, parts.netloc, "", "", "")),
-                   namespace, name, token, url)
+        config = {
+            "host": urlunsplit((parts.scheme, parts.netloc, "", "", "")),
+            "token": token,
+            "name": "gitlab",
+        }
+
+        self = cls(config, namespace, name, url)
 
         logging.debug(json.dumps(self.info))
         logging.debug("%s is valid.", self.name_with_namespace)
@@ -76,49 +81,48 @@ class Repo(object):
         return self
 
     @classmethod
-    def _cls_gl_get(cls, url_base, path, token, params={}):
+    def _cls_gl_get(cls, config, path, params={}):
         """Make a Gitlab GET request"""
-        headers = {"Private-Token": token}
-        url = urljoin(url_base, "/api/v4" + path)
+        headers = {"Private-Token": config["token"]}
+        url = urljoin(config["host"], "/api/v4" + path)
         r = requests.get(url, params=params, headers=headers)
         r.raise_for_status()
         return r.json()
 
     @classmethod
-    def _cls_gl_post(cls, url_base, path, token, payload={}, params={}):
+    def _cls_gl_post(cls, config, path, payload={}, params={}):
         """Make a Gitlab POST request"""
-        headers = {"Private-Token": token}
-        url = urljoin(url_base, "/api/v4" + path)
+        headers = {"Private-Token": config["token"]}
+        url = urljoin(config["host"], "/api/v4" + path)
         r = requests.post(url, params=params, data=payload, headers=headers)
         r.raise_for_status()
         return r.json()
 
     @classmethod
-    def _cls_gl_put(cls, url_base, path, token, payload={}, params={}):
+    def _cls_gl_put(cls, config, path, payload={}, params={}):
         """Make a Gitlab PUT request"""
-        headers = {"Private-Token": token}
-        url = urljoin(url_base, "/api/v4" + path)
+        headers = {"Private-Token": config["token"]}
+        url = urljoin(config["host"], "/api/v4" + path)
         r = requests.put(url, params=params, data=payload, headers=headers)
         r.raise_for_status()
         return r.json()
 
     @classmethod
-    def _cls_gl_delete(cls, url_base, path, token, params={}):
+    def _cls_gl_delete(cls, config, path, params={}):
         """Make a Gitlab DELETE request"""
-        headers = {"Private-Token": token}
-        url = urljoin(url_base, "/api/v4" + path)
+        headers = {"Private-Token": config["token"]}
+        url = urljoin(config["host"], "/api/v4" + path)
         r = requests.delete(url, params=params, headers=headers)
         r.raise_for_status()
         return r.json()
 
-    def __init__(self, url_base, namespace, name, token, url=None):
-        self.url_base = url_base
+    def __init__(self, config, namespace, name, url=None):
+        self.config = config
         self.namespace = namespace
         self.name = name
-        self.token = token
 
         if url is None:
-            self.url = Repo.build_url(url_base, namespace, name)
+            self.url = Repo.build_url(self.config, namespace, name)
         else:
             self.url = url
 
@@ -150,7 +154,7 @@ class Repo(object):
             except HTTPError as e:
                 if e.response.status_code == 404:
                     logging.debug("Could not find repo with url %s/api/v4%s.",
-                                  self.url_base, url)
+                                  self.config["host"], url)
                     self._info = None
                 else:
                     raise
@@ -228,9 +232,8 @@ class Repo(object):
         logging.debug("Deleted %s.", self.name)
 
     @classmethod
-    def get_user_id(cls, username, url_base, token):
-        data = cls._cls_gl_get(url_base, "/users", token,
-                               params={"search": username})
+    def get_user_id(cls, username, config):
+        data = cls._cls_gl_get(config, "/users", params={"search": username})
 
         if not data:
             logging.warning(
@@ -350,31 +353,30 @@ class Repo(object):
 
     def _gl_get(self, path, params={}):
         return self.__class__._cls_gl_get(
-            self.url_base, path, self.token, params
+            self.config, path, params
         )
 
     def _gl_post(self, path, payload={}, params={}):
         return self.__class__._cls_gl_post(
-            self.url_base, path, self.token, payload, params
+            self.config, path, payload, params
         )
 
     def _gl_put(self, path, payload={}, params={}):
         return self.__class__._cls_gl_put(
-            self.url_base, path, self.token, payload, params
+            self.config, path, payload, params
         )
 
     def _gl_delete(self, path, params={}):
         return self.__class__._cls_gl_delete(
-            self.url_base, path, self.token, params
+            self.config, path, params
         )
 
 
 class BaseRepo(Repo):
 
     @classmethod
-    def new(cls, name, namespace, url_base, token):
-        namespaces = cls._cls_gl_get(url_base, "/namespaces",
-                                     token, {"search": namespace})
+    def new(cls, name, namespace, config):
+        namespaces = cls._cls_gl_get(config, "/namespaces", {"search": namespace})
         if len(namespaces) > 1:
             logging.warning(
                 "%s namespaces match %s; defaulting to namespace %s.",
@@ -401,9 +403,9 @@ class BaseRepo(Repo):
             "visibility_level": Visibility.private.value,
         }
 
-        result = cls._cls_gl_post(url_base, "/projects", token, payload)
+        result = cls._cls_gl_post(config, "/projects", payload)
 
-        return cls.from_url(result["http_url_to_repo"], token)
+        return cls.from_url(result["http_url_to_repo"], config["token"])
 
     def push_to(self, student_repo, branch="master"):
         r = git.Remote.add(self.repo, student_repo.name,
@@ -416,7 +418,7 @@ class StudentRepo(Repo):
     """Repository for a student's solution to a homework assignment"""
 
     @classmethod
-    def new(cls, base_repo, semester, section, username, token):
+    def new(cls, base_repo, semester, section, username):
         """Create a new repository on GitLab"""
         payload = {
             "name": cls.build_name(semester, section, base_repo.name, username),
@@ -429,10 +431,9 @@ class StudentRepo(Repo):
             "visibility_level": Visibility.private.value,
         }
 
-        result = cls._cls_gl_post(base_repo.url_base, "/projects",
-                                  token, payload)
+        result = cls._cls_gl_post(base_repo.config, "/projects", payload)
 
-        return cls.from_url(result["http_url_to_repo"], token)
+        return cls.from_url(result["http_url_to_repo"], base_repo.config["token"])
 
     @classmethod
     def build_name(cls, semester, section, assignment, user):

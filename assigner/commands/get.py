@@ -23,10 +23,9 @@ def get(conf, args):
     """
     hw_name = args.name
     hw_path = args.path
-    host = conf.gitlab_host
     namespace = conf.namespace
-    token = conf.gitlab_token
     semester = conf.semester
+    backend_conf = conf.backend
     branch = args.branch
     force = args.force
 
@@ -48,7 +47,7 @@ def get(conf, args):
                                            hw_name, username)
 
         try:
-            repo = StudentRepo(host, namespace, full_name, token)
+            repo = StudentRepo(backend_conf, namespace, full_name)
             repo_dir = os.path.join(path, username)
 
             row = str(i + 1)
