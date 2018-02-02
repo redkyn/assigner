@@ -136,10 +136,8 @@ class Config(UserDict):
         # Keys contained dashes can be called using an underscore
         key = key.replace("_", "-")
 
-        try:
-            return self.data[key]
-        except KeyError as e:
-            if key == "roster":
-                self.data[key] = []
-                return self.data[key]
-            raise e
+        # Fill in a blank roster if needed
+        if key == "roster" and self.data.get(key, None) is None:
+            self.data[key] = []
+
+        return self.data[key]

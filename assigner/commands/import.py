@@ -20,9 +20,6 @@ def import_students(conf, args):
     with open(args.file) as fh:
         reader = csv.reader(fh)
 
-        if "roster" not in conf:
-            conf["roster"] = []
-
         # Note: This is incredibly hardcoded.
         # However, peoplesoft never updates anything, so we're probably good.
         reader.__next__()  # Skip the header
