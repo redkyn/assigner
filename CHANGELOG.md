@@ -1,5 +1,6 @@
 ## Devel
 
+- Added 'push' command to push commits to student repos
 - Retry clones that fail with 'Connection reset by peer' using exponential backoff
 - Offer to create GitLab group in `assigner init`
 - Version configuration; automatically upgrade old configs to latest version

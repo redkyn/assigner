@@ -344,6 +344,10 @@ class GitlabRepo(RepoBase):
             "/projects/{}/members/{}".format(self.id, user_id)
         )
 
+    def is_locked(self):
+        access = [Access(m["access_level"]) for m in self.list_members()]
+        return all([a in (Access.guest, Access.reporter) for a in access])
+
     def list_commits(self, ref_name="master"):
         params = {
             "id": self.id,
