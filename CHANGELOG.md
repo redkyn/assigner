@@ -1,5 +1,7 @@
 ## Devel
 
+- Fixed `get` failing to clone new repos with error `Remote branch ['master'] not found in upstream origin`
+
 ## 1.1.0
 
 - Warn when an assignment is already open for a student when running `open`
