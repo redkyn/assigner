@@ -194,6 +194,12 @@ class GitlabRepo(RepoBase):
             return True
         return False
 
+    def get_index(self):
+        if self.repo is None:
+            raise RepoError("No repo to get index from")
+
+        return self.repo.index
+
     def get_head(self, branch):
         if self.repo is None:
             raise RepoError("No repo to get head from")

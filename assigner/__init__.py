@@ -41,6 +41,7 @@ subcommands = [
     "assign",
     "open",
     "get",
+    "commit",
     "push",
     "lock",
     "unlock",
