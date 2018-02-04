@@ -190,12 +190,11 @@ class Repo(object):
 
         self.repo.remote().pull(branch)
 
-    def clone_to(self, dir_name, branch=None):
+    def clone_to(self, dir_name, branch):
         logging.debug("Cloning %s...", self.ssh_url)
         try:
             if branch:
-                self._repo = git.Repo.clone_from(self.ssh_url, dir_name,
-                                                 branch=branch)
+                self._repo = git.Repo.clone_from(self.ssh_url, dir_name)
                 for b in branch:
                     self._repo.create_head(b, "origin/{}".format(b))
 

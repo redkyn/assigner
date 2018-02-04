@@ -100,15 +100,15 @@ def get(conf, args):
                                         username, b)
                         logging.warning("  (use --force to overwrite)")
 
-                # Check out first branch specified; this is probably what people expect
-                # If there's just one branch, it's already checked out by the loop above
-                if len(branch) > 1:
-                    repo.get_head(branch[0]).checkout()
-
             except NoSuchPathError:
                 logging.debug("Local repo does not exist; cloning...")
                 repo.clone_to(repo_dir, branch)
                 output.add_row([row, sec, sid, name, "Cloned a new copy"])
+
+            # Check out first branch specified; this is probably what people expect
+            # If there's just one branch, it's already checked out by the loop above
+            if len(branch) > 1:
+                repo.get_head(branch[0]).checkout()
 
         except RepoError as e:
             logging.warning(e)
