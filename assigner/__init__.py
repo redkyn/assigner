@@ -6,6 +6,7 @@ import sys
 
 from colorlog import ColoredFormatter
 from requests.exceptions import HTTPError
+from git.cmd import GitCommandNotFound
 
 from assigner.baserepo import StudentRepo
 from assigner.config import config_context
@@ -186,6 +187,8 @@ def main(args=sys.argv[1:]):
             raise e
         if isinstance(e, KeyError):
             logger.error("%s is missing", e)
+        elif isinstance(e, GitCommandNotFound):
+            logger.error("git is not installed!")
         else:
             logger.error(str(e))
         raise SystemExit(1) from e
