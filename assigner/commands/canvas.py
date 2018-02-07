@@ -24,9 +24,6 @@ def import_from_canvas(conf, args):
         print("Import from canvas failed: missing Canvas API access token.")
         return
 
-    if "roster" not in conf:
-        conf["roster"] = []
-
     course_id = args.id
     section = args.section
     force = args.force
