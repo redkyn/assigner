@@ -20,9 +20,8 @@ with open(path.join(here, 'README.rst'), encoding='utf-8') as f:
 setup(
     name='assigner',
 
-    # Versions should comply with PEP 440:
-    # https://www.python.org/dev/peps/pep-0440/
-    version='1.1.1',
+    # Derive version from git tags
+    use_scm_version=True,
 
     description='Automatically assign programming homework to students on GitLab',
     long_description=long_description,
@@ -66,6 +65,8 @@ setup(
     #keywords='sample setuptools development',
 
     packages=find_packages(),
+
+    setup_requires=['setuptools_scm>=1.15'],
 
     # This field lists other packages that your project depends on to run.
     # Any package you put here will be installed by pip when your project is
