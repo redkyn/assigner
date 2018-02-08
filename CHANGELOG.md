@@ -1,5 +1,7 @@
 ## Devel
 
+- Print informative message if `git` is not installed
+
 ## 1.1.1
 
 - Fixed `get` failing to clone new repos with error `Remote branch ['master'] not found in upstream origin`

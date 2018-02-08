@@ -4,6 +4,8 @@ from unittest.mock import patch
 from assigner import main, make_parser, subcommands
 from assigner.tests.utils import AssignerTestCase
 
+from git.cmd import GitCommandNotFound
+
 
 class MakeParserTestCase(AssignerTestCase):
     def setUp(self):
@@ -132,6 +134,22 @@ class MainTestCase(AssignerTestCase):
 
         mock_logger.error.assert_called_once_with(
             "%s is missing", self.mock_args.run.side_effect
+        )
+
+    @patch("assigner.logger", autospec=True)
+    def test_main_logs_gitcommandnotfound_with_catch(self, mock_logger):
+        """
+        main should log a GitCommandNotFound with "git is not installed!" when raised.
+        """
+        self.mock_args.tracebacks = False
+        self.mock_args.run.side_effect = GitCommandNotFound()
+        try:
+            main([])
+        except SystemExit:
+            pass
+
+        mock_logger.error.assert_called_once_with(
+            "git is not installed!"
         )
 
     def test_main_sets_verbosity(self):
