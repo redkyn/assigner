@@ -2,9 +2,10 @@ import logging
 import os
 
 from requests.exceptions import HTTPError
-from git import NoSuchPathError, GitCommandError
+from git import NoSuchPathError, GitCommandError, InvalidGitRepositoryError
 
 from assigner.backends import RepoError
+from assigner.backends.exceptions import RetryableGitError
 from assigner import progress
 from assigner.backends.decorators import requires_config_and_backend
 from assigner.roster_util import get_filtered_roster
@@ -34,6 +35,8 @@ def _get(conf, backend, args):
     backend_conf = conf.backend
     branch = args.branch
     force = args.force
+
+    attempts = args.attempts
 
     roster = get_filtered_roster(conf.roster, args.section, args.student)
 
@@ -103,9 +106,9 @@ def _get(conf, backend, args):
                                         username, b)
                         logging.warning("  (use --force to overwrite)")
 
-            except NoSuchPathError:
+            except (NoSuchPathError, InvalidGitRepositoryError):
                 logging.debug("Local repo does not exist; cloning...")
-                repo.clone_to(repo_dir, branch)
+                repo.clone_to(repo_dir, branch, attempts)
                 output.add_row([row, sec, sid, name, "Cloned a new copy"])
 
             # Check out first branch specified; this is probably what people expect
@@ -113,6 +116,8 @@ def _get(conf, backend, args):
             if len(branch) > 1:
                 repo.get_head(branch[0]).checkout()
 
+        except RetryableGitError as e:
+            logging.warning(e)
         except RepoError as e:
             logging.warning(e)
         except HTTPError as e:
@@ -141,4 +146,6 @@ def setup_parser(parser):
                         help="Section to retrieve")
     parser.add_argument("--student", metavar="id",
                         help="ID of student whose assignment needs retrieving.")
+    parser.add_argument("--attempts", default=5,
+                        help="Number of times to retry failed git commands")
     parser.set_defaults(run=get)

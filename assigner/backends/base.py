@@ -63,7 +63,7 @@ class RepoBase:
     def pull(self, branch: str) -> None:
         raise NotImplementedError
 
-    def clone_to(self, dir_name: str, branch: Optional[str]) -> None:
+    def clone_to(self, dir_name: str, branch: Optional[str], attempts: Optional[int]) -> None:
         raise NotImplementedError
 
     def add_local_copy(self, dir_name: str) -> None:

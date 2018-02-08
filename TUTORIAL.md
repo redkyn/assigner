@@ -154,6 +154,8 @@ You can then inspect and grade the assignments however you like.
 If you want to collect late submissions, you can re-run `assigner get hw1`.
 It will fetch changes for each existing repository and clone any nonexisting repositores.
 
+If you encounter 'Connection reset by peer' errors when cloning, run, say, `assigner get hw1 --attempts=10` to have Assigner try cloning 10 times before giving up.
+
 (Assigner doesn't have plans for any grading features;
 however, if you are interested in automated grading, check out its sister project, [grader](https://github.com/redkyn/grader).)
 
