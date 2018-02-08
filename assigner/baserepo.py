@@ -74,36 +74,36 @@ class Repo(object):
     @classmethod
     def _cls_gl_get(cls, url_base, path, token, params={}):
         """Make a Gitlab GET request"""
-        params.update({"private_token": token})
+        headers = {"Private-Token": token}
         url = urljoin(url_base, "/api/v4" + path)
-        r = requests.get(url, params=params)
+        r = requests.get(url, params=params, headers=headers)
         r.raise_for_status()
         return r.json()
 
     @classmethod
     def _cls_gl_post(cls, url_base, path, token, payload={}, params={}):
         """Make a Gitlab POST request"""
-        params.update({"private_token": token})
+        headers = {"Private-Token": token}
         url = urljoin(url_base, "/api/v4" + path)
-        r = requests.post(url, params=params, data=payload)
+        r = requests.post(url, params=params, data=payload, headers=headers)
         r.raise_for_status()
         return r.json()
 
     @classmethod
     def _cls_gl_put(cls, url_base, path, token, payload={}, params={}):
         """Make a Gitlab PUT request"""
-        params.update({"private_token": token})
+        headers = {"Private-Token": token}
         url = urljoin(url_base, "/api/v4" + path)
-        r = requests.put(url, params=params, data=payload)
+        r = requests.put(url, params=params, data=payload, headers=headers)
         r.raise_for_status()
         return r.json()
 
     @classmethod
     def _cls_gl_delete(cls, url_base, path, token, params={}):
         """Make a Gitlab DELETE request"""
-        params.update({"private_token": token})
+        headers = {"Private-Token": token}
         url = urljoin(url_base, "/api/v4" + path)
-        r = requests.delete(url, params=params)
+        r = requests.delete(url, params=params, headers=headers)
         r.raise_for_status()
         return r.json()
 

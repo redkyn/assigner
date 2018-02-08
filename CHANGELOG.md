@@ -1,5 +1,6 @@
 ## Devel
 
+- Send GitLab authentication token in HTTP header rather than request parameters
 - Print informative message if `git` is not installed
 
 ## 1.1.1
