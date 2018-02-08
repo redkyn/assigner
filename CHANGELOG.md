@@ -1,11 +1,12 @@
 ## Devel
 
 - Print informative message if `git` is not installed
+- Use a shared HTTPS session for API calls to speed up operations
+- Add `--version` flag to Assigner
 
 ## 1.1.1
 
 - Fixed `get` failing to clone new repos with error `Remote branch ['master'] not found in upstream origin`
-- Add `--version` flag to Assigner
 
 ## 1.1.0
 
