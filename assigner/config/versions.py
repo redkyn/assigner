@@ -11,8 +11,22 @@ class ValidationError(jsonschema.ValidationError):
     pass
 
 
-def validate(config, version=(len(SCHEMAS) - 1)):
-    assert version < len(SCHEMAS)
+class VersionError(Exception):
+    pass
+
+
+class UpgradeError(Exception):
+    pass
+
+
+def validate(config, version=None):
+    if version is None:
+        version = get_version(config)
+
+    if version >= len(SCHEMAS):
+        raise VersionError(
+            "Configuration version %d is newer than latest known configuration version %d" % (version, len(SCHEMAS) - 1)
+        )
 
     try:
         jsonschema.validate(config, SCHEMAS[version])
@@ -35,16 +49,40 @@ def upgrade(config):
     latest = len(SCHEMAS) - 1
 
     if current > latest:
-        logger.warning("Configuration version %d is newer than latest known configuration version %d", current, latest)
-        logger.warning("Is your installation of Assigner up to date?")
-        logger.warning("Attempting to continue anyway...")
         return config
 
     if current != latest:
         logger.info("Migrating configuration from version %d to version %d.", current, latest)
 
+    # Determine whether we should look for upgrade-caused
+    # validation errors. If the initial config doesn't validate,
+    # we can't tell whether upgrading has made things worse, but
+    # we'll try anyway.
+    try:
+        validate(config, current)
+        is_valid = True
+    except ValidationError:
+        is_valid = False
+
     for version in range(current, latest):
         config = UPGRADES[version](config)
+
+        # Upgrade validation.
+        # Upgrades should be rare, so we can afford to be very particular about them.
         assert get_version(config) == version + 1
+        if is_valid:
+            try:
+                validate(config, version + 1)
+            except ValidationError as e:
+                # pylint: disable=bad-continuation
+                raise UpgradeError(
+"""
+Upgrading configuration from version %d to %d resulted in an invalid configuration:
+%s
+
+This is a bug. Please file an issue at https://github.com/redkyn/assigner/issues with your configuration.
+Your original configuration has been restored.
+""" % (version, version + 1, e.message)
+                )
 
     return config

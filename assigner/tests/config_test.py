@@ -1,6 +1,6 @@
 from assigner.tests.utils import AssignerTestCase
 
-from assigner.config.versions import validate, get_version, upgrade, ValidationError
+from assigner.config.versions import validate, get_version, upgrade, ValidationError, VersionError
 from assigner.config.upgrades import UPGRADES
 from assigner.config.schemas import SCHEMAS
 
@@ -41,6 +41,7 @@ EMPTY_CONFIGS = [
     },
 ]
 
+TOO_NEW_CONFIG = {"version": len(SCHEMAS)}
 
 class UpgradeTester(AssignerTestCase):
     def test_that_we_are_testing_all_schemas_and_upgrades(self):
@@ -86,3 +87,7 @@ class UpgradeTester(AssignerTestCase):
         for config in EMPTY_CONFIGS:
             config = upgrade(config)
             self.assertEqual(config, EMPTY_CONFIGS[-1])
+
+    def test_too_new_config(self):
+        with self.assertRaises(VersionError):
+            validate(TOO_NEW_CONFIG)

@@ -3,7 +3,7 @@ import yaml
 
 from collections import UserDict
 
-from assigner.config.versions import upgrade, validate, ValidationError
+from assigner.config.versions import upgrade, validate, ValidationError, VersionError
 
 
 class DuplicateUserError(Exception):
@@ -35,6 +35,10 @@ class Config(UserDict):
             validate(self.data)
         except ValidationError as e:
             logging.warning("Your configuration is not valid: %s", e.message)
+        except VersionError as e:
+            logging.warning(e)
+            logging.warning("Is your installation of Assigner up to date?")
+            logging.warning("Attempting to continue anyway...")
 
     def __enter__(self):
         return self
