@@ -1,5 +1,7 @@
 ## Devel
 
+## 1.2.0
+
 - Branch names are shown each on their own line in `assigner status` to make output more legible
 - Send GitLab authentication token in HTTP header rather than request parameters
 - Print informative message if `git` is not installed
