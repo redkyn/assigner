@@ -1,5 +1,6 @@
 ## Devel
 
+- Branch names are shown each on their own line in `assigner status` to make output more legible
 - Send GitLab authentication token in HTTP header rather than request parameters
 - Print informative message if `git` is not installed
 - Use a shared HTTPS session for API calls to speed up operations

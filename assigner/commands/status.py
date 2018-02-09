@@ -81,7 +81,7 @@ def status(conf, args):
             branches = repo.list_branches()
 
             if branches:
-                row[5] = ", ".join([b["name"] for b in branches])
+                row[5] = "\n".join([b["name"] for b in branches])
 
             head = repo.get_last_HEAD_commit()
 
