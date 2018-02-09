@@ -2,7 +2,7 @@ import logging
 import os
 
 from requests.exceptions import HTTPError
-from git.exc import NoSuchPathError, GitCommandError
+from git import NoSuchPathError, GitCommandError
 
 from assigner.roster_util import get_filtered_roster
 from assigner.baserepo import RepoError, StudentRepo

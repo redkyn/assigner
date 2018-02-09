@@ -1,4 +1,15 @@
 #!/usr/bin/env python3
+
+# GitPython throws an ImportError now if git is not installed
+# unless the environment variable GIT_PYTHON_REFRESH is set.
+# We'll opt to keep going and handle the GitCommandNotFound
+# exception if it comes up.
+import os
+os.environ["GIT_PYTHON_REFRESH"] = "silence"
+
+# We *have* to set GIT_PYTHON_REFRESH before importing
+# anything that imports GitPython.
+# pylint: disable=wrong-import-position
 import argparse
 import importlib
 import logging

@@ -1,4 +1,4 @@
-GitPython==1.0.1
+GitPython==2.1.8
 PyYAML==3.11
 colorlog==2.6.0
 gitdb==0.6.4

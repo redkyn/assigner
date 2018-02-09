@@ -206,7 +206,7 @@ class Repo(object):
             else:
                 self._repo = git.Repo.clone_from(self.ssh_url, dir_name)
             logging.debug("Cloned %s.", self.name)
-        except git.exc.GitCommandError as e:
+        except git.GitCommandError as e:
             # GitPython may delete this directory
             # and the caller may have opinions about that,
             # so go ahead and re-create it just to be safe.
