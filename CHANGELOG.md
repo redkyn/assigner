@@ -1,5 +1,8 @@
 ## Devel
 
+- Version configuration; automatically upgrade old configs to latest version
+- Make GitLab backend configuration generic
+
 ## 1.2.0
 
 - Branch names are shown each on their own line in `assigner status` to make output more legible
