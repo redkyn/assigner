@@ -11,6 +11,10 @@ from requests.exceptions import HTTPError
 from urllib.parse import urlsplit, urlunsplit, urljoin, quote
 
 
+# Transparently use a common TLS session for each request
+requests = requests.Session()
+
+
 class RepoError(Exception):
     pass
 
