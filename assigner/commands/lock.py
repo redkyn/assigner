@@ -1,7 +1,7 @@
 import logging
 
 from assigner import manage_repos
-from assigner.baserepo import Access
+from assigner.backends.gitlab import Access
 
 help = "Lock students out of repos"
 
@@ -15,6 +15,7 @@ def lock(args):
     #pylint: disable=no-value-for-parameter
     return manage_repos(
         args,
+        # TODO: Fix access
         lambda repo, student: repo.edit_member(student["id"], Access.reporter)
     )
 

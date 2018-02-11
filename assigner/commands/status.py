@@ -2,19 +2,22 @@ import logging
 from datetime import datetime
 
 from prettytable import PrettyTable
-from assigner import progress
 
-from assigner.roster_util import get_filtered_roster
+from assigner import progress
+from assigner.backends.base import RepoError
+from assigner.backends.decorators import require_backend
+from assigner.backends.gitlab import Access
 from assigner.config import config_context
-from assigner.baserepo import Access, Repo, StudentRepo, RepoError
+from assigner.roster_util import get_filtered_roster
 
 help = "Retrieve status of repos"
 
 logger = logging.getLogger(__name__)
 
 
+@require_backend
 @config_context
-def status(conf, args):
+def status(conf, backend, args):
     """Retrieves and prints the status of repos"""
     hw_name = args.name
 
@@ -42,12 +45,12 @@ def status(conf, args):
         name = student["name"]
         username = student["username"]
         student_section = student["section"]
-        full_name = StudentRepo.build_name(semester, student_section,
-                                           hw_name, username)
+        full_name = backend.student_repo.build_name(semester, student_section,
+                                                    hw_name, username)
 
         row = [i+1, student_section, username, name, "", "", "", "", ""]
 
-        repo = StudentRepo(backend_conf, namespace, full_name)
+        repo = backend.student_repo(backend_conf, namespace, full_name)
 
         if not repo.already_exists():
             row[4] = "Not Assigned"
@@ -56,7 +59,7 @@ def status(conf, args):
 
         if "id" not in student:
             try:
-                student["id"] = Repo.get_user_id(username, backend_conf)
+                student["id"] = backend.repo.get_user_id(username, backend_conf)
             except RepoError:
                 row[4] = "No Gitlab user"
                 output.add_row(row)

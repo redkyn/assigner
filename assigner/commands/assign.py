@@ -2,11 +2,12 @@ import logging
 import tempfile
 import time
 
-from assigner.roster_util import get_filtered_roster
-from assigner.baserepo import BaseRepo, StudentRepo, RepoError
+from assigner.backends.base import RepoError
+from assigner.backends.decorators import require_backend
 from assigner.commands.open import open_assignment
 from assigner.config import config_context
 from assigner import progress
+from assigner.roster_util import get_filtered_roster
 
 from requests.exceptions import HTTPError
 
@@ -15,8 +16,9 @@ help = "Assign a base repo to students"
 logger = logging.getLogger(__name__)
 
 
+@require_backend
 @config_context
-def assign(conf, args):
+def assign(conf, backend, args):
     """Creates homework repositories for an assignment for each student
     in the roster.
     """
@@ -42,7 +44,7 @@ def assign(conf, args):
             "s" if student_count != 1 else "",
             "section " + args.section if args.section else "all sections"
         ))
-        base = BaseRepo(backend_conf, namespace, hw_name)
+        base = backend.template_repo(backend_conf, namespace, hw_name)
         if not dry_run:
             try:
                 base.clone_to(tmpdirname, branch)
@@ -59,13 +61,14 @@ def assign(conf, args):
         for i, student in progress.enumerate(roster):
             username = student["username"]
             student_section = student["section"]
-            full_name = StudentRepo.build_name(semester, student_section,
-                                               hw_name, username)
-            repo = StudentRepo(backend_conf, namespace, full_name)
+            full_name = backend.student_repo.build_name(semester, student_section,
+                                                        hw_name, username)
+            repo = backend.student_repo(backend_conf, namespace, full_name)
 
             if not repo.already_exists():
                 if not dry_run:
-                    repo = StudentRepo.new(base, semester, student_section, username)
+                    repo = backend.student_repo.new(base, semester, student_section,
+                                                    username)
                     repo.push(base, branch)
                     for b in branch:
                         repo.protect(b)
@@ -83,7 +86,7 @@ def assign(conf, args):
                     retries = 0
                     while True:
                         try:
-                            repo = StudentRepo.new(
+                            repo = backend.student_repo.new(
                                 base, semester, student_section, username
                             )
                             logger.debug("Success!")

@@ -1,7 +1,7 @@
 import logging
 
 from assigner import manage_repos
-from assigner.baserepo import Access
+from assigner.backends.gitlab import Access
 
 help = "Unlock student's repo"
 
@@ -14,6 +14,7 @@ def unlock(args):
     #pylint: disable=no-value-for-parameter
     return manage_repos(
         args,
+        # TODO: Access handling
         lambda repo, student: repo.edit_member(student["id"], Access.developer)
     )
 

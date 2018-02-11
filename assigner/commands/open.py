@@ -2,8 +2,10 @@ import logging
 
 from requests.exceptions import HTTPError
 
+from assigner.backends.base import RepoError
+from assigner.backends.decorators import require_backend
+from assigner.backends.gitlab import Access
 from assigner.roster_util import get_filtered_roster
-from assigner.baserepo import Access, Repo, RepoError, StudentRepo
 from assigner.config import config_context
 from assigner import progress
 
@@ -11,9 +13,11 @@ help = "Grants students access to their repos"
 
 logger = logging.getLogger(__name__)
 
+
 def open_assignment(repo, student):
     try:
         logging.debug("Opening %s...", repo.name)
+        # TODO: access handling
         repo.add_member(student["id"], Access.developer)
     except HTTPError as e:
         if e.response.status_code == 409:
@@ -21,8 +25,10 @@ def open_assignment(repo, student):
         else:
             raise
 
+
+@require_backend
 @config_context
-def open_all_assignments(conf, args):
+def open_all_assignments(conf, backend, args):
     """Adds each student in the roster to their respective homework
     repositories as Developers so they can pull/commit/push their work.
     """
@@ -37,13 +43,13 @@ def open_all_assignments(conf, args):
     for student in progress.iterate(roster):
         username = student["username"]
         student_section = student["section"]
-        full_name = StudentRepo.build_name(semester, student_section,
-                                           hw_name, username)
+        full_name = backend.student_repo.build_name(semester, student_section,
+                                                    hw_name, username)
 
         try:
-            repo = StudentRepo(backend_conf, namespace, full_name)
+            repo = backend.student_repo(backend_conf, namespace, full_name)
             if "id" not in student:
-                student["id"] = Repo.get_user_id(username, backend_conf)
+                student["id"] = backend.repo.get_user_id(username, backend_conf)
 
             open_assignment(repo, student)
             count += 1
