@@ -43,9 +43,9 @@ class MockRepo(RepoBase):
     )
 
     @classmethod
-    def build_url(cls, url_base, namespace, name):
+    def build_url(cls, config, namespace, name):
         """ Build a url for a repository """
-        return url_base + "/" + namespace + "/" + name + ".git"
+        return "hxxp://mock.repo.url/" + namespace + "/" + name + ".git"
 
     @classmethod
     def from_url(cls, url, token):
@@ -61,14 +61,13 @@ class MockRepo(RepoBase):
         return cls("https://basemock.com/api4/", "namespace", "HW1", "token")
 
     #pylint: disable=super-init-not-called
-    def __init__(self, url_base, namespace, name, token, url=None):
-        self.url_base = url_base
+    def __init__(self, config, namespace, name, url=None):
+        self.config = config
         self.namespace = namespace
         self.name = name
-        self.token = token
 
         if url is None:
-            self.url = MockRepo.build_url(url_base, namespace, name)
+            self.url = MockRepo.build_url(self.config, namespace, name)
         else:
             self.url = url
 
@@ -100,7 +99,7 @@ class MockRepo(RepoBase):
             except HTTPError as e:
                 if e.response.status_code == 404:
                     logging.debug("Could not find repo with url %s/api/v4%s.",
-                                  self.url_base, url)
+                                  self.config["host"], url)
                     self._info = None
                 else:
                     raise
@@ -169,7 +168,7 @@ class MockRepo(RepoBase):
         logging.debug("Deleted %s.", self.name)
 
     @classmethod
-    def get_user_id(cls, username, url_base, token):
+    def get_user_id(cls, username, config):
         id = sum(map(ord, username))
 
         logging.info(
@@ -230,8 +229,8 @@ class MockRepo(RepoBase):
 class MockTemplateRepo(MockRepo, TemplateRepoBase):
 
     @classmethod
-    def new(cls, name, namespace, url_base, token):
-        return MockRepo(name, namespace, url_base, token)
+    def new(cls, name, namespace, config):
+        return MockRepo(name, namespace, config)
 
     def push_to(self, student_repo, branch="master"):
         logging.debug("Pushed %s to %s.", self.name, student_repo.name)
@@ -241,7 +240,7 @@ class MockStudentRepo(MockRepo, StudentRepoBase):
     """Repository for a student's solution to a homework assignment"""
 
     @classmethod
-    def new(cls, base_repo, semester, section, username, token):
+    def new(cls, base_repo, semester, section, username):
         """Create a new repository on GitLab"""
         return cls.from_url("http://mockhub.com/", "token")
 

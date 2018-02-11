@@ -18,6 +18,11 @@ logger = logging.getLogger(__name__)
 
 @requires_config_and_backend
 def get(conf, backend, args):
+    _get(conf, backend, args)
+
+
+# Sans decorator to ease testing
+def _get(conf, backend, args):
     """
     Creates a folder for the assignment in the CWD (or <path>, if specified)
     and clones each students' repository into subfolders.
