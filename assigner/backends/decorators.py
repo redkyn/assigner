@@ -19,7 +19,7 @@ def requires_config_and_backend(func):
             )
             return func(config, GitlabBackend, cmdargs, *args, **kwargs)
 
-        if config.backend == "gitlab":
+        if config.backend["name"] == "gitlab":
             return func(config, GitlabBackend, cmdargs, *args, **kwargs)
         return func(config, MockBackend, cmdargs, *args, **kwargs)
     return wrapper
