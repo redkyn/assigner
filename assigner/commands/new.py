@@ -17,17 +17,16 @@ def new(conf, args):
     """
     hw_name = args.name
     dry_run = args.dry_run
-    host = conf.gitlab_host
     namespace = conf.namespace
-    token = conf.gitlab_token
+    backend_conf = conf.backend
 
     if dry_run:
-        url = Repo.build_url(host, namespace, hw_name)
+        url = Repo.build_url(backend_conf, namespace, hw_name)
         print(
             "Created repo for {}:\n\t{}\n\t{}".format(hw_name, url, "(ssh url not available)"))
     else:
         try:
-            repo = BaseRepo.new(hw_name, namespace, host, token)
+            repo = BaseRepo.new(hw_name, namespace, backend_conf)
             print("Created repo for {}:\n\t{}\n\t{}".format(hw_name, repo.url, repo.ssh_url))
         except HTTPError as e:
             if e.response.status_code == 400:

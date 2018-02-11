@@ -22,10 +22,9 @@ def status(conf, args):
     if not hw_name:
         raise ValueError("Missing assignment name.")
 
-    host = conf.gitlab_host
     namespace = conf.namespace
-    token = conf.gitlab_token
     semester = conf.semester
+    backend_conf = conf.backend
 
     roster = get_filtered_roster(conf.roster, args.section, args.student)
     sort_key = args.sort
@@ -51,7 +50,7 @@ def status(conf, args):
         row = [i+1, student_section, username, name, "", "", "", "", ""]
 
         try:
-            repo = StudentRepo(host, namespace, full_name, token)
+            repo = StudentRepo(backend_conf, namespace, full_name)
 
             if not repo.already_exists():
                 row[4] = "Not Assigned"
@@ -60,7 +59,7 @@ def status(conf, args):
 
             if "id" not in student:
                 try:
-                    student["id"] = Repo.get_user_id(username, host, token)
+                    student["id"] = Repo.get_user_id(username, backend_conf)
                 except RepoError:
                     row[4] = "No Gitlab user"
                     output.add_row(row)

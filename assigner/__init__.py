@@ -1,4 +1,15 @@
 #!/usr/bin/env python3
+
+# GitPython throws an ImportError now if git is not installed
+# unless the environment variable GIT_PYTHON_REFRESH is set.
+# We'll opt to keep going and handle the GitCommandNotFound
+# exception if it comes up.
+import os
+os.environ["GIT_PYTHON_REFRESH"] = "silence"
+
+# We *have* to set GIT_PYTHON_REFRESH before importing
+# anything that imports GitPython.
+# pylint: disable=wrong-import-position
 import argparse
 import importlib
 import logging
@@ -53,10 +64,9 @@ def manage_repos(conf, args, action):
     hw_name = args.name
     dry_run = args.dry_run
 
-    host = conf.gitlab_host
     namespace = conf.namespace
-    token = conf.gitlab_token
     semester = conf.semester
+    backend_conf = conf.backend
 
     roster = get_filtered_roster(conf.roster, args.section, args.student)
 
@@ -74,7 +84,7 @@ def manage_repos(conf, args, action):
                                            hw_name, username)
 
         try:
-            repo = StudentRepo(host, namespace, full_name, token)
+            repo = StudentRepo(backend_conf, namespace, full_name)
             if not dry_run:
                 action(repo, student)
             count += 1

@@ -72,7 +72,7 @@ setup(
     # Any package you put here will be installed by pip when your project is
     # installed, so they must be valid existing projects.
     install_requires=[
-        'GitPython>=1',
+        'GitPython>=2.1.8',
         'PyYAML>=3.11',
         'colorlog>=2.6,<3', # TODO can we move to v3?
         'jsonschema>=2.5',

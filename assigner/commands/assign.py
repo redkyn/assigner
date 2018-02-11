@@ -27,10 +27,9 @@ def assign(conf, args):
         branch = ["master"]
     dry_run = args.dry_run
     force = args.force
-    host = conf.gitlab_host
     namespace = conf.namespace
-    token = conf.gitlab_token
     semester = conf.semester
+    backend_conf = conf.backend
 
     roster = get_filtered_roster(conf.roster, args.section, args.student)
 
@@ -43,7 +42,7 @@ def assign(conf, args):
             "s" if student_count != 1 else "",
             "section " + args.section if args.section else "all sections"
         ))
-        base = BaseRepo(host, namespace, hw_name, token)
+        base = BaseRepo(backend_conf, namespace, hw_name)
         if not dry_run:
             try:
                 base.clone_to(tmpdirname, branch)
@@ -63,12 +62,11 @@ def assign(conf, args):
             student_section = student["section"]
             full_name = StudentRepo.build_name(semester, student_section,
                                                hw_name, username)
-            repo = StudentRepo(host, namespace, full_name, token)
+            repo = StudentRepo(backend_conf, namespace, full_name)
 
             if not repo.already_exists():
                 if not dry_run:
-                    repo = StudentRepo.new(base, semester, student_section,
-                                           username, token)
+                    repo = StudentRepo.new(base, semester, student_section, username)
                     repo.push(base, branch)
                     for b in branch:
                         repo.protect(b)
@@ -87,7 +85,7 @@ def assign(conf, args):
                     while True:
                         try:
                             repo = StudentRepo.new(
-                                base, semester, student_section, username, token
+                                base, semester, student_section, username
                             )
                             logger.debug("Success!")
                             break
