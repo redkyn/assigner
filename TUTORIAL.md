@@ -35,6 +35,7 @@ It will prompt you for the following information:
     Right now, Assigner does not create this group for you, so you will need to do that yourself.
     **Do not** add students to this group; if you do, they will be able to see all student submissions!
     If you like, you may add graders and TAs to the group.
+    Note that you'll need to be an Owner of the group in order to use all of Assigner's features.
 5. Canvas information. This is optional; you should enter this information if you want to import your class roster from Canvas.
     We recommend this, as it is the most straightforward way to import a class roster.
     If you enter `y` here, Assigner will prompt you for:
