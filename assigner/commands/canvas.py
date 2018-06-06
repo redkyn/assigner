@@ -2,9 +2,11 @@ import logging
 
 from prettytable import PrettyTable
 
+from redkyn.canvas import CanvasAPI
+from redkyn.canvas.exceptions import AuthenticationFailed, CourseNotFound
+
 from assigner import make_help_parser
 from assigner.backends.decorators import requires_config_and_backend
-from assigner.canvas import CanvasAPI
 from assigner.config import requires_config, DuplicateUserError
 from assigner.roster_util import add_to_roster
 
@@ -31,7 +33,16 @@ def import_from_canvas(conf, backend, args):
 
     canvas = CanvasAPI(conf["canvas-token"], conf["canvas-host"])
 
-    students = canvas.get_course_students(course_id)
+    try:
+        students = canvas.get_course_students(course_id)
+    except AuthenticationFailed as e:
+        logger.debug(e)
+        logger.error("Canvas authentication failed. Is your token missing or expired?")
+        return
+    except CourseNotFound as e:
+        logger.debug(e)
+        logger.error("Course ID %s not found. Make sure to use the ID, not the row number.", course_id)
+        return
 
     for s in students:
         if 'sis_user_id' not in s:
@@ -59,7 +70,12 @@ def print_canvas_courses(conf, _):
 
     canvas = CanvasAPI(conf["canvas-token"], conf["canvas-host"])
 
-    courses = canvas.get_instructor_courses()
+    try:
+        courses = canvas.get_instructor_courses()
+    except AuthenticationFailed as e:
+        logger.debug(e)
+        logger.error("Canvas authentication failed. Is your token missing or expired?")
+        return
 
     if not courses:
         print("No courses found where current user is a teacher.")
