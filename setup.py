@@ -76,7 +76,7 @@ setup(
         'PyYAML>=3.11',
         'colorlog>=2.6,<3', # TODO can we move to v3?
         'jsonschema>=2.5',
-        'requests==2.9.1', # TODO can we upgrade?
+        'requests>=2.20.0',
         'PTable>=0.9',
         'tqdm>=4',
     ],
