@@ -113,6 +113,6 @@ Credits
 
 - Ty Morrow
 - Mike Wisely
-- Nate Jarus
+- Natasha Jarus
 - Islam Elnabarawy
 - Billy Rhoades
