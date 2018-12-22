@@ -26,7 +26,7 @@ class GetIntegrationTestCase(AssignerIntegrationTestCase):
             "path": "somepath/",
             "hw_name": "HW2",
             "section": "SP2017",
-            "student": "",
+            "student": MagicMock(),
             "branch": ["a", "b"],
             "force": MagicMock()
         })

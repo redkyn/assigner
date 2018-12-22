@@ -1,6 +1,6 @@
 import logging
 
-from assigner.backends import GitlabBackend, MockBackend
+from assigner.backends import from_name
 from assigner.config import requires_config
 
 
@@ -11,15 +11,8 @@ def requires_config_and_backend(func):
     """Provides a backend depending on configuration."""
     @requires_config
     def wrapper(config, cmdargs, *args, **kwargs):
-        try:
-            config.backend
-        except KeyError:
-            logger.info(
-                "The 'backend' field in config is not set; it will default to Gitlab."
-            )
-            return func(config, GitlabBackend, cmdargs, *args, **kwargs)
 
-        if config.backend["name"] == "gitlab":
-            return func(config, GitlabBackend, cmdargs, *args, **kwargs)
-        return func(config, MockBackend, cmdargs, *args, **kwargs)
+        backend = from_name(config.backend["name"])
+
+        return func(config, backend, cmdargs, *args, **kwargs)
     return wrapper
