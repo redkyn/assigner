@@ -1,5 +1,5 @@
 GitPython==2.1.8
-PyYAML==3.11
+PyYAML==3.13
 colorlog==2.6.0
 gitdb==0.6.4
 jsonschema==2.5.1
