@@ -86,7 +86,7 @@ setup(
         'nose-parameterized',
     ],
 
-    python_requires='>=3',
+    python_requires='>=3.4',
 
     # List additional groups of dependencies here (e.g. development
     # dependencies). Users will be able to install these using the "extras"
