@@ -16,7 +16,6 @@ import logging
 import sys
 
 from colorlog import ColoredFormatter
-from requests.exceptions import HTTPError
 from git.cmd import GitCommandNotFound
 
 from assigner.baserepo import StudentRepo
@@ -82,13 +81,10 @@ def manage_repos(conf, args, action):
         full_name = StudentRepo.build_name(semester, student_section,
                                            hw_name, username)
 
-        try:
-            repo = StudentRepo(backend_conf, namespace, full_name)
-            if not dry_run:
-                action(repo, student)
-            count += 1
-        except HTTPError:
-            raise
+        repo = StudentRepo(backend_conf, namespace, full_name)
+        if not dry_run:
+            action(repo, student)
+        count += 1
 
     print("Changed {} repositories.".format(count))
 

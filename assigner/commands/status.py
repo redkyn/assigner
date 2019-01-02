@@ -1,7 +1,6 @@
 import logging
 from datetime import datetime
 
-from requests.exceptions import HTTPError
 from prettytable import PrettyTable
 from assigner import progress
 
@@ -48,55 +47,51 @@ def status(conf, args):
 
         row = [i+1, student_section, username, name, "", "", "", "", ""]
 
-        try:
-            repo = StudentRepo(backend_conf, namespace, full_name)
+        repo = StudentRepo(backend_conf, namespace, full_name)
 
-            if not repo.already_exists():
-                row[4] = "Not Assigned"
-                output.add_row(row)
-                continue
-
-            if "id" not in student:
-                try:
-                    student["id"] = Repo.get_user_id(username, backend_conf)
-                except RepoError:
-                    row[4] = "No Gitlab user"
-                    output.add_row(row)
-                    continue
-
-            members = repo.list_members()
-            if student["id"] not in [s["id"] for s in members]:
-                row[4] = "Not Opened"
-                output.add_row(row)
-                continue
-
-            if repo.info["archived"]:
-                row[4] = 'Archived'
-            else:
-                level = Access([s["access_level"] for s in members if s["id"] == student["id"]][0])
-                row[4] = "Open" if level is Access.developer else "Locked"
-
-            branches = repo.list_branches()
-
-            if branches:
-                row[5] = "\n".join([b["name"] for b in branches])
-
-            head = repo.get_last_HEAD_commit()
-
-            if head:
-                row[6] = head["short_id"]
-                row[7] = head["author_name"]
-                created_at = head["created_at"]
-                # Fix UTC offset format in GitLab's datetime
-                created_at = created_at[:-6] + created_at[-6:].replace(':', '')
-                row[8] = datetime.strptime(
-                    created_at, "%Y-%m-%dT%H:%M:%S.%f%z"
-                ).astimezone().strftime("%c")
-
+        if not repo.already_exists():
+            row[4] = "Not Assigned"
             output.add_row(row)
+            continue
 
-        except HTTPError:
-            raise
+        if "id" not in student:
+            try:
+                student["id"] = Repo.get_user_id(username, backend_conf)
+            except RepoError:
+                row[4] = "No Gitlab user"
+                output.add_row(row)
+                continue
+
+        members = repo.list_members()
+        if student["id"] not in [s["id"] for s in members]:
+            row[4] = "Not Opened"
+            output.add_row(row)
+            continue
+
+        if repo.info["archived"]:
+            row[4] = "Archived"
+        else:
+            level = Access([s["access_level"] for s in members if s["id"] == student["id"]][0])
+            row[4] = "Open" if level is Access.developer else "Locked"
+
+        branches = repo.list_branches()
+
+        if branches:
+            row[5] = "\n".join([b["name"] for b in branches])
+
+        head = repo.get_last_HEAD_commit()
+
+        if head:
+            row[6] = head["short_id"]
+            row[7] = head["author_name"]
+            created_at = head["created_at"]
+            # Fix UTC offset format in GitLab's datetime
+            created_at = created_at[:-6] + created_at[-6:].replace(':', '')
+            row[8] = datetime.strptime(
+                created_at, "%Y-%m-%dT%H:%M:%S.%f%z"
+            ).astimezone().strftime("%c")
+
+        output.add_row(row)
 
     print(output)
 
