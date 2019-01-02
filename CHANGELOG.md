@@ -2,6 +2,7 @@
 
 - Version configuration; automatically upgrade old configs to latest version
 - Make GitLab backend configuration generic
+- Tidy up progress bars with logging output
 
 ## 1.2.0
 
