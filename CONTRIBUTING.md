@@ -22,8 +22,8 @@ Before merging:
 - Create supporting unit tests
 - Verify new and existing unit tests pass with `python setup.py nosetests`
 - Make sure `pyflakes assigner` passes with no errors/warnings
-- Check `pylint assigner` and make sure there are no new errors/warnings
-- Update requirements.txt with any new dependencies
+- Make sure `pylint assigner` passes with no errors/warnings
+- Update `requirements.txt` and `setup.py` with any new dependencies or version bumps
 
 ## Installation for Developing
 
