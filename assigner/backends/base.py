@@ -154,7 +154,7 @@ class BackendBase:
     """
     Common abstract base backend for all assigner backends (gitlab or mock).
     """
-    repo: RepoBase = RepoBase
-    template_repo: TemplateRepoBase = TemplateRepoBase
-    student_repo: StudentRepoBase = StudentRepoBase
+    repo = RepoBase # type: RepoBase
+    template_repo = TemplateRepoBase # type: TemplateRepoBase
+    student_repo = StudentRepoBase # type: StudentRepoBase
     access = None

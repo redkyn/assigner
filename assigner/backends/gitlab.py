@@ -469,7 +469,7 @@ class GitlabBackend(BackendBase):
     """
     Common abstract base backend for all assigner backends (gitlab or mock).
     """
-    repo: RepoBase = GitlabRepo
-    template_repo: TemplateRepoBase = GitlabTemplateRepo
-    student_repo: StudentRepoBase = GitlabStudentRepo
+    repo = GitlabRepo # type: RepoBase
+    template_repo = GitlabTemplateRepo # type: TemplateRepoBase
+    student_repo = GitlabStudentRepo # type: StudentRepoBase
     access = Access

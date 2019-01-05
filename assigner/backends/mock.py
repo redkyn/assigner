@@ -265,6 +265,6 @@ class MockBackend(BackendBase):
     """
     Common abstract base backend for all assigner backends (gitlab or mock).
     """
-    repo: RepoBase = MockRepo
-    template_repo: TemplateRepoBase = MockTemplateRepo
-    student_repo: StudentRepoBase = MockStudentRepo
+    repo = MockRepo # type: RepoBase
+    template_repo = MockTemplateRepo # type: TemplateRepoBase
+    student_repo = MockStudentRepo # type: StudentRepoBase
