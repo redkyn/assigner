@@ -22,7 +22,7 @@ from git.cmd import GitCommandNotFound
 from assigner.baserepo import StudentRepo
 from assigner.config import config_context
 from assigner.roster_util import get_filtered_roster
-from assigner.progress import Progress
+from assigner import progress
 
 from pkg_resources import get_distribution, DistributionNotFound
 
@@ -71,7 +71,6 @@ def manage_repos(conf, args, action):
     roster = get_filtered_roster(conf.roster, args.section, args.student)
 
     count = 0
-    progress = Progress()
     for student in progress.iterate(roster):
         username = student["username"]
         student_section = student["section"]
@@ -90,8 +89,6 @@ def manage_repos(conf, args, action):
             count += 1
         except HTTPError:
             raise
-
-    progress.finish()
 
     print("Changed {} repositories.".format(count))
 

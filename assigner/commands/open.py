@@ -5,7 +5,7 @@ from requests.exceptions import HTTPError
 from assigner.roster_util import get_filtered_roster
 from assigner.baserepo import Access, Repo, RepoError, StudentRepo
 from assigner.config import config_context
-from assigner.progress import Progress
+from assigner import progress
 
 help = "Grants students access to their repos"
 
@@ -34,7 +34,6 @@ def open_all_assignments(conf, args):
     roster = get_filtered_roster(conf.roster, args.section, args.student)
 
     count = 0
-    progress = Progress()
     for student in progress.iterate(roster):
         username = student["username"]
         student_section = student["section"]
@@ -50,8 +49,6 @@ def open_all_assignments(conf, args):
             count += 1
         except RepoError:
             logging.warning("Could not add %s to %s.", username, full_name)
-
-    progress.finish()
 
     print("Granted access to {} repositories.".format(count))
 

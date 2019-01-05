@@ -78,7 +78,7 @@ setup(
         'jsonschema>=2.5',
         'requests>=2.20.0',
         'PTable>=0.9',
-        'tqdm>=4',
+        'enlighten>=1',
     ],
 
     tests_require=[

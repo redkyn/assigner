@@ -7,7 +7,7 @@ from git import NoSuchPathError, GitCommandError
 from assigner.roster_util import get_filtered_roster
 from assigner.baserepo import RepoError, StudentRepo
 from assigner.config import config_context
-from assigner.progress import Progress
+from assigner import progress
 
 from prettytable import PrettyTable
 
@@ -37,8 +37,6 @@ def get(conf, args):
     output = PrettyTable(["#", "Sec", "SID", "Name", "Change"], print_empty=False)
     output.align["Name"] = "l"
     output.align["Change"] = "l"
-
-    progress = Progress()
 
     for i, student in progress.enumerate(roster):
         username = student["username"]
@@ -116,8 +114,6 @@ def get(conf, args):
                 logging.warning("Repository %s does not exist.", full_name)
             else:
                 raise
-
-    progress.finish()
 
     out_str = output.get_string()
     if out_str != "":
