@@ -3,6 +3,7 @@
 - Version configuration; automatically upgrade old configs to latest version
 - Make GitLab backend configuration generic
 - Tidy up progress bars with logging output
+- Test all supported python versions (3.4-3.7) automatically
 
 ## 1.2.0
 

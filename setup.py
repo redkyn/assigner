@@ -54,7 +54,7 @@ setup(
         # that you indicate whether you support Python 2, Python 3 or both.
         'Programming Language :: Python :: 3',
         'Programming Language :: Python :: 3 :: Only',
-        'Programming Language :: Python :: 3.4', # TODO what is the minimum py3 version we support?
+        'Programming Language :: Python :: 3.4',
         'Programming Language :: Python :: 3.5',
         'Programming Language :: Python :: 3.6',
         'Programming Language :: Python :: 3.7',
@@ -73,7 +73,7 @@ setup(
     # installed, so they must be valid existing projects.
     install_requires=[
         'GitPython>=2.1.8',
-        'PyYAML>=3.11',
+        'PyYAML>=3.13',
         'colorlog>=2.6,<3', # TODO can we move to v3?
         'jsonschema>=2.5',
         'requests>=2.20.0',
@@ -86,7 +86,7 @@ setup(
         'nose-parameterized',
     ],
 
-    python_requires='>=3',
+    python_requires='>=3.4',
 
     # List additional groups of dependencies here (e.g. development
     # dependencies). Users will be able to install these using the "extras"

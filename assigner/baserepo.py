@@ -34,7 +34,7 @@ class Access(Enum):
     owner = 50
 
 
-class Repo(object):
+class Repo:
     """Gitlab repo; manages API requests and various metadata"""
 
     PATH_RE = re.compile(
@@ -383,13 +383,14 @@ class BaseRepo(Repo):
                 len(namespaces), namespace, namespaces[0]["path"]
             )
             logging.warning(
-                "(please update the configuration in your namespace to " +
+                "(please update the configuration in your namespace to "
                 "exactly match the namespace you want Assigner to use.)"
             )
 
         logging.debug(
-            "Using namespace " +
-            "%s with ID %s.", namespaces[0]["path"], namespaces[0]["id"]
+            "Using namespace %s with ID %s.",
+            namespaces[0]["path"],
+            namespaces[0]["id"]
         )
 
         payload = {
