@@ -19,22 +19,28 @@ Pull requests are welcome! If you have questions, feel free to [contact the auth
 Before merging:
 
 - Describe the change in `CHANGELOG.md`
-- Create supporting unit tests.
-- Verify new and existing unit tests pass with `python setup.py nosetests`.
+- Create supporting unit tests
+- Verify new and existing unit tests pass with `python setup.py nosetests`
 - Make sure `pyflakes assigner` passes with no errors/warnings
-- Check `pylint assigner` and make sure there are no new errors/warnings.
-- Update requirements.txt with any new dependencies.
+- Make sure `pylint assigner` passes with no errors/warnings
+- Update `requirements.txt` and `setup.py` with any new dependencies or version bumps
 
 ## Installation for Developing
 
 You'll want to install an *editable* copy of Assigner using `pip`.
 This allows you to make changes to the Assigner source while still having `pip` manage your dependencies.
 
-1. Clone the repository somewhere and `cd` into the cloned repo.
-2. Run `pip install --user -e .`
+1. Clone the repository somewhere and `cd` into the cloned repo
+1. Run `pip install --user -e .`
 
-Alternatively, you can use `virtualenv`.
-`requirements.txt` contains all of the needed packages which you can pass to `pip` once you've activated `virtualenv`.
+To run unit tests, `pyflakes`, and `pylint, you'll want to set up a [virtualenv](https://virtualenv.pypa.io/):
+
+1. `cd` into your cloned repo
+1. Run `virtualenv -p python3 env` to create a new environment
+1. Run `source env/bin/activate`
+1. Run `pip install -r requirements.txt`
+
+From here on, before running unit tests or the like, run `source env/bin/activate` and the software installed in your virtualenv will be used instead of the system defaults.
 
 # Design Philosophy
 
