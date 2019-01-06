@@ -1,12 +1,13 @@
 import git
 import re
-from typing import Optional
+from typing import Optional, Type, TypeVar
 
 
 class RepoError(Exception):
     pass
 
 
+T = TypeVar('T', bound='RepoBase')
 class RepoBase:
     """Generic Repo base"""
 
@@ -23,7 +24,7 @@ class RepoBase:
         raise NotImplementedError
 
     @classmethod
-    def from_url(cls, url: str, token: str):
+    def from_url(cls: Type[T], url: str, token: str) -> T:
         raise NotImplementedError
 
     @property
@@ -53,10 +54,10 @@ class RepoBase:
     def already_exists(self) -> bool:
         raise NotImplementedError
 
-    def get_head(self, branch: str):
+    def get_head(self, branch: str) -> git.refs.head.Head:
         raise NotImplementedError
 
-    def checkout(self, branch: str):
+    def checkout(self, branch: str) -> git.refs.head.Head:
         raise NotImplementedError
 
     def pull(self, branch: str) -> None:
@@ -124,11 +125,12 @@ class RepoBase:
         raise NotImplementedError
 
 
+T = TypeVar('T', bound='StudentRepoBase')
 class StudentRepoBase(RepoBase):
     """Repository for a student's solution to a homework assignment"""
 
     @classmethod
-    def new(cls, base_repo: str, semester: str, section: str, username: str):
+    def new(cls, base_repo: str, semester: str, section: str, username: str) -> T:
         raise NotImplementedError
 
     @classmethod
@@ -140,10 +142,11 @@ class StudentRepoBase(RepoBase):
         raise NotImplementedError
 
 
+T = TypeVar('T', bound='StudentRepoBase')
 class TemplateRepoBase(RepoBase):
     """A repo from which StudentRepos are cloned from (Homework Repo)."""
     @classmethod
-    def new(cls, name: str, namespace: str, config):
+    def new(cls, name: str, namespace: str, config) -> T:
         raise NotImplementedError
 
     def push_to(self, student_repo: StudentRepoBase, branch: str = "master") -> None:
