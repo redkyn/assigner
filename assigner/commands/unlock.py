@@ -1,6 +1,7 @@
 import logging
 
 from assigner import manage_repos
+from assigner.backends.exceptions import UserInAssignerGroup
 
 help = "Unlock student's repo"
 
@@ -11,11 +12,13 @@ def unlock(args):
     """Sets each student to Developer status on their homework repository.
     """
     #pylint: disable=no-value-for-parameter
-    return manage_repos(
-        args,
-        lambda repo, student: repo.unlock(student["id"])
-    )
+    return manage_repos(args, _unlock)
 
+def _unlock(repo, student):
+    try:
+        repo.unlock(student["id"])
+    except UserInAssignerGroup:
+        logging.info("%s cannot be locked out because they are a member of the group, skipping...", student["username"])
 
 def setup_parser(parser):
     parser.add_argument("name",

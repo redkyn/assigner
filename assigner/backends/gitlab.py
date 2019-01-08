@@ -18,6 +18,9 @@ from assigner.backends.base import (
     TemplateRepoBase
 )
 
+from assigner.backends.gitlab_exceptions import (
+    raiseUserInAssignerGroup,
+)
 
 # Transparently use a common TLS session for each request
 requests = requests.Session()
@@ -289,7 +292,11 @@ class GitlabRepo(RepoBase):
             "user_id": user_id,
             "access_level": level.value
         }
-        return self._gl_post("/projects/{}/members".format(self.id), payload)
+        try:
+            return self._gl_post("/projects/{}/members".format(self.id), payload)
+        except HTTPError as e:
+            raiseUserInAssignerGroup(e)
+            raise e
 
     def edit_member(self, user_id, level):
         payload = {
@@ -297,9 +304,13 @@ class GitlabRepo(RepoBase):
             "user_id": user_id,
             "access_level": level.value
         }
-        return self._gl_put(
-            "/projects/{}/members/{}".format(self.id, user_id), payload
-        )
+        try:
+            return self._gl_put(
+                "/projects/{}/members/{}".format(self.id, user_id), payload
+            )
+        except HTTPError as e:
+            raiseUserInAssignerGroup(e)
+            raise e
 
     def delete_member(self, user_id):
         return self._gl_delete(
