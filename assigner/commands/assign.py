@@ -2,21 +2,21 @@ import logging
 import tempfile
 import time
 
-from assigner.roster_util import get_filtered_roster
-from assigner.baserepo import BaseRepo, StudentRepo, RepoError
+from assigner.backends.base import RepoError
+from assigner.backends.decorators import requires_config_and_backend
 from assigner.commands.open import open_assignment
-from assigner.config import config_context
 from assigner import progress
+from assigner.roster_util import get_filtered_roster
 
 from requests.exceptions import HTTPError
 
-help = "Assign a base repo to students"
+help = "Assign a template repo to students"
 
 logger = logging.getLogger(__name__)
 
 
-@config_context
-def assign(conf, args):
+@requires_config_and_backend
+def assign(conf, backend, args):
     """Creates homework repositories for an assignment for each student
     in the roster.
     """
@@ -42,13 +42,13 @@ def assign(conf, args):
             "s" if student_count != 1 else "",
             "section " + args.section if args.section else "all sections"
         ))
-        base = BaseRepo(backend_conf, namespace, hw_name)
+        template = backend.template_repo(backend_conf, namespace, hw_name)
         if not dry_run:
             try:
-                base.clone_to(tmpdirname, branch)
+                template.clone_to(tmpdirname, branch)
             except RepoError as e:
                 logging.error(
-                    "Could not clone base repo (have you pushed at least one commit to it?)"
+                    "Could not clone template repo (have you pushed at least one commit to it?)"
                 )
                 logging.debug(e)
                 return
@@ -59,14 +59,15 @@ def assign(conf, args):
         for i, student in progress.enumerate(roster):
             username = student["username"]
             student_section = student["section"]
-            full_name = StudentRepo.build_name(semester, student_section,
-                                               hw_name, username)
-            repo = StudentRepo(backend_conf, namespace, full_name)
+            full_name = backend.student_repo.build_name(semester, student_section,
+                                                        hw_name, username)
+            repo = backend.student_repo(backend_conf, namespace, full_name)
 
             if not repo.already_exists():
                 if not dry_run:
-                    repo = StudentRepo.new(base, semester, student_section, username)
-                    repo.push(base, branch)
+                    repo = backend.student_repo.new(template, semester, student_section,
+                                                    username)
+                    repo.push(template, branch)
                     for b in branch:
                         repo.protect(b)
                 actual_count += 1
@@ -83,8 +84,8 @@ def assign(conf, args):
                     retries = 0
                     while True:
                         try:
-                            repo = StudentRepo.new(
-                                base, semester, student_section, username
+                            repo = backend.student_repo.new(
+                                template, semester, student_section, username
                             )
                             logger.debug("Success!")
                             break
@@ -98,7 +99,7 @@ def assign(conf, args):
                         time.sleep(wait * 2**retries)
                         retries += 1
 
-                    repo.push(base, branch)
+                    repo.push(template, branch)
                     for b in branch:
                         repo.protect(b)
                 actual_count += 1
@@ -107,7 +108,7 @@ def assign(conf, args):
                 logging.info("%s: Already exists.", full_name)
                 # If we have an explicit branch, push anyways
                 if not dry_run:
-                    repo.push(base, branch)
+                    repo.push(template, branch)
                     for b in branch:
                         repo.protect(b)
                 actual_count += 1
@@ -117,7 +118,7 @@ def assign(conf, args):
             i += 1
 
             if args.open:
-                open_assignment(repo, student)
+                open_assignment(repo, student, backend.access.developer)
 
     print("Assigned '{}' to {} student{}.".format(
         hw_name,

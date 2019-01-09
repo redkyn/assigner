@@ -18,8 +18,7 @@ import sys
 from colorlog import ColoredFormatter
 from git.cmd import GitCommandNotFound
 
-from assigner.baserepo import StudentRepo
-from assigner.config import config_context
+from assigner.backends.decorators import requires_config_and_backend
 from assigner.roster_util import get_filtered_roster
 from assigner import progress
 
@@ -56,8 +55,8 @@ subcommands = [
 ]
 
 
-@config_context
-def manage_repos(conf, args, action):
+@requires_config_and_backend
+def manage_repos(conf, backend, args, action):
     """Performs an action (lambda) on all student repos
     """
     hw_name = args.name
@@ -78,10 +77,10 @@ def manage_repos(conf, args, action):
                 "Student %s does not have a gitlab account.", username
             )
             continue
-        full_name = StudentRepo.build_name(semester, student_section,
-                                           hw_name, username)
+        full_name = backend.student_repo.build_name(semester, student_section,
+                                                    hw_name, username)
 
-        repo = StudentRepo(backend_conf, namespace, full_name)
+        repo = backend.student_repo(backend_conf, namespace, full_name)
         if not dry_run:
             action(repo, student)
         count += 1

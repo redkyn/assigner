@@ -1,7 +1,7 @@
 import logging
 import datetime
 
-from assigner.config import config_context
+from assigner.config import requires_config
 
 help = "Interactively initialize a new configuration"
 
@@ -37,7 +37,7 @@ def guess_semester():
     return "{}-{}".format(now.year, semester)
 
 
-@config_context
+@requires_config
 def init(conf, _):
     conf['backend'] = {'name': 'gitlab'}
     conf['backend']['host'] = "https://{}".format(prompt("Gitlab server to use", "gitlab.com"))

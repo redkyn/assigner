@@ -4,10 +4,10 @@ import os
 from requests.exceptions import HTTPError
 from git import NoSuchPathError, GitCommandError
 
-from assigner.roster_util import get_filtered_roster
-from assigner.baserepo import RepoError, StudentRepo
-from assigner.config import config_context
+from assigner.backends import RepoError
 from assigner import progress
+from assigner.backends.decorators import requires_config_and_backend
+from assigner.roster_util import get_filtered_roster
 
 from prettytable import PrettyTable
 
@@ -16,9 +16,15 @@ help = "Clone or fetch student repos"
 logger = logging.getLogger(__name__)
 
 
-@config_context
-def get(conf, args):
-    """Creates a folder for the assignment in the CWD (or <path>, if specified)
+@requires_config_and_backend
+def get(conf, backend, args):
+    _get(conf, backend, args)
+
+
+# Sans decorator to ease testing
+def _get(conf, backend, args):
+    """
+    Creates a folder for the assignment in the CWD (or <path>, if specified)
     and clones each students' repository into subfolders.
     """
     hw_name = args.name
@@ -41,11 +47,11 @@ def get(conf, args):
     for i, student in progress.enumerate(roster):
         username = student["username"]
         student_section = student["section"]
-        full_name = StudentRepo.build_name(semester, student_section,
-                                           hw_name, username)
+        full_name = backend.student_repo.build_name(semester, student_section,
+                                                    hw_name, username)
 
         try:
-            repo = StudentRepo(backend_conf, namespace, full_name)
+            repo = backend.student_repo(backend_conf, namespace, full_name)
             repo_dir = os.path.join(path, username)
 
             row = str(i + 1)

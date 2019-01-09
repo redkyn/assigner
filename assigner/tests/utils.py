@@ -46,3 +46,6 @@ class AssignerIntegrationTestCase(AssignerTestCase):
         )
 
         self.mock_config = self.mock_config_class.return_value.__enter__.return_value
+        self.mock_config.backend = {
+            "name": "mock",
+        }

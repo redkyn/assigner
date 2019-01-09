@@ -1,6 +1,6 @@
 import logging
 
-from assigner.config import config_context
+from assigner.config import requires_config
 
 
 help = "Set configuration values"
@@ -8,7 +8,7 @@ help = "Set configuration values"
 logger = logging.getLogger(__name__)
 
 
-@config_context
+@requires_config
 def set_conf(conf, args):
     """Sets <key> to <value> in the config.
     """

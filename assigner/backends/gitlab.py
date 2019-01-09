@@ -10,13 +10,17 @@ from enum import Enum
 from requests.exceptions import HTTPError
 from urllib.parse import urlsplit, urlunsplit, urljoin, quote
 
+from assigner.backends.base import (
+    BackendBase,
+    RepoBase,
+    RepoError,
+    StudentRepoBase,
+    TemplateRepoBase
+)
+
 
 # Transparently use a common TLS session for each request
 requests = requests.Session()
-
-
-class RepoError(Exception):
-    pass
 
 
 class Visibility(Enum):
@@ -34,7 +38,7 @@ class Access(Enum):
     owner = 50
 
 
-class Repo:
+class GitlabRepo(RepoBase):
     """Gitlab repo; manages API requests and various metadata"""
 
     PATH_RE = re.compile(
@@ -116,13 +120,14 @@ class Repo:
         r.raise_for_status()
         return r.json()
 
+    #pylint: disable=super-init-not-called
     def __init__(self, config, namespace, name, url=None):
         self.config = config
         self.namespace = namespace
         self.name = name
 
         if url is None:
-            self.url = Repo.build_url(self.config, namespace, name)
+            self.url = GitlabRepo.build_url(self.config, namespace, name)
         else:
             self.url = url
 
@@ -210,7 +215,8 @@ class Repo:
             else:
                 self._repo = git.Repo.clone_from(self.ssh_url, dir_name)
             logging.debug("Cloned %s.", self.name)
-        except git.GitCommandError as e:
+        #pylint: disable=no-member
+        except git.exc.GitCommandError as e:
             # GitPython may delete this directory
             # and the caller may have opinions about that,
             # so go ahead and re-create it just to be safe.
@@ -351,6 +357,12 @@ class Repo:
         return self._gl_put("/projects/{}/repository/branches/{}/unprotect"
                             .format(self.id, branch))
 
+    def unlock(self, student_id: str) -> None:
+        self.edit_member(student_id, Access.developer)
+
+    def lock(self, student_id: str) -> None:
+        self.edit_member(student_id, Access.reporter)
+
     def _gl_get(self, path, params={}):
         return self.__class__._cls_gl_get(
             self.config, path, params
@@ -372,7 +384,7 @@ class Repo:
         )
 
 
-class BaseRepo(Repo):
+class GitlabTemplateRepo(GitlabRepo, TemplateRepoBase):
 
     @classmethod
     def new(cls, name, namespace, config):
@@ -415,7 +427,7 @@ class BaseRepo(Repo):
         logging.debug("Pushed %s to %s.", self.name, student_repo.name)
 
 
-class StudentRepo(Repo):
+class GitlabStudentRepo(GitlabRepo, StudentRepoBase):
     """Repository for a student's solution to a homework assignment"""
 
     @classmethod
@@ -451,3 +463,13 @@ class StudentRepo(Repo):
     def push(self, base_repo, branch="master"):
         """Push base_repo code to this repo"""
         base_repo.push_to(self, branch)
+
+
+class GitlabBackend(BackendBase):
+    """
+    Common abstract base backend for all assigner backends (gitlab or mock).
+    """
+    repo = GitlabRepo # type: RepoBase
+    template_repo = GitlabTemplateRepo # type: TemplateRepoBase
+    student_repo = GitlabStudentRepo # type: StudentRepoBase
+    access = Access

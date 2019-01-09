@@ -142,7 +142,7 @@ class MainTestCase(AssignerTestCase):
         main should log a GitCommandNotFound with "git is not installed!" when raised.
         """
         self.mock_args.tracebacks = False
-        self.mock_args.run.side_effect = GitCommandNotFound("git", "not found")
+        self.mock_args.run.side_effect = GitCommandNotFound("git", "not installed!")
         try:
             main([])
         except SystemExit:

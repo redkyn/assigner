@@ -1,5 +1,5 @@
+from assigner.backends.base import RepoError
 from assigner.config import DuplicateUserError
-from assigner.baserepo import Repo, RepoError
 
 import logging
 
@@ -16,7 +16,7 @@ def get_filtered_roster(roster, section, target):
     return roster
 
 
-def add_to_roster(conf, roster, name, username, section, force=False):
+def add_to_roster(conf, backend, roster, name, username, section, force=False):
     student = {
         "name": name,
         "username": username,
@@ -29,7 +29,9 @@ def add_to_roster(conf, roster, name, username, section, force=False):
         raise DuplicateUserError("Student already exists in roster!")
 
     try:
-        student["id"] = Repo.get_user_id(username, conf.backend)
+        student["id"] = backend.repo.get_user_id(
+            username, conf.backend
+        )
     except RepoError:
         logger.warning(
             "Student %s does not have a Gitlab account.", name

@@ -2,17 +2,17 @@ import logging
 
 from requests.exceptions import HTTPError
 
-from assigner.baserepo import BaseRepo, Repo
-from assigner.config import config_context
+from assigner.backends.decorators import requires_config_and_backend
 
-help = "Create a new base repo"
+help = "Create a new template repo"
 
 logger = logging.getLogger(__name__)
 
 
-@config_context
-def new(conf, args):
-    """Creates a new base repository for an assignment so that you can add the
+@requires_config_and_backend
+def new(conf, backend, args):
+    """
+    Creates a new template repository for an assignment so that you can add the
     instructions, sample code, etc.
     """
     hw_name = args.name
@@ -21,12 +21,12 @@ def new(conf, args):
     backend_conf = conf.backend
 
     if dry_run:
-        url = Repo.build_url(backend_conf, namespace, hw_name)
+        url = backend.repo.build_url(backend_conf, namespace, hw_name)
         print(
             "Created repo for {}:\n\t{}\n\t{}".format(hw_name, url, "(ssh url not available)"))
     else:
         try:
-            repo = BaseRepo.new(hw_name, namespace, backend_conf)
+            repo = backend.template_repo.new(hw_name, namespace, backend_conf)
             print("Created repo for {}:\n\t{}\n\t{}".format(hw_name, repo.url, repo.ssh_url))
         except HTTPError as e:
             if e.response.status_code == 400:

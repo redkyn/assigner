@@ -2,7 +2,8 @@ import csv
 import logging
 import re
 
-from assigner.config import config_context, DuplicateUserError
+from assigner.backends.decorators import requires_config_and_backend
+from assigner.config import DuplicateUserError
 from assigner.roster_util import add_to_roster
 
 help = "Import users from a csv"
@@ -10,8 +11,8 @@ help = "Import users from a csv"
 logger = logging.getLogger(__name__)
 
 
-@config_context
-def import_students(conf, args):
+@requires_config_and_backend
+def import_students(conf, backend, args):
     """Imports students from a CSV file to the roster.
     """
     section = args.section
@@ -29,7 +30,9 @@ def import_students(conf, args):
             match = email_re.match(row[4])
 
             try:
-                add_to_roster(conf, conf.roster, row[3], match.group("user"), section, args.force)
+                add_to_roster(
+                    conf, backend, conf.roster, row[3], match.group("user"), section, args.force
+                )
             except DuplicateUserError:
                 logger.warning("User %s is already in the roster, skipping", match.group("user"))
 
