@@ -20,6 +20,7 @@ from assigner.backends.base import (
 
 from assigner.backends.gitlab_exceptions import (
     raiseUserInAssignerGroup,
+    raiseUserNotAssigned,
 )
 
 # Transparently use a common TLS session for each request
@@ -310,6 +311,7 @@ class GitlabRepo(RepoBase):
             )
         except HTTPError as e:
             raiseUserInAssignerGroup(e)
+            raiseUserNotAssigned(e)
             raise e
 
     def delete_member(self, user_id):

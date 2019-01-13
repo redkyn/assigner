@@ -28,3 +28,15 @@ def raiseUserInAssignerGroup(err: HTTPError):
         return
 
     raise UserInAssignerGroup(err)
+
+def raiseUserNotAssigned(err: HTTPError):
+    """
+    Request url:
+        PUT /api/v4/projects/{}/members/{}
+
+    Expected response: HTTP 404
+    """
+    if err.response.status_code != 404:
+        return
+
+    raise UserNotAssigned(err)

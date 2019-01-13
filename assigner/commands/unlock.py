@@ -1,7 +1,10 @@
 import logging
 
 from assigner import manage_repos
-from assigner.backends.exceptions import UserInAssignerGroup
+from assigner.backends.exceptions import (
+        UserInAssignerGroup,
+        UserNotAssigned,
+    )
 
 help = "Unlock student's repo"
 
@@ -17,8 +20,13 @@ def unlock(args):
 def _unlock(repo, student):
     try:
         repo.unlock(student["id"])
+        return True
     except UserInAssignerGroup:
         logging.info("%s cannot be locked out because they are a member of the group, skipping...", student["username"])
+        return False
+    except UserNotAssigned:
+        logging.info("%s has not been assigned for %s", repo.name, student["username"])
+        return False
 
 def setup_parser(parser):
     parser.add_argument("name",

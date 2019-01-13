@@ -82,8 +82,10 @@ def manage_repos(conf, backend, args, action):
 
         repo = backend.student_repo(backend_conf, namespace, full_name)
         if not dry_run:
-            action(repo, student)
-        count += 1
+            if action(repo, student):
+                count += 1
+        else:
+            count += 1
 
     print("Changed {} repositories.".format(count))
 
