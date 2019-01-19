@@ -27,12 +27,12 @@ class Config(UserDict):
         try:
             with open(filename) as f:
                 self.data = yaml.safe_load(f)
-        except FileNotFoundError:
-            pass  # Just make an empty config; create on __exit__()
 
-        try:
             self.data = upgrade(self.data)
             validate(self.data)
+
+        except FileNotFoundError:
+            pass  # Just make an empty config; create on __exit__()
         except ValidationError as e:
             logging.warning("Your configuration is not valid: %s", e.message)
         except VersionError as e:
