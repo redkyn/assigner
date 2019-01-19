@@ -159,6 +159,41 @@ If you encounter 'Connection reset by peer' errors when cloning, run, say, `assi
 (Assigner doesn't have plans for any grading features;
 however, if you are interested in automated grading, check out its sister project, [grader](https://github.com/redkyn/grader).)
 
+### Committing and pushing changes to student repositories
+
+You can make and push commits to student repositories after they have been created with `assigner assign` by using `assigner commit` and `assigner push`.
+These commands should be used carefully!
+It is quite possible to give your students merge conflicts if they are still making commits to their repository while you are making changes.
+We recommend using this feature very carefully if students are intended to continue working in their repos after you push your commits.
+
+We recommend using the following workflow with `commit` and `push`:
+
+1. Lock student repositories with `assigner lock`.
+    This will prevent students from pushing to their repositories before you push your changes.
+2. Clone or pull local copies of their repositories using `assigner get`.
+3. Make the changes you require in each repository.
+4. Commit your changes.
+    `assigner commit assignment-name "my commit message"` behaves effectively like executing `git checkout master; git commit -am "my commit message` in each student repository.
+    Add new files by specifying their names after the `-a` flag; remove files by specifying their names after the `-r` flag.
+
+    To add all untracked files in each student's repository, run `assigner commit assignment-name "commit message" -a "*"`.
+
+    As a more extended example, the command 
+    ```
+    assigner commit assignment-name "my commit message" -a newfile.txt -r junk.dat -u --branch devel
+    ```
+    corresponds to executing the following commands in each repository:
+    ```
+    git checkout devel
+    git add newfile.txt
+    git rm junk.dat
+    git commit --all --message="my commit message"
+    ```
+5. Push your commits with `assigner push`.
+    If you did not lock the students' repositories, Assigner will print an error and exit.
+    We recommend locking their repositories, then updating your local copies with `assigner get` before pushing.
+    However, if you are absolutely sure of what you are doing, you can override this check with the `--push-unlocked` flag.
+
 ### Student repository management
 
 If you wish to prevent students from submitting after the deadline, you may lock their repositories by running `assigner lock hw1`.
