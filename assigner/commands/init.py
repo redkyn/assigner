@@ -39,10 +39,11 @@ def guess_semester():
 
 @requires_config
 def init(conf, _):
+    conf['version'] = 2
     conf['backend'] = {'name': 'gitlab'}
     conf['backend']['host'] = "https://{}".format(prompt("Gitlab server to use", "gitlab.com"))
     conf['backend']['token'] = prompt("Gitlab access token (from {}/profile/personal_access_tokens)"
-                                      .format(conf['gitlab-host']))
+                                      .format(conf['backend']['host']))
     conf['semester'] = prompt("Year and semester, in the format YYYY-(FS|SP|SS)", guess_semester())
     conf['namespace'] = prompt("Gitlab group to create repositories under", "{}-CS1001"
                                .format(conf['semester']))
