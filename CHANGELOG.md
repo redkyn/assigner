@@ -1,5 +1,6 @@
 ## Devel
 
+- Offer to create GitLab group in `assigner init`
 - Version configuration; automatically upgrade old configs to latest version
 - Make GitLab backend configuration generic
 - Tidy up progress bars with logging output

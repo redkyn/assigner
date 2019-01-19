@@ -2,6 +2,7 @@ import logging
 import datetime
 
 from assigner.config import requires_config
+from assigner.backends.gitlab import GitlabRepo
 
 help = "Interactively initialize a new configuration"
 
@@ -47,6 +48,11 @@ def init(conf, _):
     conf['semester'] = prompt("Year and semester, in the format YYYY-(FS|SP|SS)", guess_semester())
     conf['namespace'] = prompt("Gitlab group to create repositories under", "{}-CS1001"
                                .format(conf['semester']))
+    do_create_group = input("Do you want to create this group on Gitlab? [y/N]: ")
+    if do_create_group.lower() == 'y':
+        GitlabRepo.create_group(conf['namespace'], conf['backend'])
+        print("{} created!".format(conf['namespace']))
+
     do_canvas = input("Do you want to configure Canvas integration? [y/N]: ")
     if do_canvas.lower() == 'y':
         conf['canvas-host'] = prompt("Canvas server to use (???.instructure.com)")
