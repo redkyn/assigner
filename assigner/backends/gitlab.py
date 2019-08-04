@@ -238,6 +238,17 @@ class GitlabRepo(RepoBase):
         logging.debug("Deleted %s.", self.name)
 
     @classmethod
+    def create_group(cls, group, config):
+        payload = {
+            "name": group,
+            "path": group,
+            "description": "Created by assigner",
+            "visibility": "private",
+            "request_access_enabled": False,
+        }
+        cls._cls_gl_post(config, "/groups", payload)
+
+    @classmethod
     def get_user_id(cls, username, config):
         data = cls._cls_gl_get(config, "/users", params={"search": username})
 
