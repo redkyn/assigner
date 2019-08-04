@@ -11,6 +11,7 @@
 - Added `requires_backend_and_config` decorator with backend config option to load the desired backend.
 - Renamed `config_context` decorator to `requires_config`.
 - pyflakes 1.6.0 upgrade for type annotations fixes.
+- Improved canvas error handling.
 
 ## 1.2.0
 
