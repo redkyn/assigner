@@ -1,11 +1,17 @@
-gitlab-host: https://git-classes.mst.edu/
-gitlab-token: xxxxxxxxxxxxxxxx
-namespace: 2016-Fall-CS1001
-semester: 2016-FS
-# optional; for canvas integration
-canvas-token: xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
-canvas-host: mst.instructure.com
-# we recommend using one of the import commands to automatically populate the roster
+# Point this at any GitLab server
+backend:
+  host: https://git-classes.mst.edu/  # Hostname of your gitlab server
+  name: gitlab
+  token: xxxxxxxxxxxxxxxx  # Your GitLab API token, retrievable from your gitlab settings page
+
+namespace: 2016-Fall-CS1001  # Group (or user) to create repositories under
+semester: 2016-FS  # The semester: the year followed by one of -FS, -SP, or -SS
+
+# Optional; for canvas integration
+canvas-token: xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx  # Your Canvas API token, retrievable from your Canvas settings page
+canvas-host: mst.instructure.com  # Hostname of your Canvas server
+
+# We recommend using one of the import commands to automatically populate the roster
 roster:
 - name: Smith, John
   section: A
@@ -13,3 +19,6 @@ roster:
 - name: Smith, Jane
   section: A
   username: xyz123
+
+# assigner configuration schema version
+version: 2

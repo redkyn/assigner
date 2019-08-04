@@ -55,18 +55,14 @@ Your GitLab account must have an SSH key set up in order to push the assignment 
 Configuration File
 ~~~~~~~~~~~~~~~~~~
 
-*Assigner* will create a ``_config.yml`` file that will persist your GitLab private token and other settings.
+*Assigner* will create a ``_config.yml`` file in the current directory that will persist your GitLab private token and other settings.
 You can use a different config file by specifying the ``--config`` option.
 
-*Assigner* needs you to set a few config keys before it will work:
+*Assigner* needs you to set a few config keys before it will work.
+The easiest way to do this is by running ``assigner init`` and entering the information it prompts you for.
+Alternatively, you can create yor own, following the template in ``_config.example.yml``.
 
-- ``gitlab-host``: Hostname of your gitlab instance
-- ``namespace``: Group or user to create repositories in
-- ``semester``: The semester; recommended formatting: ``2016SP``
-- ``gitlab-token``: Your gitlab API token, retrievable from your gitlab settings page
-- ``canvas-token``: Your Canvas API token, retrievable from your Canvas settings page
-
-You can set these keys by either manually adding them to the config or through using the ``config`` subcommand.
+You can change configuration settings by either manually editing the config or through using the ``set`` subcommand.
 
 Importing from Canvas via the Canvas API
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
