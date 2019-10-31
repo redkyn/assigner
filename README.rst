@@ -95,8 +95,8 @@ Canvas Token
 
 To generate an API token for Canvas, log onto your Canvas account (e.g. https://canvas.mst.edu/), and click on *Account* at the top left corner of the page, then go to *Settings*. From there scroll down to *Approved Integrations* and click the *New Access Token* button, then use the form to create a new API token. Make sure you copy the generated token, since you won't be able to retrieve it afterwards.
 
-Developing
-----------
+Reporting Bugs
+--------------
 
 See |CONTRIBUTING.md|_.
 

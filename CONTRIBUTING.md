@@ -14,7 +14,7 @@ For example, if `assigner get the_homework` is giving you trouble, you'd run `as
 
 # Making changes
 
-Pull requests are welcome! If you have questions, feel free to [contact the authors](jarus@mst.edu) or open a WIP PR.
+Pull requests are welcome! If you have questions, feel free to [contact the authors](mailto:jarus@mst.edu) or open a WIP PR.
 
 Before merging:
 
@@ -33,7 +33,7 @@ This allows you to make changes to the Assigner source while still having `pip` 
 1. Clone the repository somewhere and `cd` into the cloned repo
 1. Run `pip install --user -e .`
 
-To run unit tests, `pyflakes`, and `pylint, you'll want to set up a [virtualenv](https://virtualenv.pypa.io/):
+To run unit tests, `pyflakes`, and `pylint`, you'll want to set up a [virtualenv](https://virtualenv.pypa.io/):
 
 1. `cd` into your cloned repo
 1. Run `virtualenv -p python3 env` to create a new environment
