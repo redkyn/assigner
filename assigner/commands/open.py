@@ -4,6 +4,7 @@ from requests.exceptions import HTTPError
 
 from assigner.backends.base import RepoError
 from assigner.backends.decorators import requires_config_and_backend
+from assigner.backends.exceptions import UserInAssignerGroup
 from assigner.roster_util import get_filtered_roster
 from assigner import progress
 
@@ -49,6 +50,8 @@ def open_all_assignments(conf, backend, args):
 
             open_assignment(repo, student, backend.access.developer)
             count += 1
+        except UserInAssignerGroup:
+            logging.info("%s already has access via group membership, skipping...", username)
         except RepoError:
             logging.warning("Could not add %s to %s.", username, full_name)
 
