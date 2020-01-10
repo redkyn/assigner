@@ -6,7 +6,7 @@ jsonschema==2.5.1
 mccabe==0.3.1
 pep8==1.5.7
 pyapi-gitlab==7.8.5
-pyflakes==1.6.0
+pyflakes==2.1.1
 requests==2.21.0
 six==1.10.0
 smmap==0.9.0
