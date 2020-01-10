@@ -17,6 +17,7 @@ import sys
 
 from colorlog import ColoredFormatter
 from git.cmd import GitCommandNotFound
+from requests.exceptions import HTTPError
 
 from assigner.backends.decorators import requires_config_and_backend
 from assigner.roster_util import get_filtered_roster
@@ -40,6 +41,8 @@ subcommands = [
     "assign",
     "open",
     "get",
+    "commit",
+    "push",
     "lock",
     "unlock",
     "archive",
@@ -77,15 +80,20 @@ def manage_repos(conf, backend, args, action):
                 "Student %s does not have a gitlab account.", username
             )
             continue
+
         full_name = backend.student_repo.build_name(semester, student_section,
                                                     hw_name, username)
 
-        repo = backend.student_repo(backend_conf, namespace, full_name)
-        if not dry_run:
-            if action(repo, student):
+        try:
+            repo = backend.student_repo(backend_conf, namespace, full_name)
+            if not dry_run:
+                if action(repo, student):
+                    count += 1
+            else:
                 count += 1
-        else:
-            count += 1
+        except HTTPError:
+            logging.warning("Error processing %s", username)
+            raise
 
     print("Changed {} repositories.".format(count))
 

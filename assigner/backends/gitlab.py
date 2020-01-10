@@ -194,6 +194,12 @@ class GitlabRepo(RepoBase):
             return True
         return False
 
+    def get_index(self):
+        if self.repo is None:
+            raise RepoError("No repo to get index from")
+
+        return self.repo.index
+
     def get_head(self, branch):
         if self.repo is None:
             raise RepoError("No repo to get head from")
@@ -343,6 +349,10 @@ class GitlabRepo(RepoBase):
         return self._gl_delete(
             "/projects/{}/members/{}".format(self.id, user_id)
         )
+
+    def is_locked(self):
+        access = [Access(m["access_level"]) for m in self.list_members()]
+        return all([a in (Access.guest, Access.reporter) for a in access])
 
     def list_commits(self, ref_name="master"):
         params = {
