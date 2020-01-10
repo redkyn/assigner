@@ -1,5 +1,6 @@
 ## Devel
 
+- Retry clones that fail with 'Connection reset by peer' using exponential backoff
 - Offer to create GitLab group in `assigner init`
 - Version configuration; automatically upgrade old configs to latest version
 - Make GitLab backend configuration generic

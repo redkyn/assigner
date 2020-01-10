@@ -5,3 +5,6 @@ class UserInAssignerGroup(AssignerException):
 
 class UserNotAssigned(AssignerException):
     """ A student is not a member of their homework repository. """
+
+class RetryableGitError(AssignerException):
+    """ Git has encountered an error that may be spurious. """

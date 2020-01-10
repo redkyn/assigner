@@ -5,6 +5,7 @@ import logging
 import os
 import re
 import requests
+from time import sleep
 
 from enum import Enum
 from requests.exceptions import HTTPError
@@ -22,6 +23,11 @@ from assigner.backends.gitlab_exceptions import (
     raiseUserInAssignerGroup,
     raiseUserNotAssigned,
 )
+
+from assigner.backends.git_exceptions import (
+    raiseRetryableGitError,
+)
+from assigner.backends.exceptions import RetryableGitError
 
 # Transparently use a common TLS session for each request
 requests = requests.Session()
@@ -207,25 +213,44 @@ class GitlabRepo(RepoBase):
 
         self.repo.remote().pull(branch)
 
-    def clone_to(self, dir_name, branch):
+    def clone_to(self, dir_name, branch, attempts=1):
         logging.debug("Cloning %s...", self.ssh_url)
-        try:
-            if branch:
-                self._repo = git.Repo.clone_from(self.ssh_url, dir_name)
-                for b in branch:
-                    self._repo.create_head(b, "origin/{}".format(b))
+        for attempt in range(0, attempts):
+            if attempts > 1:
+                logging.debug("Attempt %d of %d...", attempt + 1, attempts)
 
-                logging.debug(self._repo.heads)
-            else:
-                self._repo = git.Repo.clone_from(self.ssh_url, dir_name)
-            logging.debug("Cloned %s.", self.name)
-        #pylint: disable=no-member
-        except git.exc.GitCommandError as e:
-            # GitPython may delete this directory
-            # and the caller may have opinions about that,
-            # so go ahead and re-create it just to be safe.
-            os.makedirs(dir_name, exist_ok=True)
-            raise RepoError(e)
+            try: # for exp. backoff
+                try:
+                    if branch:
+                        self._repo = git.Repo.clone_from(self.ssh_url, dir_name)
+                        for b in branch:
+                            self._repo.create_head(b, "origin/{}".format(b))
+
+                        logging.debug(self._repo.heads)
+                    else:
+                        self._repo = git.Repo.clone_from(self.ssh_url, dir_name)
+                    logging.debug("Cloned %s.", self.name)
+                #pylint: disable=no-member
+                except git.exc.GitCommandError as e:
+                    # GitPython may delete this directory
+                    # and the caller may have opinions about that,
+                    # so go ahead and re-create it just to be safe.
+                    os.makedirs(dir_name, exist_ok=True)
+                    raiseRetryableGitError(e)
+                    raise RepoError(e)
+
+                # if we got this far, we succeeded!
+                break
+
+            except RetryableGitError as e:
+                if attempt == (attempts - 1):
+                    raise
+                else:
+                    logging.debug(e)
+
+                    duration = 0.5 * 2 ** attempt
+                    logging.debug("Retrying after %.1f seconds...", duration)
+                    sleep(duration)
 
         return self._repo
 

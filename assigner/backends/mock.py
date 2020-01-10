@@ -141,7 +141,7 @@ class MockRepo(RepoBase):
         if self.repo is None:
             raise RepoError("No repo to pull to")
 
-    def clone_to(self, dir_name, branch=None):
+    def clone_to(self, dir_name, branch=None, attempts=1):
         logging.debug("Cloning %s...", self.ssh_url)
         if branch:
             self._repo = MockGitRepo.clone_from(self.ssh_url, dir_name,
