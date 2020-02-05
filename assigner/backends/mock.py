@@ -194,6 +194,12 @@ class MockRepo(RepoBase):
     def list_commits(self, ref_name="master"):
         return MagicMock()
 
+    def list_ci_jobs(self):
+        return MagicMock()
+
+    def get_ci_artifact(self, job_id, artifact_path):
+        return MagicMock()
+
     def list_pushes(self):
         return MagicMock()
 

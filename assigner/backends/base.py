@@ -94,6 +94,12 @@ class RepoBase:
     def list_commits(self, ref_name: str = "master") -> str:
         raise NotImplementedError
 
+    def list_ci_jobs(self) -> str:
+        raise NotImplementedError
+
+    def get_ci_artifact(self, job_id: str, artifact_path: str) -> str:
+        raise NotImplementedError
+
     def list_pushes(self) -> str:
         raise NotImplementedError
 

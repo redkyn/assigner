@@ -55,6 +55,7 @@ subcommands = [
     "set",
     "roster",
     "init",
+    "score",
 ]
 
 

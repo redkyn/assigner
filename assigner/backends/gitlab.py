@@ -363,6 +363,24 @@ class GitlabRepo(RepoBase):
             "/projects/{}/repository/commits".format(self.id), params
         )
 
+    def list_ci_jobs(self):
+        params = {
+            "id": self.id
+        }
+        return self._gl_get(
+            "/projects/{}/jobs".format(self.id), params
+        )
+
+    def get_ci_artifact(self, job_id, artifact_path):
+        params = {
+            "id": self.id,
+            "job_id": job_id,
+            "artifact_path": artifact_path
+        }
+        return self._gl_get(
+            "/projects/{}/jobs/{}/artifacts/{}".format(self.id, job_id, artifact_path), params
+        )
+
     def list_pushes(self):
         return self._gl_get(
             "/projects/{}/events?action=pushed".format(self.id)
