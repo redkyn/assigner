@@ -35,6 +35,7 @@ def import_from_canvas(conf, backend, args):
 
     try:
         students = canvas.get_course_students(course_id)
+        conf["course"] = course_id
     except AuthenticationFailed as e:
         logger.debug(e)
         logger.error("Canvas authentication failed. Is your token missing or expired?")

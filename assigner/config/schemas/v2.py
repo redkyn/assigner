@@ -109,6 +109,10 @@ V2 = {
         # Canvas domain
         "canvas-host": {
             "type": "string",
+        },
+        # Canvas course ID
+        "canvas-course": {
+            "type": "string",
         }
     },
     "required": ["version", "backend", "namespace", "semester"],
