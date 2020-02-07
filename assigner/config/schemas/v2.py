@@ -110,10 +110,26 @@ V2 = {
         "canvas-host": {
             "type": "string",
         },
-        # Canvas course ID
-        "canvas-course": {
-            "type": "string",
-        }
+        # Canvas course IDs by section
+        "canvas-courses": {
+            "type": "array",
+            "items": {
+                "type": "object",
+                "properties": {
+                    # Section
+                    "section": {
+                        "type": "string"
+                    },
+
+                    # Canvas course ID
+                    "id": {
+                        "type": "integer",
+                    },
+                },
+                "required": ["section"],
+                "additionalProperties": False,
+            },
+        },
     },
     "required": ["version", "backend", "namespace", "semester"],
     "additionalProperties": False,
