@@ -86,8 +86,11 @@ def status(conf, backend, args):
             row[6] = head["short_id"]
             row[7] = head["author_name"]
             created_at = head["created_at"]
-            # Fix UTC offset format in GitLab's datetime
-            created_at = created_at[:-6] + created_at[-6:].replace(':', '')
+            # Fix UTC offset format in GitLab's datetime: prior to py3.7, UTC offsets could not contain colons
+            created_at = created_at[:-7] + created_at[-7:].replace(':', '')
+            # Remove odd postfix and add missing 0 to UTC offset
+            if created_at.endswith('-0000'):
+                created_at = created_at[:-5] + '0'
             row[8] = datetime.strptime(
                 created_at, "%Y-%m-%dT%H:%M:%S.%f%z"
             ).astimezone().strftime("%c")
