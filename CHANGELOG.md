@@ -1,4 +1,4 @@
-## Devel
+## 2.0.0
 
 - Added 'commit' command to commit changes to student repos
 - Added 'push' command to push commits to student repos
