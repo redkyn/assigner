@@ -79,7 +79,7 @@ setup(
         'jsonschema>=2.5',
         'requests>=2.20.0',
         'PTable>=0.9',
-        'enlighten>=1',
+        'enlighten>=1.5.0',
         'redkyn-common>=1.0.1',
     ],
 

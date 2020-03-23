@@ -1,3 +1,7 @@
+## 2.0.1
+
+- Fix issue where ASCII-only terminals cannot display progress bars
+
 ## 2.0.0
 
 - Added 'commit' command to commit changes to student repos
