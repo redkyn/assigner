@@ -8,7 +8,6 @@ from redkyn.canvas.exceptions import CourseNotFound, AssignmentNotFound
 from assigner import make_help_parser
 from assigner.backends.base import RepoError
 from assigner.backends.decorators import requires_config_and_backend
-from assigner.config import requires_config
 from assigner.roster_util import get_filtered_roster
 from assigner import progress
 
@@ -29,12 +28,12 @@ def parse_assignment_name(name: str) -> str:
         idx += 1
     return name[:idx]
 
-def get_most_recent_score(repo, student) -> str:
+def get_most_recent_score(repo, student, result_path: str) -> str:
     try:
         logger.info("Scoring %s...", repo.name)
         ci_jobs = repo.list_ci_jobs()
         most_recent_job_id = ci_jobs[0]["id"]
-        score_file = repo.get_ci_artifact(most_recent_job_id, "grader/results.txt")
+        score_file = repo.get_ci_artifact(most_recent_job_id, result_path)
         if type(score_file) is str:
             score = score_file.split()[-1]
         else:
@@ -101,11 +100,14 @@ def score_assignments(conf, backend, args):
     """
     hw_name = args.name
     do_upload = args.upload
+    section = args.section
+    student = args.student
+    result_path = args.result_path
     namespace = conf.namespace
     semester = conf.semester
     backend_conf = conf.backend
 
-    roster = get_filtered_roster(conf.roster, args.section, args.student)
+    roster = get_filtered_roster(conf.roster, section, student)
 
     if do_upload:
         canvas = CanvasAPI(conf["canvas-token"], conf["canvas-host"])
@@ -126,7 +128,7 @@ def score_assignments(conf, backend, args):
             repo = backend.student_repo(backend_conf, namespace, full_name)
             if "id" not in student:
                 student["id"] = backend.repo.get_user_id(username, backend_conf)
-            score = get_most_recent_score(repo, student)
+            score = get_most_recent_score(repo, student, result_path)
             if score:
                 scores.append(float(score))
             count += 1
@@ -158,6 +160,7 @@ def checkout_students(conf, backend, args):
     artifact, which contains their autograded score
     """
     hw_name = args.name
+    result_path = args.result_path
     namespace = conf.namespace
     semester = conf.semester
     backend_conf = conf.backend
@@ -173,7 +176,7 @@ def checkout_students(conf, backend, args):
 
     while True:
         query = input('Enter student ID or name, or \'q\' to quit: ')
-        if student_query in 'quit':
+        if query in 'quit':
             break
         student = student_search(roster, query)
         if not student:
@@ -188,7 +191,7 @@ def checkout_students(conf, backend, args):
             repo = backend.student_repo(backend_conf, namespace, full_name)
             if "id" not in student:
                 student["id"] = backend.repo.get_user_id(username, backend_conf)
-            score = get_most_recent_score(repo, student)
+            score = get_most_recent_score(repo, student, result_path)
             course_id = section_ids[student_section]
             assignment_id = assignment_ids[student_section]
             try:
@@ -214,11 +217,12 @@ def integrity_check(conf, backend, args):
     """
     hw_name = args.name
     do_upload = args.upload
+    student = args.student
     namespace = conf.namespace
     semester = conf.semester
     backend_conf = conf.backend
 
-    roster = get_filtered_roster(conf.roster, args.section, args.student)
+    roster = get_filtered_roster(conf.roster, args.section)
 
     if do_upload:
         canvas = CanvasAPI(conf["canvas-token"], conf["canvas-host"])
@@ -254,14 +258,14 @@ def setup_parser(parser):
 
     all_parser.add_argument("name",
                         help="Name of the assignment to score")
-    all_parser.add_argument("--section", nargs="?",
+    all_parser.add_argument("--section", nargs=1,
                         help="Section to score")
-    # all_parser.add_argument("--student", metavar="id",
-    #                     help="ID of student to score")
-    # all_parser.add_argument("--all", action="store_true",
-    #                     help="Check out all students")
+    all_parser.add_argument("--student", nargs=1,
+                        help="ID of student to score")
     all_parser.add_argument("--upload", action="store_true",
                         help="Upload grades to Canvas")
+    all_parser.add_argument("--result_path", default="results.txt",
+                        help="Path within repo to grader results file")
     all_parser.set_defaults(run=score_assignments)
 
     checkout_parser = subparsers.add_parser(
@@ -278,10 +282,12 @@ def setup_parser(parser):
     )
     integrity_parser.add_argument("name",
                         help="Name of the assignment to check")
-    integrity_parser.add_argument("--section", nargs="?",
+    integrity_parser.add_argument("--section", nargs=1,
                         help="Section to check")
-    integrity_parser.add_argument("--student", metavar="id",
-                        help="ID of student to check")
+    integrity_parser.add_argument("--student", nargs=1,
+                        help="ID of student to score")
+    integrity_parser.add_argument("--result_path", default="results.txt",
+                        help="Path within repo to grader results file")
     integrity_parser.set_defaults(run=integrity_check)
 
     make_help_parser(
