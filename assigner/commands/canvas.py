@@ -46,6 +46,8 @@ def import_from_canvas(conf, backend, args):
 
     try:
         students = canvas.get_course_students(course_id)
+        if "canvas-courses" not in conf:
+            conf["canvas-courses"] = []
         add_to_courses(conf["canvas-courses"], int(course_id), section)
 
     except AuthenticationFailed as e:
@@ -58,7 +60,7 @@ def import_from_canvas(conf, backend, args):
         return
 
     for s in students:
-        if 'sis_user_id' not in s:
+        if 'sis_user_id' not in s or not s['sis_user_id']:
             logger.error("Could not get username for %s", s['sortable_name'])
 
         try:
