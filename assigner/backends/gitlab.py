@@ -6,6 +6,7 @@ import os
 import re
 import requests
 from time import sleep
+from typing import List
 
 from enum import Enum
 from requests.exceptions import HTTPError
@@ -362,6 +363,17 @@ class GitlabRepo(RepoBase):
         return self._gl_get(
             "/projects/{}/repository/commits".format(self.id), params
         )
+    
+    def list_commit_files(self, commit_hash) -> List[str]:
+        params = {
+            "id": self.id,
+            "sha": commit_hash
+        }
+
+        raw_diff = self._gl_get(
+            "/projects/{}/repository/commits/{}/diff".format(self.id, commit_hash), params
+        )
+        return [file["new_path"] for file in raw_diff]
 
     def list_ci_jobs(self):
         params = {

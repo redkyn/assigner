@@ -3,6 +3,7 @@ import git
 import logging
 import re
 from unittest.mock import MagicMock
+from typing import List
 
 from enum import Enum
 from requests.exceptions import HTTPError
@@ -192,6 +193,9 @@ class MockRepo(RepoBase):
         return MagicMock()
 
     def list_commits(self, ref_name="master"):
+        return MagicMock()
+    
+    def list_commit_files(self, commit_hash) -> List[str]:
         return MagicMock()
 
     def list_ci_jobs(self):

@@ -93,63 +93,64 @@ def student_search(roster, query):
             selected = int(input('Enter the number of the correct student: '))
         return candidate_students[selected]
 
+def handle_scoring(conf, backend, args, student, canvas, section_ids, assignment_ids, upload=True) -> float:
+    hw_name = args.name
+    result_path = args.path
+    namespace = conf.namespace
+    semester = conf.semester
+    backend_conf = conf.backend
+    username = student["username"]
+    student_section = student["section"]
+    full_name = backend.student_repo.build_name(semester, student_section,
+                                                hw_name, username)
+    try:
+        repo = backend.student_repo(backend_conf, namespace, full_name)
+        if "id" not in student:
+            student["id"] = backend.repo.get_user_id(username, backend_conf)
+        score = get_most_recent_score(repo, student, result_path)
+        if upload:
+            course_id = section_ids[student_section]
+            assignment_id = assignment_ids[student_section]
+            try:
+                student_id = canvas.get_student_from_username(course_id, username)["id"]
+            except Exception as e:
+                logger.debug(e)
+                logger.error("Unable to lookup Canvas account ID")
+                return
+            try:
+                canvas.put_assignment_submission(course_id, assignment_id, student_id, score + "%")
+            except Exception as e:
+                print(e)
+                logger.debug(e)
+                logger.warning("Unable to update submission for Canvas assignment")
+        return float(score)
+    except RepoError as e:
+        logger.debug(e)
+        logger.warning("Unable to find repo for %s with URL %s", username, full_name)
+
 @requires_config_and_backend
 def score_assignments(conf, backend, args):
     """Goes through each student repository and grabs the most recent CI
     artifact, which contains their autograded score
     """
     hw_name = args.name
-    do_upload = args.upload
     section = args.section
     student = args.student
-    result_path = args.result_path
-    namespace = conf.namespace
-    semester = conf.semester
-    backend_conf = conf.backend
+    upload = args.upload
 
     roster = get_filtered_roster(conf.roster, section, student)
-
-    if do_upload:
-        canvas = CanvasAPI(conf["canvas-token"], conf["canvas-host"])
-        try:
-            section_ids, assignment_ids = lookup_canvas_ids(conf, canvas, hw_name)
-        except:
-            logger.error("Failed to lookup Canvas assignment IDs")
-            return
+    canvas = CanvasAPI(conf["canvas-token"], conf["canvas-host"])
+    try:
+        section_ids, assignment_ids = lookup_canvas_ids(conf, canvas, hw_name)
+    except:
+        logger.error("Failed to lookup Canvas assignment")
+        return
     count = 0
     scores = []
     for student in progress.iterate(roster):
-        username = student["username"]
-        student_section = student["section"]
-        full_name = backend.student_repo.build_name(semester, student_section,
-                                                    hw_name, username)
-
-        try:
-            repo = backend.student_repo(backend_conf, namespace, full_name)
-            if "id" not in student:
-                student["id"] = backend.repo.get_user_id(username, backend_conf)
-            score = get_most_recent_score(repo, student, result_path)
-            if score:
-                scores.append(float(score))
-            count += 1
-            if do_upload:
-                course_id = section_ids[student_section]
-                assignment_id = assignment_ids[student_section]
-                try:
-                    student_id = canvas.get_student_from_username(course_id, username)["id"]
-                except Exception as e:
-                    logger.debug(e)
-                    logger.warning("Unable to lookup Canvas account ID")
-                    continue
-                try:
-                    canvas.put_assignment_submission(course_id, assignment_id, student_id, score + "%")
-                except Exception as e:
-                    print(e)
-                    logger.debug(e)
-                    logger.warning("Unable to update submission for Canvas assignment")
-        except RepoError as e :
-            logger.debug(e)
-            logger.warning("Unable to find repo for %s with URL %s", username, full_name)
+        score = handle_scoring(conf, backend, args, student, canvas, section_ids, assignment_ids, upload)
+        if score is not None:
+            scores.append(score)
 
     print("Scored {} repositories.".format(count))
     print(scores)
@@ -160,10 +161,6 @@ def checkout_students(conf, backend, args):
     artifact, which contains their autograded score
     """
     hw_name = args.name
-    result_path = args.result_path
-    namespace = conf.namespace
-    semester = conf.semester
-    backend_conf = conf.backend
 
     roster = get_filtered_roster(conf.roster, args.section, None)
 
@@ -171,7 +168,7 @@ def checkout_students(conf, backend, args):
     try:
         section_ids, assignment_ids = lookup_canvas_ids(conf, canvas, hw_name)
     except:
-        logger.error("Failed to lookup Canvas assignment IDs")
+        logger.error("Failed to lookup Canvas assignment")
         return
 
     while True:
@@ -182,33 +179,7 @@ def checkout_students(conf, backend, args):
         if not student:
             continue
 
-        username = student["username"]
-        student_section = student["section"]
-        full_name = backend.student_repo.build_name(semester, student_section,
-                                                    hw_name, username)
-
-        try:
-            repo = backend.student_repo(backend_conf, namespace, full_name)
-            if "id" not in student:
-                student["id"] = backend.repo.get_user_id(username, backend_conf)
-            score = get_most_recent_score(repo, student, result_path)
-            course_id = section_ids[student_section]
-            assignment_id = assignment_ids[student_section]
-            try:
-                student_id = canvas.get_student_from_username(course_id, username)["id"]
-            except Exception as e:
-                logger.debug(e)
-                logger.warning("Unable to lookup Canvas account ID")
-                continue
-            try:
-                canvas.put_assignment_submission(course_id, assignment_id, student_id, score + "%")
-            except Exception as e:
-                print(e)
-                logger.debug(e)
-                logger.warning("Unable to update submission for Canvas assignment")
-        except RepoError as e:
-            logger.debug(e)
-            logger.warning("Unable to find repo for %s with URL %s", username, full_name)
+        score = handle_scoring(conf, backend, args, student, canvas, section_ids, assignment_ids)
 
 @requires_config_and_backend
 def integrity_check(conf, backend, args):
@@ -216,23 +187,13 @@ def integrity_check(conf, backend, args):
     during which students could push to their repository
     """
     hw_name = args.name
-    do_upload = args.upload
     student = args.student
     namespace = conf.namespace
     semester = conf.semester
     backend_conf = conf.backend
+    print("here 1")
+    roster = get_filtered_roster(conf.roster, args.section, None)
 
-    roster = get_filtered_roster(conf.roster, args.section)
-
-    if do_upload:
-        canvas = CanvasAPI(conf["canvas-token"], conf["canvas-host"])
-        try:
-            section_ids, assignment_ids = lookup_canvas_ids(conf, canvas, hw_name)
-        except:
-            logger.error("Failed to lookup Canvas assignment IDs")
-            return
-    count = 0
-    scores = []
     for student in progress.iterate(roster):
         username = student["username"]
         student_section = student["section"]
@@ -244,7 +205,9 @@ def integrity_check(conf, backend, args):
             commits = repo.list_commits()
             # Do some git stuff wit the commits
             # logger.warning("student %s modified a file", student['username'])
-        except RepoError as e :
+            for commit in commits:
+                print(repo.list_commit_files(commit["id"]))
+        except RepoError as e:
             logger.debug(e)
             logger.warning("Unable to find repo for %s with URL %s", username, full_name)
 
@@ -264,7 +227,7 @@ def setup_parser(parser):
                         help="ID of student to score")
     all_parser.add_argument("--upload", action="store_true",
                         help="Upload grades to Canvas")
-    all_parser.add_argument("--result_path", default="results.txt",
+    all_parser.add_argument("--path", default="results.txt",
                         help="Path within repo to grader results file")
     all_parser.set_defaults(run=score_assignments)
 
@@ -275,6 +238,8 @@ def setup_parser(parser):
                         help="Name of the assignment to score")
     checkout_parser.add_argument("--section", nargs="?",
                         help="Section to score")
+    checkout_parser.add_argument("--path", default="results.txt",
+                        help="Path within repo to grader results file")
     checkout_parser.set_defaults(run=checkout_students)
 
     integrity_parser = subparsers.add_parser(
@@ -286,8 +251,6 @@ def setup_parser(parser):
                         help="Section to check")
     integrity_parser.add_argument("--student", nargs=1,
                         help="ID of student to score")
-    integrity_parser.add_argument("--result_path", default="results.txt",
-                        help="Path within repo to grader results file")
     integrity_parser.set_defaults(run=integrity_check)
 
     make_help_parser(

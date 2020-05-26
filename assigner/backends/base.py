@@ -1,6 +1,6 @@
 import git
 import re
-from typing import Optional, Type, TypeVar
+from typing import Optional, Type, TypeVar, List
 
 
 class RepoError(Exception):
@@ -92,6 +92,9 @@ class RepoBase:
         raise NotImplementedError
 
     def list_commits(self, ref_name: str = "master") -> str:
+        raise NotImplementedError
+
+    def list_commit_files(self, commit_hash) -> List[str]:
         raise NotImplementedError
 
     def list_ci_jobs(self) -> str:
