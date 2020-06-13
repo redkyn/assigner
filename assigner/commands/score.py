@@ -1,6 +1,6 @@
 import logging
 import argparse
-from typing import Any, Dict, List, Optional, Tuple
+from typing import Any, Dict, List, Optional, Tuple, Callable
 
 from requests.exceptions import HTTPError
 
@@ -17,6 +17,27 @@ from assigner.config import Config
 help = "Retrieves scores from CI artifacts and optionally uploads to Canvas"
 
 logger = logging.getLogger(__name__)
+
+
+def requires_config_and_backend_and_canvas(
+    func: Callable[[Config, BackendBase, argparse.Namespace, CanvasAPI], None]
+) -> Callable[[Config, BackendBase, argparse.Namespace], None]:
+    """Provides a Canvas API instance depending on configuration."""
+
+    @requires_config_and_backend
+    def wrapper(
+        config: Config,
+        backend: BackendBase,
+        cmdargs: argparse.Namespace,
+        *args: Any,
+        **kwargs: Any
+    ) -> None:
+
+        canvas = CanvasAPI(config["canvas-token"], config["canvas-host"])
+
+        return func(config, backend, cmdargs, canvas, *args, **kwargs)
+
+    return wrapper
 
 
 def parse_assignment_name(name: str) -> str:
@@ -74,7 +95,8 @@ def lookup_canvas_ids(
     for section, course_id in section_ids.items():
         try:
             canvas_assignments = canvas.get_course_assignments(course_id, min_name)
-        except:
+        except Exception as e:
+            print(e, type(e))
             logger.error("Failed to pull assignment list from Canvas")
             raise AssignmentNotFound
         if len(canvas_assignments) != 1:
@@ -86,6 +108,16 @@ def lookup_canvas_ids(
             raise AssignmentNotFound
         assignment_ids[section] = canvas_assignments[0]["id"]
     return (section_ids, assignment_ids)
+
+
+def get_unlock_time(conf: Config, canvas: CanvasAPI, hw_name: str) -> str:
+    section_ids, assignment_ids = lookup_canvas_ids(conf, canvas, hw_name)
+    unlock_times: List[str] = []
+    for section, s_id in section_ids.items():
+        assignment = canvas.get_assignment(s_id, assignment_ids[section])
+        unlock_time = assignment["unlock_at"]
+        unlock_times.append(unlock_time)
+    return max(unlock_times)
 
 
 def student_search(
@@ -163,9 +195,9 @@ def handle_scoring(
     return score
 
 
-@requires_config_and_backend
+@requires_config_and_backend_and_canvas
 def score_assignments(
-    conf: Config, backend: BackendBase, args: argparse.Namespace
+    conf: Config, backend: BackendBase, args: argparse.Namespace, canvas: CanvasAPI
 ) -> None:
     """Goes through each student repository and grabs the most recent CI
     artifact, which contains their autograded score
@@ -176,7 +208,7 @@ def score_assignments(
     upload = args.upload
 
     roster = get_filtered_roster(conf.roster, section, student)
-    canvas = CanvasAPI(conf["canvas-token"], conf["canvas-host"])
+    # canvas = CanvasAPI(conf["canvas-token"], conf["canvas-host"])
     try:
         section_ids, assignment_ids = lookup_canvas_ids(conf, canvas, hw_name)
     except:
@@ -195,8 +227,10 @@ def score_assignments(
     print(scores)
 
 
-@requires_config_and_backend
-def checkout_students(conf: Config, backend: BackendBase, args: argparse.Namespace):
+@requires_config_and_backend_and_canvas
+def checkout_students(
+    conf: Config, backend: BackendBase, args: argparse.Namespace, canvas: CanvasAPI
+) -> None:
     """Interactively prompts for student info and grabs the most recent CI
     artifact, which contains their autograded score
     """
@@ -204,7 +238,7 @@ def checkout_students(conf: Config, backend: BackendBase, args: argparse.Namespa
 
     roster = get_filtered_roster(conf.roster, args.section, None)
 
-    canvas = CanvasAPI(conf["canvas-token"], conf["canvas-host"])
+    # canvas = CanvasAPI(conf["canvas-token"], conf["canvas-host"])
     try:
         section_ids, assignment_ids = lookup_canvas_ids(conf, canvas, hw_name)
     except:
@@ -224,8 +258,10 @@ def checkout_students(conf: Config, backend: BackendBase, args: argparse.Namespa
         )
 
 
-@requires_config_and_backend
-def integrity_check(conf: Config, backend: BackendBase, args: argparse.Namespace):
+@requires_config_and_backend_and_canvas
+def integrity_check(
+    conf: Config, backend: BackendBase, args: argparse.Namespace, canvas: CanvasAPI
+) -> None:
     """Checks that none of the grading files were modified in the timeframe
     during which students could push to their repository
     """
@@ -237,6 +273,8 @@ def integrity_check(conf: Config, backend: BackendBase, args: argparse.Namespace
     backend_conf = conf.backend
     roster = get_filtered_roster(conf.roster, args.section, None)
 
+    lock_time = get_unlock_time(conf, canvas, hw_name)
+
     for student in progress.iterate(roster):
         username = student["username"]
         student_section = student["section"]
@@ -246,7 +284,7 @@ def integrity_check(conf: Config, backend: BackendBase, args: argparse.Namespace
 
         try:
             repo = backend.student_repo(backend_conf, namespace, full_name)
-            commits = repo.list_commits()
+            commits = repo.list_commits("master", {"since": lock_time})
             # Do some git stuff wit the commits
             # logger.warning("student %s modified a file", student['username'])
             for commit in commits:
