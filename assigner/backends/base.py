@@ -1,21 +1,28 @@
 import git
 import re
-from typing import Optional, Type, TypeVar, List
+from typing import Optional, Type, TypeVar, List, Any, Dict
 
 
 class RepoError(Exception):
     pass
 
 
-T = TypeVar('T', bound='RepoBase')
+T = TypeVar("T", bound="RepoBase")
+
+
 class RepoBase:
     """Generic Repo base"""
 
-    PATH_RE = re.compile(
-        r"^/(?P<namespace>[\w\-\.]+)/(?P<name>[\w\-\.]+)\.git$"
-    )
+    PATH_RE = re.compile(r"^/(?P<namespace>[\w\-\.]+)/(?P<name>[\w\-\.]+)\.git$")
 
-    def __init__(self, url_base: str, namespace: str, name: str, token: str, url: Optional[str] = None):
+    def __init__(
+        self,
+        url_base: str,
+        namespace: str,
+        name: str,
+        token: str,
+        url: Optional[str] = None,
+    ):
         raise NotImplementedError
 
     @classmethod
@@ -63,7 +70,9 @@ class RepoBase:
     def pull(self, branch: str) -> None:
         raise NotImplementedError
 
-    def clone_to(self, dir_name: str, branch: Optional[str], attempts: Optional[int]) -> None:
+    def clone_to(
+        self, dir_name: str, branch: Optional[str], attempts: Optional[int]
+    ) -> None:
         raise NotImplementedError
 
     def add_local_copy(self, dir_name: str) -> None:
@@ -91,13 +100,15 @@ class RepoBase:
     def delete_member(self, user_id: str) -> str:
         raise NotImplementedError
 
-    def list_commits(self, ref_name: str = "master") -> str:
+    def list_commits(
+        self, ref_name: str = "master", other_params: Dict[str, str] = {}
+    ) -> str:
         raise NotImplementedError
 
     def list_commit_files(self, commit_hash) -> List[str]:
         raise NotImplementedError
 
-    def list_ci_jobs(self) -> str:
+    def list_ci_jobs(self) -> List[Dict[str, Any]]:
         raise NotImplementedError
 
     def get_ci_artifact(self, job_id: str, artifact_path: str) -> str:
@@ -121,7 +132,12 @@ class RepoBase:
     def unarchive(self) -> str:
         raise NotImplementedError
 
-    def protect(self, branch: str = "master", developer_push: bool = True, developer_merge: bool = True) -> str:
+    def protect(
+        self,
+        branch: str = "master",
+        developer_push: bool = True,
+        developer_merge: bool = True,
+    ) -> str:
         raise NotImplementedError
 
     def unprotect(self, branch: str = "master") -> str:
@@ -134,7 +150,9 @@ class RepoBase:
         raise NotImplementedError
 
 
-T = TypeVar('T', bound='StudentRepoBase')
+T = TypeVar("T", bound="StudentRepoBase")
+
+
 class StudentRepoBase(RepoBase):
     """Repository for a student's solution to a homework assignment"""
 
@@ -151,9 +169,12 @@ class StudentRepoBase(RepoBase):
         raise NotImplementedError
 
 
-T = TypeVar('T', bound='StudentRepoBase')
+T = TypeVar("T", bound="StudentRepoBase")
+
+
 class TemplateRepoBase(RepoBase):
     """A repo from which StudentRepos are cloned from (Homework Repo)."""
+
     @classmethod
     def new(cls, name: str, namespace: str, config) -> T:
         raise NotImplementedError
@@ -166,7 +187,8 @@ class BackendBase:
     """
     Common abstract base backend for all assigner backends (gitlab or mock).
     """
-    repo = RepoBase # type: RepoBase
-    template_repo = TemplateRepoBase # type: TemplateRepoBase
-    student_repo = StudentRepoBase # type: StudentRepoBase
+
+    repo = RepoBase  # type: RepoBase
+    template_repo = TemplateRepoBase  # type: TemplateRepoBase
+    student_repo = StudentRepoBase  # type: StudentRepoBase
     access = None

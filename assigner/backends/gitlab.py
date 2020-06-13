@@ -1,4 +1,4 @@
-#pylint: disable=dangerous-default-value
+# pylint: disable=dangerous-default-value
 import git
 import json
 import logging
@@ -17,7 +17,7 @@ from assigner.backends.base import (
     RepoBase,
     RepoError,
     StudentRepoBase,
-    TemplateRepoBase
+    TemplateRepoBase,
 )
 
 from assigner.backends.gitlab_exceptions import (
@@ -25,9 +25,7 @@ from assigner.backends.gitlab_exceptions import (
     raiseUserNotAssigned,
 )
 
-from assigner.backends.git_exceptions import (
-    raiseRetryableGitError,
-)
+from assigner.backends.git_exceptions import raiseRetryableGitError
 from assigner.backends.exceptions import RetryableGitError
 
 # Transparently use a common TLS session for each request
@@ -36,6 +34,7 @@ requests = requests.Session()
 
 class Visibility(Enum):
     """Gitlab API values for repo visibility"""
+
     private = 0
     internal = 10
     public = 20
@@ -52,9 +51,7 @@ class Access(Enum):
 class GitlabRepo(RepoBase):
     """Gitlab repo; manages API requests and various metadata"""
 
-    PATH_RE = re.compile(
-        r"^/(?P<namespace>[\w\-\.]+)/(?P<name>[\w\-\.]+)\.git$"
-    )
+    PATH_RE = re.compile(r"^/(?P<namespace>[\w\-\.]+)/(?P<name>[\w\-\.]+)\.git$")
 
     @classmethod
     def build_url(cls, config, namespace, name):
@@ -75,8 +72,8 @@ class GitlabRepo(RepoBase):
         match = cls.PATH_RE.match(parts.path)
         if not match:
             raise RepoError(
-                "Bad path. Can't separate namespace " +
-                "from repo name {}.".format(parts.path)
+                "Bad path. Can't separate namespace "
+                + "from repo name {}.".format(parts.path)
             )
 
         namespace = match.group("namespace")
@@ -131,7 +128,7 @@ class GitlabRepo(RepoBase):
         r.raise_for_status()
         return r.json()
 
-    #pylint: disable=super-init-not-called
+    # pylint: disable=super-init-not-called
     def __init__(self, config, namespace, name, url=None):
         self.config = config
         self.namespace = namespace
@@ -169,8 +166,11 @@ class GitlabRepo(RepoBase):
                 self._info = self._gl_get(url)
             except HTTPError as e:
                 if e.response.status_code == 404:
-                    logging.debug("Could not find repo with url %s/api/v4%s.",
-                                  self.config["host"], url)
+                    logging.debug(
+                        "Could not find repo with url %s/api/v4%s.",
+                        self.config["host"],
+                        url,
+                    )
                     self._info = None
                 else:
                     raise
@@ -226,7 +226,7 @@ class GitlabRepo(RepoBase):
             if attempts > 1:
                 logging.debug("Attempt %d of %d...", attempt + 1, attempts)
 
-            try: # for exp. backoff
+            try:  # for exp. backoff
                 try:
                     if branch:
                         self._repo = git.Repo.clone_from(self.ssh_url, dir_name)
@@ -237,7 +237,7 @@ class GitlabRepo(RepoBase):
                     else:
                         self._repo = git.Repo.clone_from(self.ssh_url, dir_name)
                     logging.debug("Cloned %s.", self.name)
-                #pylint: disable=no-member
+                # pylint: disable=no-member
                 except git.exc.GitCommandError as e:
                     # GitPython may delete this directory
                     # and the caller may have opinions about that,
@@ -289,42 +289,28 @@ class GitlabRepo(RepoBase):
         data = cls._cls_gl_get(config, "/users", params={"search": username})
 
         if not data:
-            logging.warning(
-                "Did not find any users matching %s.", username
-            )
+            logging.warning("Did not find any users matching %s.", username)
             raise RepoError("No user {}.".format(username))
 
         for result in data:
             if result["username"] == username:
-                logging.info(
-                    "Got id %s for user %s.", data[0]["id"], username
-                )
+                logging.info("Got id %s for user %s.", data[0]["id"], username)
                 return result["id"]
 
         # Fall back to first result if all else fails
         logging.warning("Got %s users for %s.", len(data), username)
         logging.warning("Failed to find an exact match for %s.", username)
-        logging.info(
-            "Got id %s for user %s.", data[0]["id"], data[0]["username"]
-        )
+        logging.info("Got id %s for user %s.", data[0]["id"], data[0]["username"])
         return data[0]["id"]
 
     def list_members(self):
-        return self._gl_get(
-            "/projects/{}/members".format(self.id)
-        )
+        return self._gl_get("/projects/{}/members".format(self.id))
 
     def get_member(self, user_id):
-        return self._gl_get(
-            "/projects/{}/members/{}".format(self.id, user_id)
-        )
+        return self._gl_get("/projects/{}/members/{}".format(self.id, user_id))
 
     def add_member(self, user_id, level):
-        payload = {
-            "id": self.id,
-            "user_id": user_id,
-            "access_level": level.value
-        }
+        payload = {"id": self.id, "user_id": user_id, "access_level": level.value}
         try:
             return self._gl_post("/projects/{}/members".format(self.id), payload)
         except HTTPError as e:
@@ -332,11 +318,7 @@ class GitlabRepo(RepoBase):
             raise e
 
     def edit_member(self, user_id, level):
-        payload = {
-            "id": self.id,
-            "user_id": user_id,
-            "access_level": level.value
-        }
+        payload = {"id": self.id, "user_id": user_id, "access_level": level.value}
         try:
             return self._gl_put(
                 "/projects/{}/members/{}".format(self.id, user_id), payload
@@ -347,61 +329,44 @@ class GitlabRepo(RepoBase):
             raise e
 
     def delete_member(self, user_id):
-        return self._gl_delete(
-            "/projects/{}/members/{}".format(self.id, user_id)
-        )
+        return self._gl_delete("/projects/{}/members/{}".format(self.id, user_id))
 
     def is_locked(self):
         access = [Access(m["access_level"]) for m in self.list_members()]
         return all([a in (Access.guest, Access.reporter) for a in access])
 
-    def list_commits(self, ref_name="master"):
-        params = {
-            "id": self.id,
-            "ref_name": ref_name
-        }
-        return self._gl_get(
-            "/projects/{}/repository/commits".format(self.id), params
-        )
-    
+    def list_commits(self, ref_name="master", other_params={}):
+        params = {"id": self.id, "ref_name": ref_name}
+        params.update(other_params)
+        return self._gl_get("/projects/{}/repository/commits".format(self.id), params)
+
     def list_commit_files(self, commit_hash) -> List[str]:
-        params = {
-            "id": self.id,
-            "sha": commit_hash
-        }
+        params = {"id": self.id, "sha": commit_hash}
 
         raw_diff = self._gl_get(
-            "/projects/{}/repository/commits/{}/diff".format(self.id, commit_hash), params
+            "/projects/{}/repository/commits/{}/diff".format(self.id, commit_hash),
+            params,
         )
         return [file["new_path"] for file in raw_diff]
 
     def list_ci_jobs(self):
-        params = {
-            "id": self.id
-        }
-        return self._gl_get(
-            "/projects/{}/jobs".format(self.id), params
-        )
+        params = {"id": self.id}
+        return self._gl_get("/projects/{}/jobs".format(self.id), params)
 
     def get_ci_artifact(self, job_id, artifact_path):
-        params = {
-            "id": self.id,
-            "job_id": job_id,
-            "artifact_path": artifact_path
-        }
+        params = {"id": self.id, "job_id": job_id, "artifact_path": artifact_path}
         return self._gl_get(
-            "/projects/{}/jobs/{}/artifacts/{}".format(self.id, job_id, artifact_path), params
+            "/projects/{}/jobs/{}/artifacts/{}".format(self.id, job_id, artifact_path),
+            params,
         )
 
     def list_pushes(self):
-        return self._gl_get(
-            "/projects/{}/events?action=pushed".format(self.id)
-        )
+        return self._gl_get("/projects/{}/events?action=pushed".format(self.id))
 
     def get_last_HEAD_commit(self, ref="master"):
-        matching_pushes = list(filter(
-            lambda push: push['push_data']['ref'] == ref, self.list_pushes()
-        ))
+        matching_pushes = list(
+            filter(lambda push: push["push_data"]["ref"] == ref, self.list_pushes())
+        )
         commits = self.list_commits(ref)
 
         if not commits:
@@ -410,17 +375,18 @@ class GitlabRepo(RepoBase):
         HEAD = commits[0]
         # Gitlab's commit created_at time uses the git metadata;
         # rather than trusting students, we get the time the commit was pushed at
-        if matching_pushes and HEAD['id'] == matching_pushes[0]['push_data']['commit_to']:
+        if (
+            matching_pushes
+            and HEAD["id"] == matching_pushes[0]["push_data"]["commit_to"]
+        ):
             # For whatever reason, Gitlab uses a different time format here than for commits...
-            unmangled_time = matching_pushes[0]['created_at'][:-1] + "-0000"
-            HEAD['created_at'] = unmangled_time
+            unmangled_time = matching_pushes[0]["created_at"][:-1] + "-0000"
+            HEAD["created_at"] = unmangled_time
 
         return HEAD
 
     def list_branches(self):
-        return self._gl_get(
-            "/projects/{}/repository/branches".format(self.id)
-        )
+        return self._gl_get("/projects/{}/repository/branches".format(self.id))
 
     def get_branch(self, branch):
         return self._gl_get(
@@ -439,12 +405,15 @@ class GitlabRepo(RepoBase):
             "developers_can_push": developer_push,
             "developers_can_merge": developer_merge,
         }
-        return self._gl_put("/projects/{}/repository/branches/{}/protect"
-                            .format(self.id, branch), params)
+        return self._gl_put(
+            "/projects/{}/repository/branches/{}/protect".format(self.id, branch),
+            params,
+        )
 
     def unprotect(self, branch="master"):
-        return self._gl_put("/projects/{}/repository/branches/{}/unprotect"
-                            .format(self.id, branch))
+        return self._gl_put(
+            "/projects/{}/repository/branches/{}/unprotect".format(self.id, branch)
+        )
 
     def unlock(self, student_id: str) -> None:
         self.edit_member(student_id, Access.developer)
@@ -453,35 +422,28 @@ class GitlabRepo(RepoBase):
         self.edit_member(student_id, Access.reporter)
 
     def _gl_get(self, path, params={}):
-        return self.__class__._cls_gl_get(
-            self.config, path, params
-        )
+        return self.__class__._cls_gl_get(self.config, path, params)
 
     def _gl_post(self, path, payload={}, params={}):
-        return self.__class__._cls_gl_post(
-            self.config, path, payload, params
-        )
+        return self.__class__._cls_gl_post(self.config, path, payload, params)
 
     def _gl_put(self, path, payload={}, params={}):
-        return self.__class__._cls_gl_put(
-            self.config, path, payload, params
-        )
+        return self.__class__._cls_gl_put(self.config, path, payload, params)
 
     def _gl_delete(self, path, params={}):
-        return self.__class__._cls_gl_delete(
-            self.config, path, params
-        )
+        return self.__class__._cls_gl_delete(self.config, path, params)
 
 
 class GitlabTemplateRepo(GitlabRepo, TemplateRepoBase):
-
     @classmethod
     def new(cls, name, namespace, config):
         namespaces = cls._cls_gl_get(config, "/namespaces", {"search": namespace})
         if len(namespaces) > 1:
             logging.warning(
                 "%s namespaces match %s; defaulting to namespace %s.",
-                len(namespaces), namespace, namespaces[0]["path"]
+                len(namespaces),
+                namespace,
+                namespaces[0]["path"],
             )
             logging.warning(
                 "(please update the configuration in your namespace to "
@@ -489,9 +451,7 @@ class GitlabTemplateRepo(GitlabRepo, TemplateRepoBase):
             )
 
         logging.debug(
-            "Using namespace %s with ID %s.",
-            namespaces[0]["path"],
-            namespaces[0]["id"]
+            "Using namespace %s with ID %s.", namespaces[0]["path"], namespaces[0]["id"]
         )
 
         payload = {
@@ -510,8 +470,7 @@ class GitlabTemplateRepo(GitlabRepo, TemplateRepoBase):
         return cls.from_url(result["http_url_to_repo"], config["token"])
 
     def push_to(self, student_repo, branch="master"):
-        r = git.Remote.add(self.repo, student_repo.name,
-                           student_repo.ssh_url)
+        r = git.Remote.add(self.repo, student_repo.name, student_repo.ssh_url)
         r.push(branch)
         logging.debug("Pushed %s to %s.", self.name, student_repo.name)
 
@@ -544,7 +503,7 @@ class GitlabStudentRepo(GitlabRepo, StudentRepoBase):
             "section": section,
             "assignment": assignment,
             # Replace .s with -s
-            "user": user.translate(str.maketrans(".", "-"))
+            "user": user.translate(str.maketrans(".", "-")),
         }
 
         return "{semester}-{section}-{assignment}-{user}".format(**fmt)
@@ -558,7 +517,8 @@ class GitlabBackend(BackendBase):
     """
     Common abstract base backend for all assigner backends (gitlab or mock).
     """
-    repo = GitlabRepo # type: RepoBase
-    template_repo = GitlabTemplateRepo # type: TemplateRepoBase
-    student_repo = GitlabStudentRepo # type: StudentRepoBase
+
+    repo = GitlabRepo  # type: RepoBase
+    template_repo = GitlabTemplateRepo  # type: TemplateRepoBase
+    student_repo = GitlabStudentRepo  # type: StudentRepoBase
     access = Access
