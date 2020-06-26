@@ -6,7 +6,6 @@ from requests.exceptions import HTTPError
 
 from redkyn.canvas import CanvasAPI
 from redkyn.canvas.exceptions import CourseNotFound, AssignmentNotFound
-from redkyn.canvas.utils import lookup_canvas_ids
 
 from assigner import make_help_parser
 from assigner.backends.base import RepoError, RepoBase, BackendBase
@@ -41,6 +40,20 @@ def requires_config_and_backend_and_canvas(
     return wrapper
 
 
+def parse_assignment_name(name: str) -> str:
+    """Removes the tail of a string starting with the
+    character immediately following the first integer
+    sequence - i.e. reduces "hw1-first-assignment" into
+    "hw1"
+    """
+    idx = 0
+    while idx < len(name) and not name[idx].isdigit():
+        idx += 1
+    while idx < len(name) and name[idx].isdigit():
+        idx += 1
+    return name[:idx]
+
+
 def get_most_recent_score(
     repo: RepoBase, student: Dict[str, Any], result_path: str
 ) -> float:
@@ -64,10 +77,41 @@ def get_most_recent_score(
     return float(score)
 
 
+def lookup_canvas_ids(
+    conf: Config, canvas: CanvasAPI, hw_name: str
+) -> Tuple[Dict[str, int], Dict[str, int]]:
+    if "canvas-courses" not in conf:
+        logger.error(
+            "canvas-course configuration is missing! Please set the "
+            "Canvas course ID token before attempting to upload scores "
+            "to Canvas"
+        )
+        print("Import from canvas failed: missing Canvas course ID.")
+        raise CourseNotFound
+    courses = conf["canvas-courses"]
+    section_ids = {course["section"]: course["id"] for course in courses}
+    min_name = parse_assignment_name(hw_name)
+    assignment_ids = {}
+    for section, course_id in section_ids.items():
+        try:
+            canvas_assignments = canvas.get_course_assignments(course_id, min_name)
+        except Exception as e:
+            print(e, type(e))
+            logger.error("Failed to pull assignment list from Canvas")
+            raise AssignmentNotFound
+        if len(canvas_assignments) != 1:
+            logger.error(
+                "Could not uniquely identify Canvas assignment from name %s and section %s",
+                min_name,
+                section,
+            )
+            raise AssignmentNotFound
+        assignment_ids[section] = canvas_assignments[0]["id"]
+    return (section_ids, assignment_ids)
+
+
 def get_unlock_time(conf: Config, canvas: CanvasAPI, hw_name: str) -> str:
-    section_ids, assignment_ids = lookup_canvas_ids(
-        conf["canvas-courses"], canvas, hw_name
-    )
+    section_ids, assignment_ids = lookup_canvas_ids(conf, canvas, hw_name)
     unlock_times: List[str] = []
     for section, s_id in section_ids.items():
         assignment = canvas.get_assignment(s_id, assignment_ids[section])
@@ -166,9 +210,7 @@ def score_assignments(
     roster = get_filtered_roster(conf.roster, section, student)
     # canvas = CanvasAPI(conf["canvas-token"], conf["canvas-host"])
     try:
-        section_ids, assignment_ids = lookup_canvas_ids(
-            conf["canvas-courses"], canvas, hw_name
-        )
+        section_ids, assignment_ids = lookup_canvas_ids(conf, canvas, hw_name)
     except:
         logger.error("Failed to lookup Canvas assignment")
         return
@@ -198,9 +240,7 @@ def checkout_students(
 
     # canvas = CanvasAPI(conf["canvas-token"], conf["canvas-host"])
     try:
-        section_ids, assignment_ids = lookup_canvas_ids(
-            conf["canvas-courses"], canvas, hw_name
-        )
+        section_ids, assignment_ids = lookup_canvas_ids(conf, canvas, hw_name)
     except:
         logger.error("Failed to lookup Canvas assignment")
         return
