@@ -13,6 +13,7 @@ from assigner.backends.decorators import requires_config_and_backend
 from assigner.roster_util import get_filtered_roster
 from assigner import progress
 from assigner.config import Config
+import re
 
 help = "Retrieves scores from CI artifacts and optionally uploads to Canvas"
 
@@ -38,20 +39,6 @@ def requires_config_and_backend_and_canvas(
         return func(config, backend, cmdargs, canvas, *args, **kwargs)
 
     return wrapper
-
-
-def parse_assignment_name(name: str) -> str:
-    """Removes the tail of a string starting with the
-    character immediately following the first integer
-    sequence - i.e. reduces "hw1-first-assignment" into
-    "hw1"
-    """
-    idx = 0
-    while idx < len(name) and not name[idx].isdigit():
-        idx += 1
-    while idx < len(name) and name[idx].isdigit():
-        idx += 1
-    return name[:idx]
 
 
 def get_most_recent_score(
@@ -90,7 +77,7 @@ def lookup_canvas_ids(
         raise CourseNotFound
     courses = conf["canvas-courses"]
     section_ids = {course["section"]: course["id"] for course in courses}
-    min_name = parse_assignment_name(hw_name)
+    min_name = re.search(r"[A-Za-z]+\d+", hw_name).group(0)
     assignment_ids = {}
     for section, course_id in section_ids.items():
         try:
@@ -108,16 +95,6 @@ def lookup_canvas_ids(
             raise AssignmentNotFound
         assignment_ids[section] = canvas_assignments[0]["id"]
     return (section_ids, assignment_ids)
-
-
-def get_unlock_time(conf: Config, canvas: CanvasAPI, hw_name: str) -> str:
-    section_ids, assignment_ids = lookup_canvas_ids(conf, canvas, hw_name)
-    unlock_times: List[str] = []
-    for section, s_id in section_ids.items():
-        assignment = canvas.get_assignment(s_id, assignment_ids[section])
-        unlock_time = assignment["unlock_at"]
-        unlock_times.append(unlock_time)
-    return max(unlock_times)
 
 
 def student_search(
@@ -208,7 +185,6 @@ def score_assignments(
     upload = args.upload
 
     roster = get_filtered_roster(conf.roster, section, student)
-    # canvas = CanvasAPI(conf["canvas-token"], conf["canvas-host"])
     try:
         section_ids, assignment_ids = lookup_canvas_ids(conf, canvas, hw_name)
     except:
@@ -238,7 +214,6 @@ def checkout_students(
 
     roster = get_filtered_roster(conf.roster, args.section, None)
 
-    # canvas = CanvasAPI(conf["canvas-token"], conf["canvas-host"])
     try:
         section_ids, assignment_ids = lookup_canvas_ids(conf, canvas, hw_name)
     except:
@@ -258,22 +233,28 @@ def checkout_students(
         )
 
 
-@requires_config_and_backend_and_canvas
+def verify_commit(auth_ids: List[str], repo: RepoBase, commit_hash: str) -> bool:
+    try:
+        return repo.get_commit_signature_id(commit_hash) in auth_ids
+    except Exception as e:
+        logging.debug("%s: %s" % (str(type(e)), str(e)))
+        return False
+
+
+@requires_config_and_backend
 def integrity_check(
-    conf: Config, backend: BackendBase, args: argparse.Namespace, canvas: CanvasAPI
+    conf: Config, backend: BackendBase, args: argparse.Namespace
 ) -> None:
     """Checks that none of the grading files were modified in the timeframe
     during which students could push to their repository
     """
     hw_name = args.name
     student = args.student
-    files_to_check = args.files
+    files_to_check = set(args.files)
     namespace = conf.namespace
     semester = conf.semester
     backend_conf = conf.backend
     roster = get_filtered_roster(conf.roster, args.section, None)
-
-    lock_time = get_unlock_time(conf, canvas, hw_name)
 
     for student in progress.iterate(roster):
         username = student["username"]
@@ -284,15 +265,18 @@ def integrity_check(
 
         try:
             repo = backend.student_repo(backend_conf, namespace, full_name)
-            commits = repo.list_commits("master", {"since": lock_time})
-            # Do some git stuff wit the commits
-            # logger.warning("student %s modified a file", student['username'])
+            auth_ids = repo.list_authorized_gpg_ids()
+            commits = repo.list_commits("master")
             for commit in commits:
-                for file in repo.list_commit_files(commit["id"]):
-                    if file in files_to_check:
-                        logger.warning(
-                            "student %s modified a file: %s", student["username"], file
-                        )
+                modified_files = files_to_check.intersection(
+                    repo.list_commit_files(commit["id"])
+                )
+                if modified_files and not verify_commit(auth_ids, repo, commit["id"]):
+                    logger.warning(
+                        "student %s modified a file: %s",
+                        student["username"],
+                        str(modified_files),
+                    )
         except RepoError as e:
             logger.debug(e)
             logger.warning(
