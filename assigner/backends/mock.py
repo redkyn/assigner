@@ -179,6 +179,9 @@ class MockRepo(RepoBase):
     def list_members(self):
         return [MagicMock(), MagicMock(), MagicMock()]
 
+    def list_authorized_gpg_ids(self):
+        return MagicMock()
+
     def get_member(self, user_id):
         return MagicMock()
 
@@ -191,10 +194,13 @@ class MockRepo(RepoBase):
     def delete_member(self, user_id):
         return MagicMock()
 
-    def list_commits(self, ref_name="master", other_params={}):
+    def list_commits(self, ref_name="master"):
         return MagicMock()
 
-    def list_commit_files(self, commit_hash) -> List[str]:
+    def list_commit_files(self, commit_hash: str) -> List[str]:
+        return MagicMock()
+
+    def get_commit_signature_id(self, commit_hash: str) -> str:
         return MagicMock()
 
     def list_ci_jobs(self):

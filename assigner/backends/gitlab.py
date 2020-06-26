@@ -306,6 +306,15 @@ class GitlabRepo(RepoBase):
     def list_members(self):
         return self._gl_get("/projects/{}/members".format(self.id))
 
+    def list_authorized_gpg_ids(self):
+        members = self._gl_get("/projects/{}/members/all".format(self.id))
+        authorized_users = [user for user in members if user["access_level"] >= 40]
+        key_ids = []
+        for user in authorized_users:
+            status = self._gl_get("/users/{}/status".format(user["id"]))
+            key_ids.append(status["message"])
+        return key_ids
+
     def get_member(self, user_id):
         return self._gl_get("/projects/{}/members/{}".format(self.id, user_id))
 
@@ -335,9 +344,8 @@ class GitlabRepo(RepoBase):
         access = [Access(m["access_level"]) for m in self.list_members()]
         return all([a in (Access.guest, Access.reporter) for a in access])
 
-    def list_commits(self, ref_name="master", other_params={}):
+    def list_commits(self, ref_name="master"):
         params = {"id": self.id, "ref_name": ref_name}
-        params.update(other_params)
         return self._gl_get("/projects/{}/repository/commits".format(self.id), params)
 
     def list_commit_files(self, commit_hash) -> List[str]:
@@ -348,6 +356,12 @@ class GitlabRepo(RepoBase):
             params,
         )
         return [file["new_path"] for file in raw_diff]
+
+    def get_commit_signature_id(self, commit_hash) -> str:
+        signature = self._gl_get(
+            "/projects/{}/repository/commits/{}/signature".format(self.id, commit_hash)
+        )
+        return signature["gpg_key_primary_keyid"]
 
     def list_ci_jobs(self):
         params = {"id": self.id}
