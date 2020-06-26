@@ -8,30 +8,9 @@ from assigner.backends.exceptions import UserInAssignerGroup
 from assigner.roster_util import get_filtered_roster
 from assigner import progress
 
-from redkyn.canvas import CanvasAPI
-from redkyn.canvas.utils import lookup_canvas_ids
-import datetime
-
 help = "Grants students access to their repos"
 
 logger = logging.getLogger(__name__)
-
-
-def set_unlock_time(conf, hw_name: str) -> None:
-    canvas = CanvasAPI(conf["canvas-token"], conf["canvas-host"])
-    section_ids, assignment_ids = lookup_canvas_ids(
-        conf["canvas-courses"], canvas, hw_name
-    )
-    for section, s_id in section_ids.items():
-        canvas.put_assignment(
-            s_id,
-            assignment_ids[section],
-            {
-                "assignment[unlock_at]": datetime.datetime.now().strftime(
-                    "%Y-%m-%dT%H:%M:%S%Z"
-                )
-            },
-        )
 
 
 def open_assignment(repo, student, access):
@@ -40,9 +19,7 @@ def open_assignment(repo, student, access):
         repo.add_member(student["id"], access)
     except HTTPError as e:
         if e.response.status_code == 409:
-            logging.warning(
-                "%s is already a member of %s.", student["username"], repo.name
-            )
+            logging.warning("%s is already a member of %s.", student["username"], repo.name)
         else:
             raise
 
@@ -59,17 +36,12 @@ def open_all_assignments(conf, backend, args):
 
     roster = get_filtered_roster(conf.roster, args.section, args.student)
 
-    # Don't reset the unlock when changing perms for single student
-    if not args.student:
-        set_unlock_time(conf, hw_name)
-
     count = 0
     for student in progress.iterate(roster):
         username = student["username"]
         student_section = student["section"]
-        full_name = backend.student_repo.build_name(
-            semester, student_section, hw_name, username
-        )
+        full_name = backend.student_repo.build_name(semester, student_section,
+                                                    hw_name, username)
 
         try:
             repo = backend.student_repo(backend_conf, namespace, full_name)
@@ -79,9 +51,7 @@ def open_all_assignments(conf, backend, args):
             open_assignment(repo, student, backend.access.developer)
             count += 1
         except UserInAssignerGroup:
-            logging.info(
-                "%s already has access via group membership, skipping...", username
-            )
+            logging.info("%s already has access via group membership, skipping...", username)
         except RepoError:
             logging.warning("Could not add %s to %s.", username, full_name)
 
@@ -89,9 +59,10 @@ def open_all_assignments(conf, backend, args):
 
 
 def setup_parser(parser):
-    parser.add_argument("name", help="Name of the assignment to grant access to")
-    parser.add_argument("--section", nargs="?", help="Section to grant access to")
-    parser.add_argument(
-        "--student", metavar="id", help="ID of the student to assign to."
-    )
+    parser.add_argument("name",
+                        help="Name of the assignment to grant access to")
+    parser.add_argument("--section", nargs="?",
+                        help="Section to grant access to")
+    parser.add_argument("--student", metavar="id",
+                        help="ID of the student to assign to.")
     parser.set_defaults(run=open_all_assignments)
