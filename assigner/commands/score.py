@@ -233,9 +233,12 @@ def checkout_students(
         )
 
 
-def verify_commit(auth_ids: List[str], repo: RepoBase, commit_hash: str) -> bool:
+def verify_commit(auth_emails: List[str], repo: RepoBase, commit_hash: str) -> bool:
     try:
-        return repo.get_commit_signature_id(commit_hash) in auth_ids
+        email = repo.get_commit_signature_email(commit_hash)
+        if not email:
+            return False
+        return email in auth_emails
     except Exception as e:
         logging.debug("%s: %s" % (str(type(e)), str(e)))
         return False
@@ -265,13 +268,15 @@ def integrity_check(
 
         try:
             repo = backend.student_repo(backend_conf, namespace, full_name)
-            auth_ids = repo.list_authorized_gpg_ids()
+            auth_emails = repo.list_authorized_emails()
             commits = repo.list_commits("master")
             for commit in commits:
                 modified_files = files_to_check.intersection(
                     repo.list_commit_files(commit["id"])
                 )
-                if modified_files and not verify_commit(auth_ids, repo, commit["id"]):
+                if modified_files and not verify_commit(
+                    auth_emails, repo, commit["id"]
+                ):
                     logger.warning(
                         "student %s modified a file: %s",
                         student["username"],
