@@ -88,7 +88,7 @@ class RepoBase:
     def list_members(self) -> str:
         raise NotImplementedError
 
-    def list_authorized_gpg_ids(self) -> List[str]:
+    def list_authorized_emails(self) -> List[str]:
         raise NotImplementedError
 
     def get_member(self, user_id: str) -> str:
@@ -109,7 +109,7 @@ class RepoBase:
     def list_commit_files(self, commit_hash) -> List[str]:
         raise NotImplementedError
 
-    def get_commit_signature_id(self, commit_hash: str) -> str:
+    def get_commit_signature_email(self, commit_hash: str) -> Optional[str]:
         raise NotImplementedError
 
     def list_ci_jobs(self) -> List[Dict[str, Any]]:

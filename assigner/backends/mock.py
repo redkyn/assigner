@@ -3,7 +3,7 @@ import git
 import logging
 import re
 from unittest.mock import MagicMock
-from typing import List
+from typing import List, Optional
 
 from enum import Enum
 from requests.exceptions import HTTPError
@@ -179,7 +179,7 @@ class MockRepo(RepoBase):
     def list_members(self):
         return [MagicMock(), MagicMock(), MagicMock()]
 
-    def list_authorized_gpg_ids(self):
+    def list_authorized_emails(self):
         return MagicMock()
 
     def get_member(self, user_id):
@@ -200,7 +200,7 @@ class MockRepo(RepoBase):
     def list_commit_files(self, commit_hash: str) -> List[str]:
         return MagicMock()
 
-    def get_commit_signature_id(self, commit_hash: str) -> str:
+    def get_commit_signature_email(self, commit_hash: str) -> Optional[str]:
         return MagicMock()
 
     def list_ci_jobs(self):

@@ -6,7 +6,7 @@ import os
 import re
 import requests
 from time import sleep
-from typing import List
+from typing import List, Optional
 
 from enum import Enum
 from requests.exceptions import HTTPError
@@ -306,14 +306,15 @@ class GitlabRepo(RepoBase):
     def list_members(self):
         return self._gl_get("/projects/{}/members".format(self.id))
 
-    def list_authorized_gpg_ids(self):
+    def list_authorized_emails(self):
         members = self._gl_get("/projects/{}/members/all".format(self.id))
         authorized_users = [user for user in members if user["access_level"] >= 40]
-        key_ids = []
+        emails = []
         for user in authorized_users:
-            status = self._gl_get("/users/{}/status".format(user["id"]))
-            key_ids.append(status["message"])
-        return key_ids
+            full_user = self._gl_get("/users/{}".format(user["id"]))
+            if "public_email" in full_user:
+                emails.append(full_user["public_email"])
+        return emails
 
     def get_member(self, user_id):
         return self._gl_get("/projects/{}/members/{}".format(self.id, user_id))
@@ -357,11 +358,13 @@ class GitlabRepo(RepoBase):
         )
         return [file["new_path"] for file in raw_diff]
 
-    def get_commit_signature_id(self, commit_hash) -> str:
+    def get_commit_signature_email(self, commit_hash: str) -> Optional[str]:
         signature = self._gl_get(
             "/projects/{}/repository/commits/{}/signature".format(self.id, commit_hash)
         )
-        return signature["gpg_key_primary_keyid"]
+        if signature["verification_status"] != "verified":
+            return None
+        return signature["gpg_key_user_email"]
 
     def list_ci_jobs(self):
         params = {"id": self.id}
