@@ -286,4 +286,3 @@ class MockBackend(BackendBase):
     repo = MockRepo  # type: RepoBase
     template_repo = MockTemplateRepo  # type: TemplateRepoBase
     student_repo = MockStudentRepo  # type: StudentRepoBase
-

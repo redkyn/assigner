@@ -362,12 +362,17 @@ class GitlabRepo(RepoBase):
         return [file["new_path"] for file in raw_diff]
 
     def get_commit_signature_email(self, commit_hash: str) -> Optional[str]:
-        signature = self._gl_get(
-            "/projects/{}/repository/commits/{}/signature".format(self.id, commit_hash)
-        )
-        if signature["verification_status"] != "verified":
+        try:
+            signature = self._gl_get(
+                "/projects/{}/repository/commits/{}/signature".format(
+                    self.id, commit_hash
+                )
+            )
+            if signature["verification_status"] != "verified":
+                return None
+            return signature["gpg_key_user_email"]
+        except HTTPError:
             return None
-        return signature["gpg_key_user_email"]
 
     def list_ci_jobs(self):
         params = {"id": self.id}

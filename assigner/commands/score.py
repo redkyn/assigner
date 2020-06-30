@@ -6,7 +6,7 @@ import re
 from requests.exceptions import HTTPError
 
 from redkyn.canvas import CanvasAPI
-from redkyn.canvas.exceptions import CourseNotFound, AssignmentNotFound
+from redkyn.canvas.exceptions import CourseNotFound, StudentNotFound
 
 from assigner import make_help_parser
 from assigner.backends.base import RepoError, RepoBase, BackendBase
@@ -76,14 +76,6 @@ def lookup_canvas_ids(
     Canvas internal course IDs and "assignment_ids", a map of section
     names/identifiers onto the Canvas internal assignment IDs for a given assignment
     """
-    if "canvas-courses" not in conf:
-        logger.error(
-            "canvas-course configuration is missing! Please set the "
-            "Canvas course ID token before attempting to upload scores "
-            "to Canvas"
-        )
-        print("Import from canvas failed: missing Canvas course ID.")
-        raise CourseNotFound
     courses = conf["canvas-courses"]
     section_ids = {course["section"]: course["id"] for course in courses}
     min_name = re.search(r"[A-Za-z]+\d+", hw_name).group(0)
@@ -91,17 +83,15 @@ def lookup_canvas_ids(
     for section, course_id in section_ids.items():
         try:
             canvas_assignments = canvas.get_course_assignments(course_id, min_name)
-        except Exception as e:
-            print(e, type(e))
+        except CourseNotFound:
             logger.error("Failed to pull assignment list from Canvas")
-            raise AssignmentNotFound
+            raise
         if len(canvas_assignments) != 1:
-            logger.error(
-                "Could not uniquely identify Canvas assignment from name %s and section %s",
+            logger.warning(
+                "Could not uniquely identify Canvas assignment from name %s and section %s, using first assignment listed",
                 min_name,
                 section,
             )
-            raise AssignmentNotFound
         assignment_ids[section] = canvas_assignments[0]["id"]
     return (section_ids, assignment_ids)
 
@@ -119,6 +109,7 @@ def student_search(
     :return: the roster entry matching the query
     """
     candidate_students = []
+    student = None
     # Search through the entire class for a match
     for student in roster:
         if (
@@ -129,16 +120,16 @@ def student_search(
 
     if not candidate_students:
         logger.error("No student found matching query %s", query)
-        return None
     elif len(candidate_students) == 1:
-        return candidate_students[0]
+        student = candidate_students[0]
     else:
         for ct, cand_user in enumerate(candidate_students):
             print("{}: {}, {}".format(ct, cand_user["name"], cand_user["username"]))
         selected = -1
         while selected < 0 or selected >= len(candidate_students):
             selected = int(input("Enter the number of the correct student: "))
-        return candidate_students[selected]
+        student = candidate_students[selected]
+    return student
 
 
 def verify_commit(auth_emails: List[str], repo: RepoBase, commit_hash: str) -> bool:
@@ -149,14 +140,10 @@ def verify_commit(auth_emails: List[str], repo: RepoBase, commit_hash: str) -> b
     :param commit_hash: the full SHA of the commit to check
     :return: whether the committer was authorized (True if authorized, False otherwise)
     """
-    try:
-        email = repo.get_commit_signature_email(commit_hash)
-        if not email:
-            return False
-        return email in auth_emails
-    except Exception as e:
-        logging.debug("%s: %s", str(type(e)), str(e))
+    email = repo.get_commit_signature_email(commit_hash)
+    if not email:
         return False
+    return email in auth_emails
 
 
 def check_repo_integrity(repo: RepoBase, files_to_check: Set[str]) -> None:
@@ -203,9 +190,7 @@ def print_histogram(scores: List[float]) -> None:
 
     # First count up each bucket
     for bucket in buckets:
-        count = len(
-            [score for score in scores if (score >= bucket[0] and score < bucket[1])]
-        )
+        count = len([score for score in scores if bucket[0] <= score < bucket[1]])
         # If it's the last bucket we include the top (i.e. the range max)
         if bucket == buckets[-1]:
             count += scores.count(range_max)
@@ -268,17 +253,17 @@ def handle_scoring(
             assignment_id = assignment_ids[student_section]
             try:
                 student_id = canvas.get_student_from_username(course_id, username)["id"]
-            except Exception as e:
+                try:
+                    canvas.put_assignment_submission(
+                        course_id, assignment_id, student_id, str(score) + "%"
+                    )
+                except StudentNotFound as e:
+                    logger.debug(e)
+                    logger.warning("Unable to update submission for Canvas assignment")
+            except StudentNotFound as e:
                 logger.debug(e)
-                logger.error("Unable to lookup Canvas account ID")
-            try:
-                canvas.put_assignment_submission(
-                    course_id, assignment_id, student_id, str(score) + "%"
-                )
-            except Exception as e:
-                print(e)
-                logger.debug(e)
-                logger.warning("Unable to update submission for Canvas assignment")
+                logger.error("Unable to lookup Canvas student account from SIS ID")
+
     except RepoError as e:
         logger.debug(e)
         logger.warning("Unable to find repo for %s with URL %s", username, full_name)
@@ -295,12 +280,9 @@ def score_assignments(
     student = args.student
 
     roster = get_filtered_roster(conf.roster, args.section, student)
-    try:
-        section_ids, assignment_ids = lookup_canvas_ids(conf, canvas, args.name)
-    except:
-        logger.error("Failed to lookup Canvas assignment")
-        return
-    scores = []
+    section_ids, assignment_ids = lookup_canvas_ids(conf, canvas, args.name)
+
+    scores: List[float] = []
     for student in progress.iterate(roster):
         score = handle_scoring(
             conf, backend, args, student, canvas, section_ids, assignment_ids
@@ -320,12 +302,7 @@ def checkout_students(
     artifact, which contains their autograded score
     """
     roster = get_filtered_roster(conf.roster, args.section, None)
-
-    try:
-        section_ids, assignment_ids = lookup_canvas_ids(conf, canvas, args.name)
-    except:
-        logger.error("Failed to lookup Canvas assignment")
-        return
+    section_ids, assignment_ids = lookup_canvas_ids(conf, canvas, args.name)
 
     while True:
         query = input("Enter student ID or name, or 'q' to quit: ")
@@ -424,4 +401,3 @@ def setup_parser(parser: argparse.ArgumentParser):
         )
 
     make_help_parser(parser, subparsers, "Show help for score or one of its commands")
-

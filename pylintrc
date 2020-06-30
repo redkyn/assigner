@@ -144,6 +144,7 @@ disable=print-statement,
         attribute-defined-outside-init,
         redefined-builtin,
         too-few-public-methods,
+        bad-continuation,
 
 
 
