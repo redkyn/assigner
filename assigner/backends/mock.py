@@ -194,7 +194,10 @@ class MockRepo(RepoBase):
     def delete_member(self, user_id):
         return MagicMock()
 
-    def list_commit_hashes(self, ref_name="master") -> List[str]:
+    def list_commits(self, ref_name="master"):
+        return MagicMock()
+
+    def list_commit_hashes(self, ref_name: str = "master") -> List[str]:
         return MagicMock()
 
     def list_commit_files(self, commit_hash: str) -> List[str]:

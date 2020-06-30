@@ -103,6 +103,9 @@ class RepoBase:
     def delete_member(self, user_id: str) -> str:
         raise NotImplementedError
 
+    def list_commits(self, ref_name: str = "master") -> str:
+        raise NotImplementedError
+
     def list_commit_hashes(self, ref_name: str = "master") -> List[str]:
         raise NotImplementedError
 

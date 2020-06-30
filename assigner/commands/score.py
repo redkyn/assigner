@@ -424,3 +424,4 @@ def setup_parser(parser: argparse.ArgumentParser):
         )
 
     make_help_parser(parser, subparsers, "Show help for score or one of its commands")
+
