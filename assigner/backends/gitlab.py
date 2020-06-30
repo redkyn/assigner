@@ -345,9 +345,12 @@ class GitlabRepo(RepoBase):
         access = [Access(m["access_level"]) for m in self.list_members()]
         return all([a in (Access.guest, Access.reporter) for a in access])
 
-    def list_commits(self, ref_name="master"):
+    def list_commit_hashes(self, ref_name="master") -> List[str]:
         params = {"id": self.id, "ref_name": ref_name}
-        return self._gl_get("/projects/{}/repository/commits".format(self.id), params)
+        commits = self._gl_get(
+            "/projects/{}/repository/commits".format(self.id), params
+        )
+        return [commit["id"] for commit in commits]
 
     def list_commit_files(self, commit_hash) -> List[str]:
         params = {"id": self.id, "sha": commit_hash}

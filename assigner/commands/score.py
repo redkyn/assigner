@@ -1,6 +1,7 @@
 import logging
 import argparse
 from typing import Any, Dict, List, Optional, Tuple, Callable, Set
+import re
 
 from requests.exceptions import HTTPError
 
@@ -13,7 +14,6 @@ from assigner.backends.decorators import requires_config_and_backend
 from assigner.roster_util import get_filtered_roster
 from assigner import progress
 from assigner.config import Config
-import re
 
 help = "Retrieves scores from CI artifacts and optionally uploads to Canvas"
 
@@ -52,7 +52,7 @@ def get_most_recent_score(repo: RepoBase, result_path: str) -> float:
         ci_jobs = repo.list_ci_jobs()
         most_recent_job_id = ci_jobs[0]["id"]
         score_file = repo.get_ci_artifact(most_recent_job_id, result_path)
-        if type(score_file) is str:
+        if isinstance(score_file, str):
             score = score_file.split()[-1]
         else:
             score = str(score_file)
@@ -155,7 +155,7 @@ def verify_commit(auth_emails: List[str], repo: RepoBase, commit_hash: str) -> b
             return False
         return email in auth_emails
     except Exception as e:
-        logging.debug("%s: %s" % (str(type(e)), str(e)))
+        logging.debug("%s: %s", str(type(e)), str(e))
         return False
 
 
@@ -168,7 +168,7 @@ def check_repo_integrity(repo: RepoBase, files_to_check: Set[str]) -> None:
     files
     """
     auth_emails = repo.list_authorized_emails()
-    commits = [c["id"] for c in repo.list_commits("master")]
+    commits = repo.list_commit_hashes("master")
     for commit in commits:
         modified_files = files_to_check.intersection(repo.list_commit_files(commit))
         if modified_files and not verify_commit(auth_emails, repo, commit):
@@ -189,7 +189,7 @@ def print_statistics(scores: List[float]) -> None:
 
 def print_histogram(scores: List[float]) -> None:
     """
-    A utility function for printing an ASCII histogram 
+    A utility function for printing an ASCII histogram
     for a one-dimensional data set
     """
     print("ASCII Histogram:")
@@ -240,9 +240,9 @@ def handle_scoring(
     Obtains the autograded score from a repository's CI jobs
     :param student: The part of the config structure with info
     on a student's username, ID, and section
-    :param section_ids: A map of section names/identifiers onto 
+    :param section_ids: A map of section names/identifiers onto
     Canvas internal course IDs
-    :param assignment_ids: A map of section names/identifiers 
+    :param assignment_ids: A map of section names/identifiers
     onto the Canvas internal assignment IDs for a given assignment
     :return: The score obtained from the results file
     """
@@ -338,7 +338,7 @@ def checkout_students(
         score = handle_scoring(
             conf, backend, args, student, canvas, section_ids, assignment_ids
         )
-        logger.info("Uploaded score of %d" % (score))
+        logger.info("Uploaded score of %d", (score))
 
 
 @requires_config_and_backend
@@ -406,7 +406,7 @@ def setup_parser(parser: argparse.ArgumentParser):
             "--files",
             nargs="+",
             dest="files",
-            default=[],
+            default=["grade.sh", ".gitlab-ci.yml"],
             help="Files to check for modification",
         )
 
