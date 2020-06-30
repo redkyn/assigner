@@ -3,9 +3,11 @@ Assigner |pypi| |travis|
 
 .. |pypi| image:: https://badge.fury.io/py/assigner.svg
     :target: https://badge.fury.io/py/assigner
+    :alt: PyPi package
 
 .. |travis| image:: https://travis-ci.org/redkyn/assigner.svg?branch=master
     :target: https://travis-ci.org/redkyn/assigner
+    :alt: Build Status
 
 *Assigner* automatically creates a number of repositories within a GitLab group (or user).
 The repositories represent homework assignments being assigned to a list of students.

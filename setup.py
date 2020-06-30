@@ -39,7 +39,7 @@ setup(
         #   3 - Alpha
         #   4 - Beta
         #   5 - Production/Stable
-        'Development Status :: 4 - Beta',
+        'Development Status :: 5 - Production/Stable',
 
         # Indicate who your project is intended for
         'Intended Audience :: Education',
@@ -79,7 +79,7 @@ setup(
         'jsonschema>=2.5',
         'requests>=2.20.0',
         'PTable>=0.9',
-        'enlighten>=1',
+        'enlighten>=1.5.0',
         'redkyn-common>=1.0.1',
     ],
 
