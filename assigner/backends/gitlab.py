@@ -252,12 +252,11 @@ class GitlabRepo(RepoBase):
             except RetryableGitError as e:
                 if attempt == (attempts - 1):
                     raise
-                else:
-                    logging.debug(e)
+                logging.debug(e)
 
-                    duration = 0.5 * 2 ** attempt
-                    logging.debug("Retrying after %.1f seconds...", duration)
-                    sleep(duration)
+                duration = 0.5 * 2 ** attempt
+                logging.debug("Retrying after %.1f seconds...", duration)
+                sleep(duration)
 
         return self._repo
 

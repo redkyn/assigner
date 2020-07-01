@@ -96,7 +96,7 @@ V2 = {
                     "id": {
                         "type": "integer",
                     },
-                    
+
                     "canvas-id": {
                         "type": "integer",
                     },

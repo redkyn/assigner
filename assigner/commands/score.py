@@ -40,7 +40,7 @@ def requires_config_and_backend_and_canvas(
                 "token before attempting to use Canvas API functionality"
             )
             print("Canvas course listing failed: missing Canvas API access token.")
-            return
+            return None
         canvas = CanvasAPI(config["canvas-token"], config["canvas-host"])
 
         return func(config, backend, cmdargs, canvas, *args, **kwargs)
