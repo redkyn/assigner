@@ -123,27 +123,28 @@ def student_search(
     :return: the roster entry matching the query
     """
     candidate_students = []
-    student = None
+    result = None
     # Search through the entire class for a match
     for student in roster:
         if (
             query.lower() in student["name"].lower().replace(",", "")
             or query.lower() in student["username"]
+            or query.lower() in " ".join(student["name"].lower().split(",")[::-1])
         ):
             candidate_students.append(student)
 
     if not candidate_students:
         logger.error("No student found matching query %s", query)
     elif len(candidate_students) == 1:
-        student = candidate_students[0]
+        result = candidate_students[0]
     else:
         for ct, cand_user in enumerate(candidate_students):
             print("{}: {}, {}".format(ct, cand_user["name"], cand_user["username"]))
         selected = -1
         while selected < 0 or selected >= len(candidate_students):
             selected = int(input("Enter the number of the correct student: "))
-        student = candidate_students[selected]
-    return student
+        result = candidate_students[selected]
+    return result
 
 
 def verify_commit(auth_emails: List[str], repo: RepoBase, commit_hash: str) -> bool:
