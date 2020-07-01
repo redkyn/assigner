@@ -96,6 +96,10 @@ V2 = {
                     "id": {
                         "type": "integer",
                     },
+                    
+                    "canvas-id": {
+                        "type": "integer",
+                    },
                 },
                 "required": ["name", "username", "section"],
                 "additionalProperties": False,

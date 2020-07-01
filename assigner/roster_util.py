@@ -16,25 +16,26 @@ def get_filtered_roster(roster, section, target):
     return roster
 
 
-def add_to_roster(conf, backend, roster, name, username, section, force=False):
+def add_to_roster(
+    conf, backend, roster, name, username, section, force=False, canvas_id=-1
+):
     student = {
         "name": name,
         "username": username,
-        "section": section
+        "section": section,
     }
 
     logger.debug("%s", roster)
 
-    if not force and any(filter(lambda s: s['username'] == username, roster)):
+    if not force and any(filter(lambda s: s["username"] == username, roster)):
         raise DuplicateUserError("Student already exists in roster!")
 
     try:
-        student["id"] = backend.repo.get_user_id(
-            username, conf.backend
-        )
+        student["id"] = backend.repo.get_user_id(username, conf.backend)
     except RepoError:
-        logger.warning(
-            "Student %s does not have a Gitlab account.", name
-        )
+        logger.warning("Student %s does not have a Gitlab account.", name)
+
+    if canvas_id >= 0:
+        student["canvas-id"] = canvas_id
 
     roster.append(student)

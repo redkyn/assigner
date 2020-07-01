@@ -252,17 +252,12 @@ def handle_scoring(
             course_id = section_ids[student_section]
             assignment_id = assignment_ids[student_section]
             try:
-                student_id = canvas.get_student_from_username(course_id, username)["id"]
-                try:
-                    canvas.put_assignment_submission(
-                        course_id, assignment_id, student_id, str(score) + "%"
-                    )
-                except StudentNotFound as e:
-                    logger.debug(e)
-                    logger.warning("Unable to update submission for Canvas assignment")
+                canvas.put_assignment_submission(
+                    course_id, assignment_id, student["canvas-id"], str(score) + "%"
+                )
             except StudentNotFound as e:
                 logger.debug(e)
-                logger.error("Unable to lookup Canvas student account from SIS ID")
+                logger.warning("Unable to update submission for Canvas assignment")
 
     except RepoError as e:
         logger.debug(e)
@@ -306,7 +301,7 @@ def checkout_students(
 
     while True:
         query = input("Enter student ID or name, or 'q' to quit: ")
-        if query in "quit":
+        if "quit".startswith(query):
             break
         student = student_search(roster, query)
         if not student:

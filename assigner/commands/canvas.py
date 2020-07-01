@@ -65,7 +65,7 @@ def import_from_canvas(conf, backend, args):
 
         try:
             add_to_roster(
-                conf, backend, conf.roster, s['sortable_name'], s['sis_user_id'], section, force
+                conf, backend, conf.roster, s['sortable_name'], s['sis_user_id'], section, force, s['id']
             )
         except DuplicateUserError:
             logger.warning("User %s is already in the roster, skipping", s['sis_user_id'])
