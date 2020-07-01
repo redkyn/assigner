@@ -2,6 +2,7 @@ import logging
 import argparse
 from typing import Any, Dict, List, Optional, Tuple, Callable, Set
 import re
+import os
 
 from requests.exceptions import HTTPError
 
@@ -33,7 +34,13 @@ def requires_config_and_backend_and_canvas(
         *args: Any,
         **kwargs: Any
     ) -> None:
-
+        if "canvas-token" not in config:
+            logger.error(
+                "canvas-token configuration is missing! Please set the Canvas API access "
+                "token before attempting to use Canvas API functionality"
+            )
+            print("Canvas course listing failed: missing Canvas API access token.")
+            return
         canvas = CanvasAPI(config["canvas-token"], config["canvas-host"])
 
         return func(config, backend, cmdargs, canvas, *args, **kwargs)
@@ -76,6 +83,13 @@ def lookup_canvas_ids(
     Canvas internal course IDs and "assignment_ids", a map of section
     names/identifiers onto the Canvas internal assignment IDs for a given assignment
     """
+    if "canvas-courses" not in conf:
+        logger.error(
+            'canvas-courses configuration is missing! Please use the "assigner canvas import"'
+            "command to associate course IDs with section names"
+        )
+        print("Canvas course listing failed: missing section Canvas course IDs.")
+        raise CourseNotFound
     courses = conf["canvas-courses"]
     section_ids = {course["section"]: course["id"] for course in courses}
     min_name = re.search(r"[A-Za-z]+\d+", hw_name).group(0)
@@ -181,9 +195,9 @@ def print_histogram(scores: List[float]) -> None:
     """
     print("ASCII Histogram:")
     num_buckets = 10
-    range_min = 0
-    range_max = 100
-    max_col = 60
+    range_min = min(scores)
+    range_max = max(scores)
+    max_col = os.get_terminal_size()[0] - 15
     bucket_width = (range_max - range_min) / num_buckets
     buckets = [(i * bucket_width, (i + 1) * bucket_width) for i in range(num_buckets)]
     counts = {}
