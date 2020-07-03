@@ -161,16 +161,18 @@ def verify_commit(auth_emails: List[str], repo: RepoBase, commit_hash: str) -> b
     return email in auth_emails
 
 
-def check_repo_integrity(repo: RepoBase, files_to_check: Set[str]) -> None:
+def check_repo_integrity(
+    repo: RepoBase, files_to_check: Set[str], since: str = ""
+) -> None:
     """
     Checks whether any "protected" files in a repository have been modified
     by an unauthorized user and logs any violations
     :param repo: the repository object to check
-    :param files_to_check: the absolute paths (within the repo) of protected
-    files
+    :param files_to_check: the absolute paths (within the repo) of protected files
+    :param since: the date after which to check, i.e., commits prior to this date are ignored
     """
     auth_emails = repo.list_authorized_emails()
-    commits = repo.list_commit_hashes("master")
+    commits = repo.list_commit_hashes("master", since)
     for commit in commits:
         modified_files = files_to_check.intersection(repo.list_commit_files(commit))
         if modified_files and not verify_commit(auth_emails, repo, commit):
@@ -259,7 +261,10 @@ def handle_scoring(
         repo = backend.student_repo(backend_conf, conf.namespace, full_name)
         logger.info("Scoring %s...", repo.name_with_namespace)
         if not args.nocheck:
-            check_repo_integrity(repo, files_to_check)
+            unlock_time = canvas.get_assignment_unlock_time(
+                section_ids[student_section], assignment_ids[student_section]
+            )
+            check_repo_integrity(repo, files_to_check, unlock_time)
         if "id" not in student:
             student["id"] = backend.repo.get_user_id(username, backend_conf)
         score = get_most_recent_score(repo, args.path)

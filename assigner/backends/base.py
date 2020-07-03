@@ -103,10 +103,12 @@ class RepoBase:
     def delete_member(self, user_id: str) -> str:
         raise NotImplementedError
 
-    def list_commits(self, ref_name: str = "master") -> str:
+    def list_commits(self, ref_name: str = "master", since: str = "") -> str:
         raise NotImplementedError
 
-    def list_commit_hashes(self, ref_name: str = "master") -> List[str]:
+    def list_commit_hashes(
+        self, ref_name: str = "master", since: str = ""
+    ) -> List[str]:
         raise NotImplementedError
 
     def list_commit_files(self, commit_hash) -> List[str]:
