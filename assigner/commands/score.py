@@ -59,10 +59,7 @@ def get_most_recent_score(repo: RepoBase, result_path: str) -> float:
         ci_jobs = repo.list_ci_jobs()
         most_recent_job_id = ci_jobs[0]["id"]
         score_file = repo.get_ci_artifact(most_recent_job_id, result_path)
-        if isinstance(score_file, str):
-            score = score_file.split()[-1]
-        else:
-            score = str(score_file)
+        score = score_file.split()[-1]
     except HTTPError as e:
         if e.response.status_code == 404:
             logger.warning(

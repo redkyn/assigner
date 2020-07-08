@@ -102,6 +102,15 @@ class GitlabRepo(RepoBase):
         return r.json()
 
     @classmethod
+    def _cls_gl_get_raw(cls, config, path, params={}):
+        """Make a Gitlab GET request whose response is not JSON"""
+        headers = {"Private-Token": config["token"]}
+        url = urljoin(config["host"], "/api/v4" + path)
+        r = requests.get(url, params=params, headers=headers)
+        r.raise_for_status()
+        return r.content.decode("utf-8")
+
+    @classmethod
     def _cls_gl_post(cls, config, path, payload={}, params={}):
         """Make a Gitlab POST request"""
         headers = {"Private-Token": config["token"]}
@@ -307,7 +316,9 @@ class GitlabRepo(RepoBase):
 
     def list_authorized_emails(self):
         members = self._gl_get("/projects/{}/members/all".format(self.id))
-        authorized_users = [user for user in members if user["access_level"] >= 40]
+        authorized_users = [
+            user for user in members if user["access_level"] >= Access.master.value
+        ]
         emails = []
         for user in authorized_users:
             full_user = self._gl_get("/users/{}".format(user["id"]))
@@ -381,7 +392,7 @@ class GitlabRepo(RepoBase):
 
     def get_ci_artifact(self, job_id, artifact_path):
         params = {"id": self.id, "job_id": job_id, "artifact_path": artifact_path}
-        return self._gl_get(
+        return self._gl_get_raw(
             "/projects/{}/jobs/{}/artifacts/{}".format(self.id, job_id, artifact_path),
             params,
         )
@@ -449,6 +460,9 @@ class GitlabRepo(RepoBase):
 
     def _gl_get(self, path, params={}):
         return self.__class__._cls_gl_get(self.config, path, params)
+
+    def _gl_get_raw(self, path, params={}):
+        return self.__class__._cls_gl_get_raw(self.config, path, params)
 
     def _gl_post(self, path, payload={}, params={}):
         return self.__class__._cls_gl_post(self.config, path, payload, params)
