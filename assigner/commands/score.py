@@ -80,7 +80,7 @@ def lookup_canvas_ids(
     Canvas internal course IDs and "assignment_ids", a map of section
     names/identifiers onto the Canvas internal assignment IDs for a given assignment
     """
-    if "canvas-courses" not in conf:
+    if "canvas-courses" not in conf or not conf["canvas-courses"]:
         logger.error(
             'canvas-courses configuration is missing! Please use the "assigner canvas import"'
             "command to associate course IDs with section names"

@@ -1,7 +1,7 @@
-# Schema Version 2
-# Backend is now configurable: we can have either a gitlab or a mock backend
+# Schema Version 3
+# Canvas course and student IDs are now cached
 
-V2 = {
+V3 = {
     "$schema": "http://json-schema.org/schema#",
 
     "type": "object",
@@ -96,6 +96,10 @@ V2 = {
                     "id": {
                         "type": "integer",
                     },
+
+                    "canvas-id": {
+                        "type": "integer",
+                    },
                 },
                 "required": ["name", "username", "section"],
                 "additionalProperties": False,
@@ -109,7 +113,27 @@ V2 = {
         # Canvas domain
         "canvas-host": {
             "type": "string",
-        }
+        },
+        # Canvas course IDs by section
+        "canvas-courses": {
+            "type": "array",
+            "items": {
+                "type": "object",
+                "properties": {
+                    # Section
+                    "section": {
+                        "type": "string"
+                    },
+
+                    # Canvas course ID
+                    "id": {
+                        "type": "integer",
+                    },
+                },
+                "required": ["section"],
+                "additionalProperties": False,
+            },
+        },
     },
     "required": ["version", "backend", "namespace", "semester"],
     "additionalProperties": False,
