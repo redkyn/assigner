@@ -179,6 +179,17 @@ by the student
 
 #### Details on checking the integrity of grading files
 A change to a grading-related file is considered legitimate if it is GPG-signed by a maintainer or owner of the repository.
+Note that only commits made after the assignment is opened to students are checked, so this process is only necessary if 
+grading-related files are changed after an assignment is released.
+
+To use GPG to sign a commit, you must complete the following:
+1. Generate a GPG key if you don't have one.
+1. Associate your GPG key with `git` using the `user.signingkey` config option.
+1. Associate your GPG key with the appropriate repository manager (GitHub, GitLab, etc).
+1. Sign all commits made after the assignment has been opened by passing the `-S` flag to `git commit`.
+
+[GitLab's tutorial](https://docs.gitlab.com/ee/user/project/repository/gpg_signed_commits/) explains the entire process in detail.
+
 Any deviations will be reported by default unless the `--nocheck` flag is passed to any of the `assigner score` subcommands.
 The integrity of student repositories can be checked without retrieving scores using the `assigner score integrity` command.
 
