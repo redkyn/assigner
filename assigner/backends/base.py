@@ -94,6 +94,9 @@ class RepoBase:
     def get_member(self, user_id: str) -> str:
         raise NotImplementedError
 
+    def get_member_add_date(self, user_id: str) -> str:
+        raise NotImplementedError
+
     def add_member(self, user_id: str, level: str) -> str:
         raise NotImplementedError
 

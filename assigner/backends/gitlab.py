@@ -329,6 +329,17 @@ class GitlabRepo(RepoBase):
     def get_member(self, user_id):
         return self._gl_get("/projects/{}/members/{}".format(self.id, user_id))
 
+    def get_member_add_date(self, user_id: str) -> str:
+        params = {"project_id": self.id, "action": "joined", "sort": "asc"}
+        events = self._gl_get("/projects/{}/events".format(self.id), params)
+        user_events = [event for event in events if event["author_id"] == user_id]
+        if not user_events:
+            logging.warning(
+                "No project join events found for user, were they added to the repo?"
+            )
+            return ""
+        return user_events[0]["created_at"]
+
     def add_member(self, user_id, level):
         payload = {"id": self.id, "user_id": user_id, "access_level": level.value}
         try:

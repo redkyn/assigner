@@ -251,7 +251,6 @@ def handle_scoring(
     Obtains the autograded score from a repository's CI jobs
     :param student: The part of the config structure with info
     on a student's username, ID, and section
-    onto the Canvas internal assignment IDs for a given assignment
     :return: The score obtained from the results file
     """
     hw_name = args.name
@@ -264,20 +263,18 @@ def handle_scoring(
         conf.semester, student_section, hw_name, username
     )
     try:
-        canvas = OptionalCanvas.get_api(conf)
-        section_ids = OptionalCanvas.get_section_ids(conf, hw_name)
-        assignment_ids = OptionalCanvas.get_assigment_ids(conf, hw_name)
         repo = backend.student_repo(backend_conf, conf.namespace, full_name)
         logger.info("Scoring %s...", repo.name_with_namespace)
-        if not args.nocheck:
-            unlock_time = canvas.get_assignment_unlock_time(
-                section_ids[student_section], assignment_ids[student_section]
-            )
-            check_repo_integrity(repo, files_to_check, unlock_time)
         if "id" not in student:
             student["id"] = backend.repo.get_user_id(username, backend_conf)
+        if not args.nocheck:
+            unlock_time = repo.get_member_add_date(student["id"])
+            check_repo_integrity(repo, files_to_check, unlock_time)
         score = get_most_recent_score(repo, args.path)
         if upload:
+            canvas = OptionalCanvas.get_api(conf)
+            section_ids = OptionalCanvas.get_section_ids(conf, hw_name)
+            assignment_ids = OptionalCanvas.get_assigment_ids(conf, hw_name)
             course_id = section_ids[student_section]
             assignment_id = assignment_ids[student_section]
             try:

@@ -185,6 +185,9 @@ class MockRepo(RepoBase):
     def get_member(self, user_id):
         return MagicMock()
 
+    def get_member_add_date(self, user_id: str) -> str:
+        return MagicMock()
+
     def add_member(self, user_id, level):
         return MagicMock()
 
