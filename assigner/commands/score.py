@@ -1,6 +1,6 @@
 import logging
 import argparse
-from typing import Any, Dict, List, Optional, Tuple, Callable, Set
+from typing import Any, Dict, List, Optional, Tuple, Set
 import re
 import os
 
@@ -21,31 +21,84 @@ help = "Retrieves scores from CI artifacts and optionally uploads to Canvas"
 logger = logging.getLogger(__name__)
 
 
-def requires_config_and_backend_and_canvas(
-    func: Callable[[Config, BackendBase, argparse.Namespace, CanvasAPI], None]
-) -> Callable[[Config, BackendBase, argparse.Namespace], None]:
-    """Provides a Canvas API instance depending on configuration."""
+class OptionalCanvas:
+    """
+    A class that wraps a single CanvasAPI instance and related API
+    ID information that both caches the info and queries it only
+    when needed
+    """
 
-    @requires_config_and_backend
-    def wrapper(
-        config: Config,
-        backend: BackendBase,
-        cmdargs: argparse.Namespace,
-        *args: Any,
-        **kwargs: Any
-    ) -> None:
-        if "canvas-token" not in config:
+    _api: CanvasAPI = None
+    _section_ids: Dict[str, Any] = {}
+    _assignment_ids: Dict[str, Any] = {}
+
+    @staticmethod
+    def lookup_canvas_ids(
+        conf: Config, canvas: CanvasAPI, hw_name: str
+    ) -> Tuple[Dict[str, int], Dict[str, int]]:
+        """
+        Retrieves the list of internal Canvas IDs for a given assignment
+        and the relevant sections
+        :param hw_name: the name of the homework assignment to search for on Canvas
+        :return: "section_ids", a map of section names/identifiers onto
+        Canvas internal course IDs and "assignment_ids", a map of section
+        names/identifiers onto the Canvas internal assignment IDs for a given assignment
+        """
+        if "canvas-courses" not in conf or not conf["canvas-courses"]:
             logger.error(
-                "canvas-token configuration is missing! Please set the Canvas API access "
-                "token before attempting to use Canvas API functionality"
+                'canvas-courses configuration is missing! Please use the "assigner canvas import"'
+                "command to associate course IDs with section names"
             )
-            print("Canvas course listing failed: missing Canvas API access token.")
-            return None
-        canvas = CanvasAPI(config["canvas-token"], config["canvas-host"])
+            print("Canvas course listing failed: missing section Canvas course IDs.")
+            raise CourseNotFound
+        courses = conf["canvas-courses"]
+        section_ids = {course["section"]: course["id"] for course in courses}
+        min_name = re.search(r"[A-Za-z]+\d+", hw_name).group(0)
+        assignment_ids = {}
+        for section, course_id in section_ids.items():
+            try:
+                canvas_assignments = canvas.get_course_assignments(course_id, min_name)
+            except CourseNotFound:
+                logger.error("Failed to pull assignment list from Canvas")
+                raise
+            if len(canvas_assignments) != 1:
+                logger.warning(
+                    "Could not uniquely identify Canvas assignment from name %s and section %s, using first assignment listed",
+                    min_name,
+                    section,
+                )
+            assignment_ids[section] = canvas_assignments[0]["id"]
+        return (section_ids, assignment_ids)
 
-        return func(config, backend, cmdargs, canvas, *args, **kwargs)
+    @classmethod
+    def get_api(cls, conf: Config) -> CanvasAPI:
+        if not cls._api:
+            if "canvas-token" not in conf:
+                logger.error(
+                    "canvas-token configuration is missing! Please set the Canvas API access "
+                    "token before attempting to use Canvas API functionality"
+                )
+                print("Canvas course listing failed: missing Canvas API access token.")
+                raise KeyError
+            cls._api = CanvasAPI(conf["canvas-token"], conf["canvas-host"])
 
-    return wrapper
+        return cls._api
+
+    @classmethod
+    def get_section_ids(cls, conf: Config, hw_name: str) -> Dict[str, Any]:
+        if not cls._section_ids:
+            cls._section_ids, cls._assignment_ids = cls.lookup_canvas_ids(
+                conf, cls.get_api(conf), hw_name
+            )
+        return cls._section_ids
+
+    @classmethod
+    def get_assigment_ids(cls, conf: Config, hw_name: str) -> Dict[str, Any]:
+        if not cls._assignment_ids:
+            cls._section_ids, cls._assignment_ids = cls.lookup_canvas_ids(
+                conf, cls.get_api(conf), hw_name
+            )
+        return cls._assignment_ids
 
 
 def get_most_recent_score(repo: RepoBase, result_path: str) -> float:
@@ -67,44 +120,6 @@ def get_most_recent_score(repo: RepoBase, result_path: str) -> float:
             )
         raise
     return float(score)
-
-
-def lookup_canvas_ids(
-    conf: Config, canvas: CanvasAPI, hw_name: str
-) -> Tuple[Dict[str, int], Dict[str, int]]:
-    """
-    Retrieves the list of internal Canvas IDs for a given assignment
-    and the relevant sections
-    :param hw_name: the name of the homework assignment to search for on Canvas
-    :return: "section_ids", a map of section names/identifiers onto
-    Canvas internal course IDs and "assignment_ids", a map of section
-    names/identifiers onto the Canvas internal assignment IDs for a given assignment
-    """
-    if "canvas-courses" not in conf or not conf["canvas-courses"]:
-        logger.error(
-            'canvas-courses configuration is missing! Please use the "assigner canvas import"'
-            "command to associate course IDs with section names"
-        )
-        print("Canvas course listing failed: missing section Canvas course IDs.")
-        raise CourseNotFound
-    courses = conf["canvas-courses"]
-    section_ids = {course["section"]: course["id"] for course in courses}
-    min_name = re.search(r"[A-Za-z]+\d+", hw_name).group(0)
-    assignment_ids = {}
-    for section, course_id in section_ids.items():
-        try:
-            canvas_assignments = canvas.get_course_assignments(course_id, min_name)
-        except CourseNotFound:
-            logger.error("Failed to pull assignment list from Canvas")
-            raise
-        if len(canvas_assignments) != 1:
-            logger.warning(
-                "Could not uniquely identify Canvas assignment from name %s and section %s, using first assignment listed",
-                min_name,
-                section,
-            )
-        assignment_ids[section] = canvas_assignments[0]["id"]
-    return (section_ids, assignment_ids)
 
 
 def student_search(
@@ -231,17 +246,11 @@ def handle_scoring(
     backend: BackendBase,
     args: argparse.Namespace,
     student: Dict[str, Any],
-    canvas: CanvasAPI,
-    section_ids: Dict[str, Any],
-    assignment_ids: Dict[str, Any],
 ) -> Optional[float]:
     """
     Obtains the autograded score from a repository's CI jobs
     :param student: The part of the config structure with info
     on a student's username, ID, and section
-    :param section_ids: A map of section names/identifiers onto
-    Canvas internal course IDs
-    :param assignment_ids: A map of section names/identifiers
     onto the Canvas internal assignment IDs for a given assignment
     :return: The score obtained from the results file
     """
@@ -255,6 +264,9 @@ def handle_scoring(
         conf.semester, student_section, hw_name, username
     )
     try:
+        canvas = OptionalCanvas.get_api(conf)
+        section_ids = OptionalCanvas.get_section_ids(conf, hw_name)
+        assignment_ids = OptionalCanvas.get_assigment_ids(conf, hw_name)
         repo = backend.student_repo(backend_conf, conf.namespace, full_name)
         logger.info("Scoring %s...", repo.name_with_namespace)
         if not args.nocheck:
@@ -282,9 +294,9 @@ def handle_scoring(
     return score
 
 
-@requires_config_and_backend_and_canvas
+@requires_config_and_backend
 def score_assignments(
-    conf: Config, backend: BackendBase, args: argparse.Namespace, canvas: CanvasAPI
+    conf: Config, backend: BackendBase, args: argparse.Namespace
 ) -> None:
     """Goes through each student repository and grabs the most recent CI
     artifact, which contains their autograded score
@@ -292,13 +304,10 @@ def score_assignments(
     student = args.student
 
     roster = get_filtered_roster(conf.roster, args.section, student)
-    section_ids, assignment_ids = lookup_canvas_ids(conf, canvas, args.name)
 
     scores: List[float] = []
     for student in progress.iterate(roster):
-        score = handle_scoring(
-            conf, backend, args, student, canvas, section_ids, assignment_ids
-        )
+        score = handle_scoring(conf, backend, args, student)
         if score is not None:
             scores.append(score)
 
@@ -306,15 +315,14 @@ def score_assignments(
     print_statistics(scores)
 
 
-@requires_config_and_backend_and_canvas
+@requires_config_and_backend
 def checkout_students(
-    conf: Config, backend: BackendBase, args: argparse.Namespace, canvas: CanvasAPI
+    conf: Config, backend: BackendBase, args: argparse.Namespace
 ) -> None:
     """Interactively prompts for student info and grabs the most recent CI
     artifact, which contains their autograded score
     """
     roster = get_filtered_roster(conf.roster, args.section, None)
-    section_ids, assignment_ids = lookup_canvas_ids(conf, canvas, args.name)
 
     while True:
         query = input("Enter student ID or name, or 'q' to quit: ")
@@ -324,9 +332,7 @@ def checkout_students(
         if not student:
             continue
 
-        score = handle_scoring(
-            conf, backend, args, student, canvas, section_ids, assignment_ids
-        )
+        score = handle_scoring(conf, backend, args, student)
         logger.info("Uploaded score of %d", (score))
 
 
