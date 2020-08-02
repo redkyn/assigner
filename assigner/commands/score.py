@@ -267,7 +267,7 @@ def handle_scoring(
         logger.info("Scoring %s...", repo.name_with_namespace)
         if "id" not in student:
             student["id"] = backend.repo.get_user_id(username, backend_conf)
-        if not args.nocheck:
+        if not args.noverify:
             unlock_time = repo.get_member_add_date(student["id"])
             check_repo_integrity(repo, files_to_check, unlock_time)
         score = get_most_recent_score(repo, args.path)
@@ -376,11 +376,11 @@ def setup_parser(parser: argparse.ArgumentParser):
 
     all_parser.set_defaults(run=score_assignments)
 
-    checkout_parser = subparsers.add_parser(
-        "checkout",
+    interactive_parser = subparsers.add_parser(
+        "interactive",
         help="Interactively checkout individual students and upload their grades to Canvas",
     )
-    checkout_parser.set_defaults(run=checkout_students)
+    interactive_parser.set_defaults(run=checkout_students)
 
     integrity_parser = subparsers.add_parser(
         "integrity",
@@ -390,7 +390,7 @@ def setup_parser(parser: argparse.ArgumentParser):
     integrity_parser.set_defaults(run=integrity_check)
 
     # Flags common to all subcommands
-    for subcmd_parser in [all_parser, checkout_parser, integrity_parser]:
+    for subcmd_parser in [all_parser, interactive_parser, integrity_parser]:
         subcmd_parser.add_argument("name", help="Name of the assignment to check")
         subcmd_parser.add_argument("--section", nargs=1, help="Section to check")
         subcmd_parser.add_argument(
@@ -403,9 +403,9 @@ def setup_parser(parser: argparse.ArgumentParser):
         )
 
     # Flags common to the scoring subcommands
-    for subcmd_parser in [all_parser, checkout_parser]:
+    for subcmd_parser in [all_parser, interactive_parser]:
         subcmd_parser.add_argument(
-            "--nocheck",
+            "--noverify",
             action="store_true",
             help="Don't check whether a student has overwritten the grader files",
         )
