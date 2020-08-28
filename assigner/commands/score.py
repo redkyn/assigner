@@ -112,14 +112,17 @@ def get_most_recent_score(repo: RepoBase, result_path: str) -> float:
         ci_jobs = repo.list_ci_jobs()
         most_recent_job_id = ci_jobs[0]["id"]
         score_file = repo.get_ci_artifact(most_recent_job_id, result_path)
-        score = score_file.split()[-1]
+        last_token = score_file.split()[-1]
+        score = float(last_token)
+        if not 0.0 <= score <= 100.0:
+            logger.warning("Unusual score retrieved: %f.", score)
+        return score
     except HTTPError as e:
         if e.response.status_code == 404:
             logger.warning(
                 "CI artifact does not exist in repo %s.", repo.name_with_namespace,
             )
         raise
-    return float(score)
 
 
 def student_search(
@@ -283,8 +286,9 @@ def handle_scoring(
                         "No Canvas ID for student.  Remove the entry for {} in the roster,"
                         " then re-run 'assigner canvas import`.".format(student["name"])
                     )
+                # Append a percent as provided scores are percentages and not number of pts
                 canvas.put_assignment_submission(
-                    course_id, assignment_id, student["canvas-id"], str(score) + "%"
+                    course_id, assignment_id, student["canvas-id"], str(score) + "%",
                 )
             except StudentNotFound as e:
                 logger.debug(e)
