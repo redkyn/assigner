@@ -283,8 +283,10 @@ def handle_scoring(
             try:
                 if "canvas-id" not in student:
                     raise StudentNotFound(
-                        "No Canvas ID for student.  Remove the entry for {} in the roster,"
-                        " then re-run 'assigner canvas import`.".format(student["name"])
+                        "No Canvas ID for student.  Remove the student with `assigner roster remove {}`,"
+                        " then run 'assigner canvas import {} {}`.".format(
+                            username, course_id, student_section
+                        )
                     )
                 # Append a percent as provided scores are percentages and not number of pts
                 canvas.put_assignment_submission(
