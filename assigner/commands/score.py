@@ -278,6 +278,11 @@ def handle_scoring(
             course_id = section_ids[student_section]
             assignment_id = assignment_ids[student_section]
             try:
+                if "canvas-id" not in student:
+                    raise StudentNotFound(
+                        "No Canvas ID for student.  Remove the entry for {} in the roster,"
+                        " then re-run 'assigner canvas import`.".format(student["name"])
+                    )
                 canvas.put_assignment_submission(
                     course_id, assignment_id, student["canvas-id"], str(score) + "%"
                 )

@@ -167,15 +167,16 @@ produces an output file (artifact) containing the score.
 
 There are two methods of uploading these scores:
 1. Use `assigner score all` if you'd like to get the scores for all students, passing the `--upload` flag if you'd like to upload them to Canvas.
-1. Use `assigner score checkout` if you'd like to upload scores one at a time, using an interactive search function to select a student.  
+1. Use `assigner score interactive` if you'd like to upload scores one at a time, using an interactive search function to select a student.  
 
 The latter option may be useful in circumstances where an instructor wants to verify attendance as part of a programming lab or test.
 
 An example grading workflow for a conventional assignment might look like the following:
 1. `assigner score all assignment-name` while the assignment is open, to monitor student progress.
 1. `assigner lock assignment-name` once the due date is reached
-1. `assigner score all --upload assignment-name -f path/to/grader_file1 path/to/grader_file2` to upload scores and check whether grading-related files were modified 
-by the student
+1. `assigner score all --upload assignment-name -f path/to/grader_file1 path/to/grader_file2` to upload scores and check whether 
+grading-related files were modified by the student, e.g. CI configuration files like `gitlab-ci.yml` and `azure-pipelines.yml` or 
+grading inputs like `sample_inputs/input0.txt`.  These paths should be relative to the root of the repository.
 
 #### Details on checking the integrity of grading files
 A change to a grading-related file is considered legitimate if it is GPG-signed by a maintainer or owner of the repository.
@@ -190,7 +191,7 @@ To use GPG to sign a commit, you must complete the following:
 
 [GitLab's tutorial](https://docs.gitlab.com/ee/user/project/repository/gpg_signed_commits/) explains the entire process in detail.
 
-Any deviations will be reported by default unless the `--nocheck` flag is passed to any of the `assigner score` subcommands.
+Any deviations will be reported by default unless the `--noverify` flag is passed to any of the `assigner score` subcommands.
 The integrity of student repositories can be checked without retrieving scores using the `assigner score integrity` command.
 
 ### Committing and pushing changes to student repositories

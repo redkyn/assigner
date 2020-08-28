@@ -60,8 +60,4 @@ class Config(UserDict):
         if key == "roster" and self.data.get(key, None) is None:
             self.data[key] = []
 
-        # Fill in a blank course list if needed
-        elif key == "canvas-courses" and self.data.get(key, None) is None:
-            self.data[key] = []
-
         return self.data[key]

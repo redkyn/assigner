@@ -17,7 +17,7 @@ def get_filtered_roster(roster, section, target):
 
 
 def add_to_roster(
-    conf, backend, roster, name, username, section, force=False, canvas_id=-1
+    conf, backend, roster, name, username, section, force=False, canvas_id=None
 ):
     student = {
         "name": name,
@@ -35,7 +35,7 @@ def add_to_roster(
     except RepoError:
         logger.warning("Student %s does not have a Gitlab account.", name)
 
-    if canvas_id >= 0:
+    if canvas_id:
         student["canvas-id"] = canvas_id
 
     roster.append(student)
