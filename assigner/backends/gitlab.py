@@ -381,9 +381,20 @@ class GitlabRepo(RepoBase):
         # Gitlab's commit created_at time uses the git metadata;
         # rather than trusting students, we get the time the commit was pushed at
         if matching_pushes and HEAD['id'] == matching_pushes[0]['push_data']['commit_to']:
-            # For whatever reason, Gitlab uses a different time format here than for commits...
-            unmangled_time = matching_pushes[0]['created_at'][:-1] + "-0000"
-            HEAD['created_at'] = unmangled_time
+            created_at = matching_pushes[0]['created_at']
+
+            if created_at.endswith('Z'): # convert 'Z' to appropriate UTC offset
+                created_at = created_at[:-1] + "-0000"
+            else:
+                # Fix UTC offset format in GitLab's datetime: prior to py3.7, UTC offsets could not contain colons
+                # timezone specifier starts with - or +; look for - first and if that fails then look for +
+                tz_start = created_at.rfind('-')
+                if tz_start == -1:
+                    tz_start = created_at.rfind('+')
+                if tz_start != -1:
+                    created_at = created_at[:tz_start] + created_at[tz_start:].replace(':', '')
+
+            HEAD['created_at'] = created_at
 
         return HEAD
 
