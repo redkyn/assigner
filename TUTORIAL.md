@@ -165,6 +165,8 @@ Although Assigner does not support grading, it can be used to upload the scores 
 Currently, this feature is supported for workflows in which an automated grading script runs as part of a Continuous Integration (CI) job and 
 produces an output file (artifact) containing the score.  Only GitLab CI is supported at this time.  
 
+You can view an example autograder utilizing this workflow here: [grade-sh](https://gitlab.com/classroomcode/grade-sh).
+
 In order for Assigner to consume the result of a grading CI job, the job must publish a plaintext artifact.  The last token in this 
 artifact must be the student's result *as a percentage*.  This percentage can be a whole number or a decimal. An example valid output file
 (just the last few lines) is as follows:
