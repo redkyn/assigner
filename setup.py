@@ -80,7 +80,7 @@ setup(
         'requests>=2.20.0',
         'PTable>=0.9',
         'enlighten>=1.5.0',
-        'redkyn-common>=1.0.1',
+        'redkyn-common>=1.1.0',
     ],
 
     tests_require=[

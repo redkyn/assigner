@@ -1,3 +1,9 @@
+## Devel
+
+- Add auto-uploading functionality with `score` command to grab autograder results
+  from repo CI artifacts and upload them to Canvas.  Also checks for student tampering
+  with grading-related files.
+
 ## 2.0.2
 
 - Fix bugs with and severely de-cruft Gitlab timestamp parsing

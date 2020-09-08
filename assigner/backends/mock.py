@@ -1,8 +1,9 @@
-#pylint: disable=dangerous-default-value
+# pylint: disable=dangerous-default-value
 import git
 import logging
 import re
 from unittest.mock import MagicMock
+from typing import List, Optional
 
 from enum import Enum
 from requests.exceptions import HTTPError
@@ -13,12 +14,13 @@ from assigner.backends.base import (
     RepoBase,
     RepoError,
     StudentRepoBase,
-    TemplateRepoBase
+    TemplateRepoBase,
 )
 
 
 class Visibility(Enum):
     """Mock API values for repo visibility"""
+
     private = 0
     internal = 10
     public = 20
@@ -38,9 +40,7 @@ MockGitRepo = MagicMock(spec=git.Repo)
 class MockRepo(RepoBase):
     """Mock repo; manages API requests and various metadata"""
 
-    PATH_RE = re.compile(
-        r"^/(?P<namespace>[\w\-\.]+)/(?P<name>[\w\-\.]+)\.git$"
-    )
+    PATH_RE = re.compile(r"^/(?P<namespace>[\w\-\.]+)/(?P<name>[\w\-\.]+)\.git$")
 
     @classmethod
     def build_url(cls, config, namespace, name):
@@ -60,7 +60,7 @@ class MockRepo(RepoBase):
 
         return cls("https://basemock.com/api4/", "namespace", "HW1", "token")
 
-    #pylint: disable=super-init-not-called
+    # pylint: disable=super-init-not-called
     def __init__(self, config, namespace, name, url=None):
         self.config = config
         self.namespace = namespace
@@ -98,8 +98,11 @@ class MockRepo(RepoBase):
                 self._info = MagicMock()
             except HTTPError as e:
                 if e.response.status_code == 404:
-                    logging.debug("Could not find repo with url %s/api/v4%s.",
-                                  self.config["host"], url)
+                    logging.debug(
+                        "Could not find repo with url %s/api/v4%s.",
+                        self.config["host"],
+                        url,
+                    )
                     self._info = None
                 else:
                     raise
@@ -144,8 +147,7 @@ class MockRepo(RepoBase):
     def clone_to(self, dir_name, branch=None, attempts=1):
         logging.debug("Cloning %s...", self.ssh_url)
         if branch:
-            self._repo = MockGitRepo.clone_from(self.ssh_url, dir_name,
-                                                branch=branch)
+            self._repo = MockGitRepo.clone_from(self.ssh_url, dir_name, branch=branch)
             for b in branch:
                 self._repo.create_head(b, "origin/{}".format(b))
 
@@ -171,15 +173,19 @@ class MockRepo(RepoBase):
     def get_user_id(cls, username, config):
         id = sum(map(ord, username))
 
-        logging.info(
-            "Got id %i for user %s.", id, username
-        )
+        logging.info("Got id %i for user %s.", id, username)
         return id
 
     def list_members(self):
         return [MagicMock(), MagicMock(), MagicMock()]
 
+    def list_authorized_emails(self):
+        return MagicMock()
+
     def get_member(self, user_id):
+        return MagicMock()
+
+    def get_member_add_date(self, user_id: str) -> str:
         return MagicMock()
 
     def add_member(self, user_id, level):
@@ -191,7 +197,22 @@ class MockRepo(RepoBase):
     def delete_member(self, user_id):
         return MagicMock()
 
-    def list_commits(self, ref_name="master"):
+    def list_commits(self, ref_name="master", since=""):
+        return MagicMock()
+
+    def list_commit_hashes(self, ref_name: str = "master", since="") -> List[str]:
+        return MagicMock()
+
+    def list_commit_files(self, commit_hash: str) -> List[str]:
+        return MagicMock()
+
+    def get_commit_signature_email(self, commit_hash: str) -> Optional[str]:
+        return MagicMock()
+
+    def list_ci_jobs(self):
+        return MagicMock()
+
+    def get_ci_artifact(self, job_id, artifact_path):
         return MagicMock()
 
     def list_pushes(self):
@@ -227,7 +248,6 @@ class MockRepo(RepoBase):
 
 
 class MockTemplateRepo(MockRepo, TemplateRepoBase):
-
     @classmethod
     def new(cls, name, namespace, config):
         return MockRepo(name, namespace, config)
@@ -251,7 +271,7 @@ class MockStudentRepo(MockRepo, StudentRepoBase):
             "section": section,
             "assignment": assignment,
             # Replace .s with -s
-            "user": user.translate(str.maketrans(".", "-"))
+            "user": user.translate(str.maketrans(".", "-")),
         }
 
         return "{semester}-{section}-{assignment}-{user}".format(**fmt)
@@ -265,6 +285,7 @@ class MockBackend(BackendBase):
     """
     Common abstract base backend for all assigner backends (gitlab or mock).
     """
-    repo = MockRepo # type: RepoBase
-    template_repo = MockTemplateRepo # type: TemplateRepoBase
-    student_repo = MockStudentRepo # type: StudentRepoBase
+
+    repo = MockRepo  # type: RepoBase
+    template_repo = MockTemplateRepo  # type: TemplateRepoBase
+    student_repo = MockStudentRepo  # type: StudentRepoBase

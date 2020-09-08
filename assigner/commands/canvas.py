@@ -15,6 +15,17 @@ help = "Get Canvas course information"
 logger = logging.getLogger(__name__)
 
 
+def add_to_courses(courses, course_id: int, section: str) -> None:
+    course_obj = {
+        "section": section,
+        "id": course_id,
+    }
+
+    if any(filter(lambda c: c['id'] == course_id, courses)):
+        logger.warning("Course %s already exists, not modifying", course_id)
+    else:
+        courses.append(course_obj)
+
 @requires_config_and_backend
 def import_from_canvas(conf, backend, args):
     """Imports students from a Canvas course to the roster.
@@ -35,6 +46,10 @@ def import_from_canvas(conf, backend, args):
 
     try:
         students = canvas.get_course_students(course_id)
+        if "canvas-courses" not in conf:
+            conf["canvas-courses"] = []
+        add_to_courses(conf["canvas-courses"], int(course_id), section)
+
     except AuthenticationFailed as e:
         logger.debug(e)
         logger.error("Canvas authentication failed. Is your token missing or expired?")
@@ -45,12 +60,12 @@ def import_from_canvas(conf, backend, args):
         return
 
     for s in students:
-        if 'sis_user_id' not in s:
+        if 'sis_user_id' not in s or not s['sis_user_id']:
             logger.error("Could not get username for %s", s['sortable_name'])
 
         try:
             add_to_roster(
-                conf, backend, conf.roster, s['sortable_name'], s['sis_user_id'], section, force
+                conf, backend, conf.roster, s['sortable_name'], s['sis_user_id'], section, force, s['id']
             )
         except DuplicateUserError:
             logger.warning("User %s is already in the roster, skipping", s['sis_user_id'])

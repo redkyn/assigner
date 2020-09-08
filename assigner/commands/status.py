@@ -31,9 +31,19 @@ def status(conf, backend, args):
     if sort_key:
         roster.sort(key=lambda s: s[sort_key])
 
-    output = PrettyTable([
-        "#", "Sec", "SID", "Name", "Status", "Branches",
-        "HEAD", "Last Commit Author", "Last Push Time"])
+    output = PrettyTable(
+        [
+            "#",
+            "Sec",
+            "SID",
+            "Name",
+            "Status",
+            "Branches",
+            "HEAD",
+            "Last Commit Author",
+            "Last Push Time",
+        ]
+    )
     output.align["Name"] = "l"
     output.align["Last Commit Author"] = "l"
 
@@ -42,10 +52,11 @@ def status(conf, backend, args):
         name = student["name"]
         username = student["username"]
         student_section = student["section"]
-        full_name = backend.student_repo.build_name(semester, student_section,
-                                                    hw_name, username)
+        full_name = backend.student_repo.build_name(
+            semester, student_section, hw_name, username
+        )
 
-        row = [i+1, student_section, username, name, "", "", "", "", ""]
+        row = [i + 1, student_section, username, name, "", "", "", "", ""]
 
         repo = backend.student_repo(backend_conf, namespace, full_name)
 
@@ -68,7 +79,7 @@ def status(conf, backend, args):
             output.add_row(row)
             continue
         if repo.info["archived"]:
-            row[4] = 'Archived'
+            row[4] = "Archived"
         else:
             level = backend.access(
                 [s["access_level"] for s in members if s["id"] == student["id"]][0]
@@ -96,13 +107,14 @@ def status(conf, backend, args):
 
 
 def setup_parser(parser):
-    parser.add_argument("--section", nargs="?",
-                        help="Section to get status of")
-    parser.add_argument("--student", metavar="id",
-                        help="ID of student.")
-    parser.add_argument("--sort", nargs="?", default="name",
-                        choices=["name", "username"],
-                        help="Key to sort users by.")
-    parser.add_argument("name", nargs="?",
-                        help="Name of the assignment to look up.")
+    parser.add_argument("--section", nargs="?", help="Section to get status of")
+    parser.add_argument("--student", metavar="id", help="ID of student.")
+    parser.add_argument(
+        "--sort",
+        nargs="?",
+        default="name",
+        choices=["name", "username"],
+        help="Key to sort users by.",
+    )
+    parser.add_argument("name", nargs="?", help="Name of the assignment to look up.")
     parser.set_defaults(run=status)

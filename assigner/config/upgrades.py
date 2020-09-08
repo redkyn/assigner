@@ -1,4 +1,3 @@
-
 def _0_to_1(config):
     config["gitlab-token"] = config["token"]
     del config["token"]
@@ -22,7 +21,11 @@ def _1_to_2(config):
     return config
 
 
-UPGRADES = [
-    _0_to_1,
-    _1_to_2,
-]
+def _2_to_3(config):
+    config["version"] = 3
+    config["canvas-courses"] = []
+
+    return config
+
+
+UPGRADES = [_0_to_1, _1_to_2, _2_to_3]
