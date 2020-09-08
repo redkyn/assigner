@@ -28,9 +28,9 @@ class OptionalCanvas:
     when needed
     """
 
-    _api: CanvasAPI = None
-    _section_ids: Dict[str, Any] = {}
-    _assignment_ids: Dict[str, Any] = {}
+    _api = None
+    _section_ids = {}
+    _assignment_ids = {}
 
     @staticmethod
     def lookup_canvas_ids(
@@ -313,7 +313,7 @@ def score_assignments(
 
     roster = get_filtered_roster(conf.roster, args.section, student)
 
-    scores: List[float] = []
+    scores = []
     for student in progress.iterate(roster):
         score = handle_scoring(conf, backend, args, student)
         if score is not None:
