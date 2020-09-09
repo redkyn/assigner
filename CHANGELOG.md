@@ -3,6 +3,7 @@
 - Add auto-uploading functionality with `score` command to grab autograder results
   from repo CI artifacts and upload them to Canvas.  Also checks for student tampering
   with grading-related files.
+- Tidy up some docs, clarifying new features and making things more informative
 
 ## 2.0.2
 
