@@ -231,8 +231,9 @@ We recommend using the following workflow with `commit` and `push`:
 2. Clone or pull local copies of their repositories using `assigner get`.
 3. Make the changes you require in each repository.
 4. Commit your changes.
-    `assigner commit assignment-name "my commit message"` behaves effectively like executing `git checkout master; git commit -am "my commit message` in each student repository.
+    `assigner commit assignment-name "my commit message"` behaves effectively like executing `git checkout master; git commit -m "my commit message` in each student repository.
     Add new files by specifying their names after the `-a` flag; remove files by specifying their names after the `-r` flag.
+    To include all tracked changes in each repository, use the `-u` or `--update` flag. This flag has the same behavior as `git add -u` or `git commit -a`.
 
     To add all untracked files in each student's repository, run `assigner commit assignment-name "commit message" -a "*"`.
 

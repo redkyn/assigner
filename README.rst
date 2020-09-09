@@ -37,12 +37,15 @@ Check out the `tutorial <https://github.com/redkyn/assigner/blob/master/TUTORIAL
 - ``assign <assignment>`` Creates homework repositories for an assignment for each student in the roster.
 - ``open <assignment>`` Adds each student in the roster to their respective homework repositories as Developers so they can pull/commit/push their work.
 - ``get <assignment> [<path>]`` Creates a folder for the assignment in the CWD (or ``<path>``, if specified) and clones each students' repository into subfolders or fetches their changes if their repository is already cloned.
+- ``commit <assignment> <message> [<path>]`` Commits changes to files in student repositories located in the CWD or ``<path>``.
+- ``push <assignment> [<path>]`` Pushes new commits to student repositories to GitLab.
+- ``score`` Score student assignments and push grades to Canvas.
 - ``lock <assignment>`` Sets each student to Reporter status on their homework repository so they cannot push changes, etc.
 - ``unlock <assignment>`` Sets each student to Developer status on their homework repository.
 - ``archive <assignment>`` Archives student repositories, disallowing pushes and hiding the repository from the project listing on GitLab.
 - ``unarchive <assignment>`` Restores archived student repositories to their previous state.
-- ``protect <branch>`` Protect a repo branch (prevent force pushes)
-- ``unprotect <branch>`` Unprotect a repo branch
+- ``protect <branch>`` Protect a repo branch (prevent force pushes).
+- ``unprotect <branch>`` Unprotect a repo branch.
 - ``status <assignment>`` Shows the status of student homework repositories, as well as the last commit author and timestamp for each repository.
 - ``roster`` Manages the course roster.
 - ``canvas`` Lists Canvas courses or imports students from a Canvas course to the roster.
@@ -100,7 +103,9 @@ To generate an API token for Canvas, log onto your Canvas account (e.g. https://
 Reporting Bugs
 --------------
 
-See |CONTRIBUTING.md|_.
+Assigner tries to be as user-friendly and bug-free as possible.
+If you encounter behavior that is confusing, seems wrong, or used to work but doesn't anymore, please `file a bug report <https://github.com/redkyn/assigner/issues>`_.
+Please check |CONTRIBUTING.md|_ to see what info we'd like to see in bug reports and advice on contributing patches if you want to fix or improve things yourself.
 
 .. this is an awful hack; see http://docutils.sourceforge.net/FAQ.html#is-nested-inline-markup-possible
 .. |CONTRIBUTING.md| replace:: ``CONTRIBUTING.md``
@@ -114,3 +119,4 @@ Credits
 - Natasha Jarus
 - Islam Elnabarawy
 - Billy Rhoades
+- Josh Essman
