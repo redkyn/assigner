@@ -1,3 +1,9 @@
+## Unreleased
+
+- Change `score` command defaults to be more generic, fix a bug when a student's repo
+  does not exist
+- Add `-S` option to `commit` command to allow for GPG-signed commits
+
 ## 3.0.0
 
 - Add auto-uploading functionality with `score` command to grab autograder results

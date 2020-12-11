@@ -299,6 +299,7 @@ def handle_scoring(
     except RepoError as e:
         logger.debug(e)
         logger.warning("Unable to find repo for %s with URL %s", username, full_name)
+        score = None
     return score
 
 
@@ -409,7 +410,7 @@ def setup_parser(parser: argparse.ArgumentParser):
             "--files",
             nargs="+",
             dest="files",
-            default=["grade.sh", ".gitlab-ci.yml"],
+            default=[".gitlab-ci.yml"],
             help="Files to check for modification",
         )
 

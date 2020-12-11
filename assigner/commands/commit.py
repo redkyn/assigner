@@ -1,5 +1,6 @@
 import logging
 import os
+import subprocess
 
 from requests.exceptions import HTTPError
 from git.exc import NoSuchPathError
@@ -31,6 +32,7 @@ def _push(conf, backend, args):
     remove = args.remove
     update = args.update
     allow_empty = args.allow_empty
+    gpg_sign = args.gpg_sign
 
     # Default behavior: commit changes to all tracked files
     if (add == []) and (remove == []):
@@ -82,7 +84,16 @@ def _push(conf, backend, args):
 
             if has_changes or allow_empty:
                 logging.debug("%s: committing changes with message %s", full_name, message)
-                index.commit(message)
+                if gpg_sign:
+                    # The GitPython interface does not support signed commits, and
+                    # launching via repo.git.commit will launch an inaccessible
+                    # interactive prompt in the background
+                    index.write()
+                    subprocess.check_call(["git", "commit", "-S", "-m", '"{}"'.format(message)],
+                                          stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL,
+                                          cwd=repo_dir)
+                else:
+                    index.commit(message)
             else:
                 logging.warning("%s: No changes in repo; skipping commit.", full_name)
 
@@ -113,6 +124,8 @@ def setup_parser(parser):
                         help="Include all changed files (i.e., git add -u or git commit -a)")
     parser.add_argument("-e", "--allow-empty", action="store_true", dest="allow_empty",
                         help="Commit even if there are no changes to commit")
+    parser.add_argument("-S", "--gpg-sign", action="store_true", dest="gpg_sign",
+                        help="GPG-sign the commits using the committer identity")
     parser.add_argument("--section", nargs="?",
                         help="Section to commit to")
     parser.add_argument("--student", metavar="id",
