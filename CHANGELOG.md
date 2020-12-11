@@ -1,8 +1,8 @@
-## Unreleased
+## 3.1.0
 
-- Change `score` command defaults to be more generic, fix a bug when a student's repo
-  does not exist
 - Add `-S` option to `commit` command to allow for GPG-signed commits
+- Change `score` command defaults to be more generic
+- Fix a bug in `score` that occurred when a student's repo did not exist
 
 ## 3.0.0
 
