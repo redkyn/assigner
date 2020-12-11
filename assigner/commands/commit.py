@@ -89,9 +89,9 @@ def _push(conf, backend, args):
                     # launching via repo.git.commit will launch an inaccessible
                     # interactive prompt in the background
                     index.write()
-                    subprocess.call(["git", "commit", "-S", "-m", '"{}"'.format(message)],
-                                    stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL,
-                                    cwd=repo_dir)
+                    subprocess.check_call(["git", "commit", "-S", "-m", '"{}"'.format(message)],
+                                          stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL,
+                                          cwd=repo_dir)
                 else:
                     index.commit(message)
             else:
