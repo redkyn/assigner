@@ -145,6 +145,7 @@ disable=print-statement,
         redefined-builtin,
         too-few-public-methods,
         bad-continuation,
+        unsubscriptable-object,
 
 
 

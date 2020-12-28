@@ -1,3 +1,7 @@
+## devel
+
+- Minor changes to certain exception messages
+
 ## 3.1.0
 
 - Add `-S` option to `commit` command to allow for GPG-signed commits

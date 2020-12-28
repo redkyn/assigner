@@ -1,0 +1,45 @@
+name: Build
+
+on: [push]
+
+jobs:
+  build:
+
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        python-version: [3.5, 3.6, 3.7, 3.8]
+        requirements: [requirements.txt]
+        include:
+          - python-version: 3.4
+            requirements: requirements-3.4.txt
+
+
+    steps:
+      - uses: actions/checkout@v2
+      - name: Set up Python ${{ matrix.python-version }}
+        uses: actions/setup-python@v2
+        with:
+          python-version: ${{ matrix.python-version }}
+      - name: Cache pip
+        uses: actions/cache@v2
+        with:
+          path: ~/.cache/pip
+          key: ${{ runner.os }}-pip-${{ matrix.python-version }}-${{ hashFiles( matrix.requirements ) }}
+          restore-keys: |
+            ${{ runner.os }}-pip-${{ matrix.python-version }}
+            ${{ runner.os }}-pip-
+            ${{ runner.os }}-
+      - name: Install development dependencies
+        run: |
+          pip install --upgrade pip
+          pip install -r ${{ matrix.requirements }}
+      - name: Install assigner
+        run: pip install .
+      - name: Lint with pyflakes
+        run: pyflakes assigner
+      - name: Lint with pylint
+        run: pylint assigner
+      - name: Run tests
+        run: python setup.py nosetests

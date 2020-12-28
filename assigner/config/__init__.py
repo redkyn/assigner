@@ -50,7 +50,7 @@ class Config(UserDict):
         return False  # propagate exceptions from the calling context
 
     def __getattr__(self, key):
-        attr = getattr(super(Config, self), key, None)
+        attr = getattr(super(), key, None)
         if attr:
             return attr
         # Keys contained dashes can be called using an underscore
