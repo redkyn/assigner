@@ -1,5 +1,6 @@
 ## devel
 
+- Official support for Python 3.9!
 - Minor changes to certain exception messages
 
 ## 3.1.0
