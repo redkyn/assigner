@@ -253,7 +253,7 @@ class GitlabRepo(RepoBase):
                     # so go ahead and re-create it just to be safe.
                     os.makedirs(dir_name, exist_ok=True)
                     raiseRetryableGitError(e)
-                    raise RepoError(e)
+                    raise RepoError(e) from e
 
                 # if we got this far, we succeeded!
                 break

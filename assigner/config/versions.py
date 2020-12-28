@@ -31,7 +31,7 @@ def validate(config, version=None):
     try:
         jsonschema.validate(config, SCHEMAS[version])
     except jsonschema.ValidationError as e:
-        raise ValidationError(e)
+        raise ValidationError(e) from None
 
 
 def get_version(config):
@@ -74,7 +74,6 @@ def upgrade(config):
             try:
                 validate(config, version + 1)
             except ValidationError as e:
-                # pylint: disable=bad-continuation
                 raise UpgradeError(
 """
 Upgrading configuration from version %d to %d resulted in an invalid configuration:
@@ -83,6 +82,6 @@ Upgrading configuration from version %d to %d resulted in an invalid configurati
 This is a bug. Please file an issue at https://github.com/redkyn/assigner/issues with your configuration.
 Your original configuration has been restored.
 """ % (version, version + 1, e.message)
-                )
+                ) from None
 
     return config

@@ -16,4 +16,4 @@ def from_name(name: str):
     try:
         return backend_names[name]
     except KeyError:
-        raise NoSuchBackend("Cannot find backend with name {}".format(name))
+        raise NoSuchBackend("Cannot find backend with name {}".format(name)) from None
