@@ -220,6 +220,12 @@ class GitlabRepo(RepoBase):
 
         return self.repo.create_head(branch, "origin/{}".format(branch))
 
+    def get_active_branch(self):
+        if self.repo is None:
+            raise RepoError("No repo to get active branch from")
+
+        return self.repo.active_branch
+
     def checkout(self, branch):
         return self.get_head(branch).checkout()
 

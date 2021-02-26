@@ -88,10 +88,29 @@ def _push(conf, backend, args):
                     # The GitPython interface does not support signed commits, and
                     # launching via repo.git.commit will launch an inaccessible
                     # interactive prompt in the background
-                    index.write()
-                    subprocess.check_call(["git", "commit", "-S", "-m", '"{}"'.format(message)],
-                                          stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL,
-                                          cwd=repo_dir)
+
+                    # The standard index.write(); subprocess("git commit -S") approach
+                    # does not actually commit the staged changes in the index.
+                    # however, using the plumbing methods works!
+
+                    # Write the staged changes to a git tree object
+                    tree_to_commit = index.write_tree()
+                    tree_sha = tree_to_commit.hexsha
+
+                    # Get the sha for the current commit that will be the parent of our new commit
+                    # This probably doesn't work if there are no commits; hopefully that's not how people use this.
+                    active_branch = repo.get_active_branch()
+                    parent_sha = active_branch.object.hexsha
+
+                    # Commit the tree
+                    o = subprocess.run(["git", "commit-tree", tree_sha, "-p", parent_sha, "-S", "-m", '"{}"'.format(message)],
+                            capture_output=True, text=True, check=True, cwd=repo_dir)
+
+                    # Get the sha of our commit from the output
+                    commit_sha = o.stdout
+
+                    # Update the active branch to point to the new commit
+                    active_branch.set_object(commit_sha)
                 else:
                     index.commit(message)
             else:
