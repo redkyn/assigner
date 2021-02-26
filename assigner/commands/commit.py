@@ -88,7 +88,7 @@ def _push(conf, backend, args):
                     # The GitPython interface does not support signed commits, and
                     # launching via repo.git.commit will launch an inaccessible
                     # interactive prompt in the background
-                    index.write()
+                    index.write(ignore_extension_data=True)
                     subprocess.check_call(["git", "commit", "-S", "-m", '"{}"'.format(message)],
                                           stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL,
                                           cwd=repo_dir)
