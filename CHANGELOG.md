@@ -1,5 +1,6 @@
-## devel
+## 3.1.1
 
+- Fix bug where `assigner commit -S` would not commit staged changes
 - Official support for Python 3.9!
 - Minor changes to certain exception messages
 
