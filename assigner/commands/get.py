@@ -1,7 +1,6 @@
 import logging
 import os
 
-from requests.exceptions import HTTPError
 from git import NoSuchPathError, GitCommandError, InvalidGitRepositoryError
 
 from assigner.backends import RepoError
@@ -120,11 +119,6 @@ def _get(conf, backend, args):
             logging.warning(e)
         except RepoError as e:
             logging.warning(e)
-        except HTTPError as e:
-            if e.response.status_code == 404:
-                logging.warning("Repository %s does not exist.", full_name)
-            else:
-                raise
 
     out_str = output.get_string()
     if out_str != "":
