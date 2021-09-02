@@ -20,6 +20,7 @@ from git.cmd import GitCommandNotFound
 from requests.exceptions import HTTPError
 
 from assigner.backends.decorators import requires_config_and_backend
+from assigner.exceptions import AssignerException
 from assigner.roster_util import get_filtered_roster
 from assigner import progress
 
@@ -202,8 +203,11 @@ def main(args=sys.argv[1:]):
             logger.error("%s is missing", e)
         elif isinstance(e, GitCommandNotFound):
             logger.error("git is not installed!")
+        elif isinstance(e, AssignerException):
+            logger.error(str(e))
         else:
             logger.error(str(e))
+            logger.error("This is a bug. Please file an issue here: https://github.com/redkyn/assigner/issues/new")
         raise SystemExit(1) from e
 
 
