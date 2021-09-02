@@ -43,6 +43,12 @@ def raiseUserNotAssigned(err: HTTPError):
     raise UserNotAssigned(err)
 
 def raiseRepositoryAlreadyExists(err: HTTPError):
+    """
+    Request url:
+        POST /api/v4/projects
+
+    Expected response: HTTP 400
+    """
     if err.response.status_code != 400:
         return
 

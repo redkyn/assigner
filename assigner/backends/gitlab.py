@@ -564,7 +564,11 @@ class GitlabStudentRepo(GitlabRepo, StudentRepoBase):
             "visibility_level": Visibility.private.value,
         }
 
-        result = cls._cls_gl_post(base_repo.config, "/projects", payload)
+        try:
+            result = cls._cls_gl_post(base_repo.config, "/projects", payload)
+        except HTTPError as e:
+            raiseRepositoryAlreadyExists(e)
+            raise e
 
         return cls.from_url(result["http_url_to_repo"], base_repo.config["token"])
 

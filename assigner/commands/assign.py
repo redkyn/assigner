@@ -4,16 +4,16 @@ import time
 
 from assigner.backends.base import RepoError
 from assigner.backends.decorators import requires_config_and_backend
+from assigner.backends.exceptions import (
+    RepositoryAlreadyExists,
+)
 from assigner.commands.open import open_assignment
 from assigner import progress
 from assigner.roster_util import get_filtered_roster
 
-from requests.exceptions import HTTPError
-
 help = "Assign a template repo to students"
 
 logger = logging.getLogger(__name__)
-
 
 @requires_config_and_backend
 def assign(conf, backend, args):
@@ -89,11 +89,12 @@ def assign(conf, backend, args):
                             )
                             logger.debug("Success!")
                             break
-                        except HTTPError as e:
-                            if retries >= 5 or e.response.status_code != 400:
+                        except RepositoryAlreadyExists as e:
+                            if retries >= 5:
                                 logger.debug("Critical Failure!")
                                 raise
                             logger.debug("Failed, retrying...")
+                            logger.debug(e)
 
                         # Delay and try again
                         time.sleep(wait * 2**retries)
