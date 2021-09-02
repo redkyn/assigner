@@ -1,8 +1,10 @@
 import logging
 
-from requests.exceptions import HTTPError
-
 from assigner.backends.decorators import requires_config_and_backend
+from assigner.backends.exceptions import (
+    AssignerGroupNotFound,
+    RepositoryAlreadyExists,
+)
 
 help = "Create a new template repo"
 
@@ -20,19 +22,28 @@ def new(conf, backend, args):
     namespace = conf.namespace
     backend_conf = conf.backend
 
-    if dry_run:
-        url = backend.repo.build_url(backend_conf, namespace, hw_name)
-        print(
-            "Created repo for {}:\n\t{}\n\t{}".format(hw_name, url, "(ssh url not available)"))
-    else:
-        try:
+    try:
+        if dry_run:
+            url = backend.repo.build_url(backend_conf, namespace, hw_name)
+            ssh_url = "(ssh url not available)"
+        else:
             repo = backend.template_repo.new(hw_name, namespace, backend_conf)
-            print("Created repo for {}:\n\t{}\n\t{}".format(hw_name, repo.url, repo.ssh_url))
-        except HTTPError as e:
-            if e.response.status_code == 400:
-                logger.warning("Repository %s already exists!", hw_name)
-            else:
-                raise
+            url = repo.url
+            ssh_url = repo.ssh_url
+
+        print("Created repo for {}:\n\t{}\n\t{}".format(hw_name, url, ssh_url))
+
+    except AssignerGroupNotFound as e:
+        logger.error(e)
+
+        do_create_group = input("\nDo you want to create this group? [y/N]: ")
+        if do_create_group.lower() == "y":
+            backend.repo.create_group(conf["namespace"], conf["backend"])
+            print("{} created!".format(conf["namespace"]))
+
+    except RepositoryAlreadyExists as e:
+        logger.warning("Repository %s already exists!", hw_name)
+        logger.debug(e)
 
 
 def setup_parser(parser):

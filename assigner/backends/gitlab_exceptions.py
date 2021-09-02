@@ -1,6 +1,7 @@
 from requests.exceptions import HTTPError
 
 from assigner.backends.exceptions import (
+    RepositoryAlreadyExists,
     UserInAssignerGroup,
     UserNotAssigned,
 )
@@ -40,3 +41,9 @@ def raiseUserNotAssigned(err: HTTPError):
         return
 
     raise UserNotAssigned(err)
+
+def raiseRepositoryAlreadyExists(err: HTTPError):
+    if err.response.status_code != 400:
+        return
+
+    raise RepositoryAlreadyExists(err)

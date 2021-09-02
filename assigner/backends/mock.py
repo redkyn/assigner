@@ -170,6 +170,10 @@ class MockRepo(RepoBase):
         logging.debug("Deleted %s.", self.name)
 
     @classmethod
+    def create_group(cls, group, config) -> None:
+        logging.debug("Created group %s", group)
+
+    @classmethod
     def get_user_id(cls, username, config):
         id = sum(map(ord, username))
 

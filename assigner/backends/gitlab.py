@@ -23,10 +23,15 @@ from assigner.backends.base import (
 from assigner.backends.gitlab_exceptions import (
     raiseUserInAssignerGroup,
     raiseUserNotAssigned,
+    raiseRepositoryAlreadyExists,
 )
 
 from assigner.backends.git_exceptions import raiseRetryableGitError
-from assigner.backends.exceptions import RetryableGitError
+from assigner.backends.exceptions import (
+    AssignerGroupNotFound,
+    RetryableGitError,
+)
+
 
 # Transparently use a common TLS session for each request
 requests = requests.Session()
@@ -497,6 +502,10 @@ class GitlabTemplateRepo(GitlabRepo, TemplateRepoBase):
     @classmethod
     def new(cls, name, namespace, config):
         namespaces = cls._cls_gl_get(config, "/namespaces", {"search": namespace})
+
+        if len(namespaces) == 0:
+            raise AssignerGroupNotFound("No groups matching {} were found on Gitlab".format(namespace))
+
         if len(namespaces) > 1:
             logging.warning(
                 "%s namespaces match %s; defaulting to namespace %s.",
@@ -524,7 +533,11 @@ class GitlabTemplateRepo(GitlabRepo, TemplateRepoBase):
             "visibility_level": Visibility.private.value,
         }
 
-        result = cls._cls_gl_post(config, "/projects", payload)
+        try:
+            result = cls._cls_gl_post(config, "/projects", payload)
+        except HTTPError as e:
+            raiseRepositoryAlreadyExists(e)
+            raise e
 
         return cls.from_url(result["http_url_to_repo"], config["token"])
 

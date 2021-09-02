@@ -8,3 +8,9 @@ class UserNotAssigned(AssignerException):
 
 class RetryableGitError(AssignerException):
     """ Git has encountered an error that may be spurious. """
+
+class AssignerGroupNotFound(AssignerException):
+    """ The group where assignments will be created does not exist. """
+
+class RepositoryAlreadyExists(AssignerException):
+    """ The repository has already been created. """

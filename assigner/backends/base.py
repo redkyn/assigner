@@ -82,6 +82,10 @@ class RepoBase:
         raise NotImplementedError
 
     @classmethod
+    def create_group(cls, group, config) -> None:
+        raise NotImplementedError
+
+    @classmethod
     def get_user_id(cls, username: str, config) -> str:
         raise NotImplementedError
 
