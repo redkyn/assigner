@@ -1,9 +1,10 @@
 import git
 import re
 from typing import Optional, Type, TypeVar, List, Any, Dict
+from assigner.exceptions import AssignerException
 
 
-class RepoError(Exception):
+class RepoError(AssignerException):
     pass
 
 
