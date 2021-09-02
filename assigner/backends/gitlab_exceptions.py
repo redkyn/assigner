@@ -5,6 +5,7 @@ from assigner.backends.exceptions import (
     UserInAssignerGroup,
     UserAlreadyAssigned,
     UserNotAssigned,
+    CIArtifactNotFound,
 )
 
 def raiseUserInAssignerGroup(err: HTTPError):
@@ -67,3 +68,14 @@ def raiseRepositoryAlreadyExists(err: HTTPError):
         return
 
     raise RepositoryAlreadyExists(err)
+
+def raiseCIArtifactNotFound(err: HTTPError):
+    """
+    Request url:
+        GET /projects/{}/jobs/{}/artifacts/{}
+    """
+
+    if err.response.status_code != 404:
+        return
+
+    raise CIArtifactNotFound(err)

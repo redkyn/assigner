@@ -4,14 +4,14 @@ from typing import Any, Dict, List, Optional, Tuple, Set
 import re
 import os
 
-from requests.exceptions import HTTPError
-
 from redkyn.canvas import CanvasAPI
 from redkyn.canvas.exceptions import CourseNotFound, StudentNotFound
 
 from assigner import make_help_parser
 from assigner.backends.base import RepoError, RepoBase, BackendBase
 from assigner.backends.decorators import requires_config_and_backend
+from assigner.backends.exceptions import CIArtifactNotFound
+from assigner.exceptions import AssignerException
 from assigner.roster_util import get_filtered_roster
 from assigner import progress
 from assigner.config import Config
@@ -20,6 +20,8 @@ help = "Retrieves scores from CI artifacts and optionally uploads to Canvas"
 
 logger = logging.getLogger(__name__)
 
+class CIJobNotFound(AssignerException):
+    """ No CI jobs found for repository. """
 
 class OptionalCanvas:
     """
@@ -110,6 +112,9 @@ def get_most_recent_score(repo: RepoBase, result_path: str) -> float:
     """
     try:
         ci_jobs = repo.list_ci_jobs()
+        if len(ci_jobs) == 0:
+            raise CIJobNotFound
+
         most_recent_job_id = ci_jobs[0]["id"]
         score_file = repo.get_ci_artifact(most_recent_job_id, result_path)
         last_token = score_file.split()[-1]
@@ -117,12 +122,9 @@ def get_most_recent_score(repo: RepoBase, result_path: str) -> float:
         if not 0.0 <= score <= 100.0:
             logger.warning("Unusual score retrieved: %f.", score)
         return score
-    except HTTPError as e:
-        if e.response.status_code == 404:
-            logger.warning(
-                "CI artifact does not exist in repo %s.", repo.name_with_namespace,
-            )
-        raise
+    except CIArtifactNotFound as e:
+        logger.warning("CI artifact does not exist in repo %s.", repo.name_with_namespace)
+        logger.debug(e)
 
 
 def student_search(
@@ -199,6 +201,9 @@ def print_statistics(scores: List[float]) -> None:
     Displays aggregate information (summary statistics)
     for a one-dimensional data set
     """
+    if len(scores) == 0:
+        return
+
     print("---Assignment Statistics---")
     print("Mean: ", sum(scores) / len(scores))
     print("Number of zeroes:", len([score for score in scores if score < 0.1]))
@@ -296,6 +301,9 @@ def handle_scoring(
                 logger.debug(e)
                 logger.warning("Unable to update submission for Canvas assignment")
 
+    except CIJobNotFound:
+        logger.error("No CI jobs found for repo %s", repo.name_with_namespace)
+        score = None
     except RepoError as e:
         logger.debug(e)
         logger.warning("Unable to find repo for %s with URL %s", username, full_name)

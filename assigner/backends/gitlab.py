@@ -25,6 +25,7 @@ from assigner.backends.gitlab_exceptions import (
     raiseUserAlreadyAssigned,
     raiseUserNotAssigned,
     raiseRepositoryAlreadyExists,
+    raiseCIArtifactNotFound,
 )
 
 from assigner.backends.git_exceptions import raiseRetryableGitError
@@ -414,10 +415,14 @@ class GitlabRepo(RepoBase):
 
     def get_ci_artifact(self, job_id, artifact_path):
         params = {"id": self.id, "job_id": job_id, "artifact_path": artifact_path}
-        return self._gl_get_raw(
-            "/projects/{}/jobs/{}/artifacts/{}".format(self.id, job_id, artifact_path),
-            params,
-        )
+        try:
+            return self._gl_get_raw(
+                "/projects/{}/jobs/{}/artifacts/{}".format(self.id, job_id, artifact_path),
+                params,
+            )
+        except HTTPError as e:
+            raiseCIArtifactNotFound(e)
+            raise e
 
     def list_pushes(self):
         return self._gl_get("/projects/{}/events?action=pushed".format(self.id))

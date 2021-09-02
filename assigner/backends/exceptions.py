@@ -21,3 +21,6 @@ class RepositoryAlreadyExists(AssignerException):
 
 class BranchNotFound(RepoError):
     """ The branch cannot be found in the repository. """
+
+class CIArtifactNotFound(AssignerException):
+    """ CI Artifact not found. """
