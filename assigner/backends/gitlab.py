@@ -22,6 +22,7 @@ from assigner.backends.base import (
 
 from assigner.backends.gitlab_exceptions import (
     raiseUserInAssignerGroup,
+    raiseUserAlreadyAssigned,
     raiseUserNotAssigned,
     raiseRepositoryAlreadyExists,
 )
@@ -355,6 +356,7 @@ class GitlabRepo(RepoBase):
             return self._gl_post("/projects/{}/members".format(self.id), payload)
         except HTTPError as e:
             raiseUserInAssignerGroup(e)
+            raiseUserAlreadyAssigned(e)
             raise e
 
     def edit_member(self, user_id, level):

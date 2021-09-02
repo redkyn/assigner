@@ -3,6 +3,7 @@ from requests.exceptions import HTTPError
 from assigner.backends.exceptions import (
     RepositoryAlreadyExists,
     UserInAssignerGroup,
+    UserAlreadyAssigned,
     UserNotAssigned,
 )
 
@@ -29,6 +30,19 @@ def raiseUserInAssignerGroup(err: HTTPError):
         return
 
     raise UserInAssignerGroup(err)
+
+def raiseUserAlreadyAssigned(err: HTTPError):
+    """
+    Request url:
+        POST /api/v4/projects/{}/members
+
+    Expected response: HTTP 409
+    """
+
+    if err.response.status_code != 409:
+        return
+
+    raise UserAlreadyAssigned(err)
 
 def raiseUserNotAssigned(err: HTTPError):
     """

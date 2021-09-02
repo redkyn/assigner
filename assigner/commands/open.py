@@ -1,10 +1,11 @@
 import logging
 
-from requests.exceptions import HTTPError
-
 from assigner.backends.base import RepoError
 from assigner.backends.decorators import requires_config_and_backend
-from assigner.backends.exceptions import UserInAssignerGroup
+from assigner.backends.exceptions import (
+    UserInAssignerGroup,
+    UserAlreadyAssigned,
+)
 from assigner.roster_util import get_filtered_roster
 from assigner import progress
 
@@ -17,11 +18,9 @@ def open_assignment(repo, student, access):
     try:
         logging.debug("Opening %s...", repo.name)
         repo.add_member(student["id"], access)
-    except HTTPError as e:
-        if e.response.status_code == 409:
-            logging.warning("%s is already a member of %s.", student["username"], repo.name)
-        else:
-            raise
+    except UserAlreadyAssigned as e:
+        logging.warning("%s is already a member of %s.", student["username"], repo.name)
+        logging.debug(e)
 
 
 @requires_config_and_backend
