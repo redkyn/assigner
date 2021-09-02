@@ -30,6 +30,7 @@ from assigner.backends.git_exceptions import raiseRetryableGitError
 from assigner.backends.exceptions import (
     AssignerGroupNotFound,
     RetryableGitError,
+    BranchNotFound,
 )
 
 
@@ -242,14 +243,17 @@ class GitlabRepo(RepoBase):
 
             try:  # for exp. backoff
                 try:
+                    self._repo = git.Repo.clone_from(self.ssh_url, dir_name)
                     if branch:
-                        self._repo = git.Repo.clone_from(self.ssh_url, dir_name)
                         for b in branch:
-                            self._repo.create_head(b, "origin/{}".format(b))
+                            try:
+                                self._repo.create_head(b, "origin/{}".format(b))
+                            # pylint: disable=no-member
+                            except git.exc.BadName as e:
+                                raise BranchNotFound(b, e) from e
 
                         logging.debug(self._repo.heads)
-                    else:
-                        self._repo = git.Repo.clone_from(self.ssh_url, dir_name)
+
                     logging.debug("Cloned %s.", self.name)
                 # pylint: disable=no-member
                 except git.exc.GitCommandError as e:

@@ -6,6 +6,7 @@ from assigner.backends.base import RepoError
 from assigner.backends.decorators import requires_config_and_backend
 from assigner.backends.exceptions import (
     RepositoryAlreadyExists,
+    BranchNotFound,
 )
 from assigner.commands.open import open_assignment
 from assigner import progress
@@ -46,6 +47,10 @@ def assign(conf, backend, args):
         if not dry_run:
             try:
                 template.clone_to(tmpdirname, branch)
+            except BranchNotFound as e:
+                logging.error("Cound not find branch %s in base repository", e.args[0])
+                logging.debug(e)
+                return
             except RepoError as e:
                 logging.error(
                     "Could not clone template repo (have you pushed at least one commit to it?)"

@@ -1,4 +1,5 @@
 from assigner.exceptions import AssignerException
+from assigner.backends.base import RepoError
 
 class UserInAssignerGroup(AssignerException):
     """ A student is a member of the group/namespace assigner is creating assignments in. This may make some operatons, such as assigning homework, no-ops as they already have access. """
@@ -14,3 +15,6 @@ class AssignerGroupNotFound(AssignerException):
 
 class RepositoryAlreadyExists(AssignerException):
     """ The repository has already been created. """
+
+class BranchNotFound(RepoError):
+    """ The branch cannot be found in the repository. """
