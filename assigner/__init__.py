@@ -17,7 +17,6 @@ import sys
 
 from colorlog import ColoredFormatter
 from git.cmd import GitCommandNotFound
-from requests.exceptions import HTTPError
 
 from assigner.backends.decorators import requires_config_and_backend
 from assigner.exceptions import AssignerException
@@ -86,16 +85,12 @@ def manage_repos(conf, backend, args, action):
         full_name = backend.student_repo.build_name(semester, student_section,
                                                     hw_name, username)
 
-        try:
-            repo = backend.student_repo(backend_conf, namespace, full_name)
-            if not dry_run:
-                if action(repo, student):
-                    count += 1
-            else:
+        repo = backend.student_repo(backend_conf, namespace, full_name)
+        if not dry_run:
+            if action(repo, student):
                 count += 1
-        except HTTPError:
-            logging.warning("Error processing %s", username)
-            raise
+        else:
+            count += 1
 
     print("Changed {} repositories.".format(count))
 
