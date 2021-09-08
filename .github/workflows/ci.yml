@@ -11,10 +11,6 @@ jobs:
       matrix:
         python-version: [3.5, 3.6, 3.7, 3.8, 3.9]
         requirements: [requirements.txt]
-        include:
-          - python-version: 3.4
-            requirements: requirements-3.4.txt
-
 
     steps:
       - uses: actions/checkout@v2
@@ -42,4 +38,5 @@ jobs:
       - name: Lint with pylint
         run: pylint assigner
       - name: Run tests
+        if: ${{ matrix.python-version > 3.5 }}
         run: python setup.py nosetests
