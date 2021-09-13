@@ -1,3 +1,10 @@
+## 3.1.2
+
+- Improveme exception handling
+- Commit clearly to handling any unexpected exceptions (non-AssignerExceptions are now a bug)
+- Change default Canvas git-backend username column to 'login_id'
+- Add option to `canvas import` to select column used for git-backend username
+
 ## 3.1.1
 
 - Fix bug where `assigner commit -S` would not commit staged changes
