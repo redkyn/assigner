@@ -41,6 +41,7 @@ def import_from_canvas(conf, backend, args):
     course_id = args.id
     section = args.section
     force = args.force
+    username_column = args.username_column
 
     canvas = CanvasAPI(conf["canvas-token"], conf["canvas-host"])
 
@@ -60,15 +61,16 @@ def import_from_canvas(conf, backend, args):
         return
 
     for s in students:
-        if 'sis_user_id' not in s or not s['sis_user_id']:
+        logger.debug(s)
+        if username_column not in s or not s[username_column]:
             logger.error("Could not get username for %s", s['sortable_name'])
 
         try:
             add_to_roster(
-                conf, backend, conf.roster, s['sortable_name'], s['sis_user_id'], section, force, s['id']
+                conf, backend, conf.roster, s['sortable_name'], s[username_column], section, force, s['id']
             )
         except DuplicateUserError:
-            logger.warning("User %s is already in the roster, skipping", s['sis_user_id'])
+            logger.warning("User %s is already in the roster, skipping", s[username_column])
 
     print("Imported {} students.".format(len(students)))
 
@@ -120,6 +122,9 @@ def setup_parser(parser):
     import_parser.add_argument("section", help="Section being imported")
     import_parser.add_argument(
         "--force", action="store_true", help="Import duplicate students anyway"
+    )
+    import_parser.add_argument(
+        "-u", "--username-column", metavar="username_column", nargs="?", default="login_id"
     )
     import_parser.set_defaults(run=import_from_canvas)
 
