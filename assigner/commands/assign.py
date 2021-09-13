@@ -4,16 +4,17 @@ import time
 
 from assigner.backends.base import RepoError
 from assigner.backends.decorators import requires_config_and_backend
+from assigner.backends.exceptions import (
+    RepositoryAlreadyExists,
+    BranchNotFound,
+)
 from assigner.commands.open import open_assignment
 from assigner import progress
 from assigner.roster_util import get_filtered_roster
 
-from requests.exceptions import HTTPError
-
 help = "Assign a template repo to students"
 
 logger = logging.getLogger(__name__)
-
 
 @requires_config_and_backend
 def assign(conf, backend, args):
@@ -46,6 +47,10 @@ def assign(conf, backend, args):
         if not dry_run:
             try:
                 template.clone_to(tmpdirname, branch)
+            except BranchNotFound as e:
+                logging.error("Cound not find branch %s in base repository", e.args[0])
+                logging.debug(e)
+                return
             except RepoError as e:
                 logging.error(
                     "Could not clone template repo (have you pushed at least one commit to it?)"
@@ -89,11 +94,12 @@ def assign(conf, backend, args):
                             )
                             logger.debug("Success!")
                             break
-                        except HTTPError as e:
-                            if retries >= 5 or e.response.status_code != 400:
+                        except RepositoryAlreadyExists as e:
+                            if retries >= 5:
                                 logger.debug("Critical Failure!")
                                 raise
                             logger.debug("Failed, retrying...")
+                            logger.debug(e)
 
                         # Delay and try again
                         time.sleep(wait * 2**retries)

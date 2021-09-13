@@ -1,8 +1,11 @@
 from requests.exceptions import HTTPError
 
 from assigner.backends.exceptions import (
+    RepositoryAlreadyExists,
     UserInAssignerGroup,
+    UserAlreadyAssigned,
     UserNotAssigned,
+    CIArtifactNotFound,
 )
 
 def raiseUserInAssignerGroup(err: HTTPError):
@@ -29,6 +32,19 @@ def raiseUserInAssignerGroup(err: HTTPError):
 
     raise UserInAssignerGroup(err)
 
+def raiseUserAlreadyAssigned(err: HTTPError):
+    """
+    Request url:
+        POST /api/v4/projects/{}/members
+
+    Expected response: HTTP 409
+    """
+
+    if err.response.status_code != 409:
+        return
+
+    raise UserAlreadyAssigned(err)
+
 def raiseUserNotAssigned(err: HTTPError):
     """
     Request url:
@@ -40,3 +56,26 @@ def raiseUserNotAssigned(err: HTTPError):
         return
 
     raise UserNotAssigned(err)
+
+def raiseRepositoryAlreadyExists(err: HTTPError):
+    """
+    Request url:
+        POST /api/v4/projects
+
+    Expected response: HTTP 400
+    """
+    if err.response.status_code != 400:
+        return
+
+    raise RepositoryAlreadyExists(err)
+
+def raiseCIArtifactNotFound(err: HTTPError):
+    """
+    Request url:
+        GET /projects/{}/jobs/{}/artifacts/{}
+    """
+
+    if err.response.status_code != 404:
+        return
+
+    raise CIArtifactNotFound(err)

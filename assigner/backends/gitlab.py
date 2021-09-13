@@ -22,11 +22,19 @@ from assigner.backends.base import (
 
 from assigner.backends.gitlab_exceptions import (
     raiseUserInAssignerGroup,
+    raiseUserAlreadyAssigned,
     raiseUserNotAssigned,
+    raiseRepositoryAlreadyExists,
+    raiseCIArtifactNotFound,
 )
 
 from assigner.backends.git_exceptions import raiseRetryableGitError
-from assigner.backends.exceptions import RetryableGitError
+from assigner.backends.exceptions import (
+    AssignerGroupNotFound,
+    RetryableGitError,
+    BranchNotFound,
+)
+
 
 # Transparently use a common TLS session for each request
 requests = requests.Session()
@@ -237,14 +245,17 @@ class GitlabRepo(RepoBase):
 
             try:  # for exp. backoff
                 try:
+                    self._repo = git.Repo.clone_from(self.ssh_url, dir_name)
                     if branch:
-                        self._repo = git.Repo.clone_from(self.ssh_url, dir_name)
                         for b in branch:
-                            self._repo.create_head(b, "origin/{}".format(b))
+                            try:
+                                self._repo.create_head(b, "origin/{}".format(b))
+                            # pylint: disable=no-member
+                            except git.exc.BadName as e:
+                                raise BranchNotFound(b, e) from e
 
                         logging.debug(self._repo.heads)
-                    else:
-                        self._repo = git.Repo.clone_from(self.ssh_url, dir_name)
+
                     logging.debug("Cloned %s.", self.name)
                 # pylint: disable=no-member
                 except git.exc.GitCommandError as e:
@@ -346,6 +357,7 @@ class GitlabRepo(RepoBase):
             return self._gl_post("/projects/{}/members".format(self.id), payload)
         except HTTPError as e:
             raiseUserInAssignerGroup(e)
+            raiseUserAlreadyAssigned(e)
             raise e
 
     def edit_member(self, user_id, level):
@@ -403,10 +415,14 @@ class GitlabRepo(RepoBase):
 
     def get_ci_artifact(self, job_id, artifact_path):
         params = {"id": self.id, "job_id": job_id, "artifact_path": artifact_path}
-        return self._gl_get_raw(
-            "/projects/{}/jobs/{}/artifacts/{}".format(self.id, job_id, artifact_path),
-            params,
-        )
+        try:
+            return self._gl_get_raw(
+                "/projects/{}/jobs/{}/artifacts/{}".format(self.id, job_id, artifact_path),
+                params,
+            )
+        except HTTPError as e:
+            raiseCIArtifactNotFound(e)
+            raise e
 
     def list_pushes(self):
         return self._gl_get("/projects/{}/events?action=pushed".format(self.id))
@@ -497,6 +513,10 @@ class GitlabTemplateRepo(GitlabRepo, TemplateRepoBase):
     @classmethod
     def new(cls, name, namespace, config):
         namespaces = cls._cls_gl_get(config, "/namespaces", {"search": namespace})
+
+        if len(namespaces) == 0:
+            raise AssignerGroupNotFound("No groups matching {} were found on Gitlab".format(namespace))
+
         if len(namespaces) > 1:
             logging.warning(
                 "%s namespaces match %s; defaulting to namespace %s.",
@@ -524,7 +544,11 @@ class GitlabTemplateRepo(GitlabRepo, TemplateRepoBase):
             "visibility_level": Visibility.private.value,
         }
 
-        result = cls._cls_gl_post(config, "/projects", payload)
+        try:
+            result = cls._cls_gl_post(config, "/projects", payload)
+        except HTTPError as e:
+            raiseRepositoryAlreadyExists(e)
+            raise e
 
         return cls.from_url(result["http_url_to_repo"], config["token"])
 
@@ -551,7 +575,11 @@ class GitlabStudentRepo(GitlabRepo, StudentRepoBase):
             "visibility_level": Visibility.private.value,
         }
 
-        result = cls._cls_gl_post(base_repo.config, "/projects", payload)
+        try:
+            result = cls._cls_gl_post(base_repo.config, "/projects", payload)
+        except HTTPError as e:
+            raiseRepositoryAlreadyExists(e)
+            raise e
 
         return cls.from_url(result["http_url_to_repo"], base_repo.config["token"])
 

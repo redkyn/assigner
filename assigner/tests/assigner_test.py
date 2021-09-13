@@ -2,6 +2,7 @@ import itertools
 from unittest.mock import patch
 
 from assigner import main, make_parser, subcommands
+from assigner.exceptions import AssignerException
 from assigner.tests.utils import AssignerTestCase
 
 from git.cmd import GitCommandNotFound
@@ -51,6 +52,9 @@ class MakeParserTestCase(AssignerTestCase):
         kwargs['run'](mock_args)
         self.assertTrue(self.mock_parser.print_usage.called)
 
+
+class ExampleAssignerError(AssignerException):
+    pass
 
 class ExampleError(Exception):
     pass
@@ -112,13 +116,28 @@ class MainTestCase(AssignerTestCase):
         main should log exceptions when raised.
         """
         self.mock_args.tracebacks = False
-        self.mock_args.run.side_effect = ExampleError
+        self.mock_args.run.side_effect = ExampleAssignerError("assigner exception")
         try:
             main([])
         except SystemExit:
             pass
 
-        mock_logger.error.assert_called_once_with(str(ExampleError()))
+        mock_logger.error.assert_called_once_with(str(ExampleAssignerError("assigner exception")))
+
+    @patch("assigner.logger", autospec=True)
+    def test_main_reports_unexpected_exceptions(self, mock_logger):
+        """
+        main should log exceptions when raised.
+        """
+        self.mock_args.tracebacks = False
+        self.mock_args.run.side_effect = ExampleError("unexpected error")
+        try:
+            main([])
+        except SystemExit:
+            pass
+
+        mock_logger.error.assert_any_call(str(ExampleError("unexpected error")))
+        mock_logger.error.assert_any_call("This is a bug. Please file an issue here: https://github.com/redkyn/assigner/issues/new")
 
     @patch("assigner.logger", autospec=True)
     def test_main_logs_keyerror_with_catch(self, mock_logger):

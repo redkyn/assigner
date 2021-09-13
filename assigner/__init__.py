@@ -17,9 +17,9 @@ import sys
 
 from colorlog import ColoredFormatter
 from git.cmd import GitCommandNotFound
-from requests.exceptions import HTTPError
 
 from assigner.backends.decorators import requires_config_and_backend
+from assigner.exceptions import AssignerException
 from assigner.roster_util import get_filtered_roster
 from assigner import progress
 
@@ -85,16 +85,12 @@ def manage_repos(conf, backend, args, action):
         full_name = backend.student_repo.build_name(semester, student_section,
                                                     hw_name, username)
 
-        try:
-            repo = backend.student_repo(backend_conf, namespace, full_name)
-            if not dry_run:
-                if action(repo, student):
-                    count += 1
-            else:
+        repo = backend.student_repo(backend_conf, namespace, full_name)
+        if not dry_run:
+            if action(repo, student):
                 count += 1
-        except HTTPError:
-            logging.warning("Error processing %s", username)
-            raise
+        else:
+            count += 1
 
     print("Changed {} repositories.".format(count))
 
@@ -202,8 +198,11 @@ def main(args=sys.argv[1:]):
             logger.error("%s is missing", e)
         elif isinstance(e, GitCommandNotFound):
             logger.error("git is not installed!")
+        elif isinstance(e, AssignerException):
+            logger.error(str(e))
         else:
             logger.error(str(e))
+            logger.error("This is a bug. Please file an issue here: https://github.com/redkyn/assigner/issues/new")
         raise SystemExit(1) from e
 
 

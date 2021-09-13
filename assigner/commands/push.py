@@ -1,7 +1,6 @@
 import logging
 import os
 
-from requests.exceptions import HTTPError
 from git.exc import NoSuchPathError
 
 from assigner.roster_util import get_filtered_roster
@@ -56,11 +55,6 @@ def _push(conf, backend, args):
             logging.warning("Local repo for %s does not exist; skipping...", username)
         except RepoError as e:
             logging.warning(e)
-        except HTTPError as e:
-            if e.response.status_code == 404:
-                logging.warning("Repository %s does not exist.", full_name)
-            else:
-                raise
 
 
 def setup_parser(parser):

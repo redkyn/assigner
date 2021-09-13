@@ -1,9 +1,10 @@
 import git
 import re
 from typing import Optional, Type, TypeVar, List, Any, Dict
+from assigner.exceptions import AssignerException
 
 
-class RepoError(Exception):
+class RepoError(AssignerException):
     pass
 
 
@@ -79,6 +80,10 @@ class RepoBase:
         raise NotImplementedError
 
     def delete(self) -> None:
+        raise NotImplementedError
+
+    @classmethod
+    def create_group(cls, group, config) -> None:
         raise NotImplementedError
 
     @classmethod
